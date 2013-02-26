@@ -16,6 +16,15 @@ def run(argv):
     for job in jobs:
         worker.process(job)
 
+
+class SingleWorkerTeam(object):
+    def __init__(self, worker):
+        self.worker = worker        
+        
+    def process(self, jobs):
+        for job in jobs:
+            self.worker.process(job)
+
 ###################
 #
 # MAIN

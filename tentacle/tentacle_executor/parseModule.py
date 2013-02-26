@@ -22,8 +22,8 @@ def indexContigs(contigsFile, logger):
 
     contigCoverage = {} 
     # Parse contigsFile to fill out data structure
-    with open(contigsFile) as file:
-        line = file.readline().strip()
+    with open(contigsFile) as f:
+        line = f.readline().strip()
         # Check that contigsFile seems to be in FASTA format
         if not line.startswith(">"):
             logger.error("CONTIGS file %s not in FASTA format?", contigsFile)
@@ -36,7 +36,7 @@ def indexContigs(contigsFile, logger):
                 seqlength = 0
 
                 # Start reading contig length
-                line = file.readline().strip()
+                line = f.readline().strip()
                 while True:
                     if line.startswith(">"):
                         # Create a list of zeros for current contig ("header")
@@ -63,8 +63,8 @@ def parse_razers3(mappings, contigCoverage, logger):
     Parses razers3 output and fills the
     contigCoverage dictionary
     """
-    with open(mappings) as file:
-        for line in file:
+    with open(mappings) as f:
+        for line in f:
             # Read name, Read start, Read end, Direction, Contig name, 
             # Contig start, Contig end, percent Identity.
             # Positions in RazerS3 output are indexed from start (0-indexed)
@@ -97,8 +97,8 @@ def parse_pblat_blast8(mappings, contigCoverage, logger):
     contigCoverage dictionary
     """
 
-    with open(mappings) as file:
-        for line in file:
+    with open(mappings) as f:
+        for line in f:
             # Read name, Contig name, percent identity, alignment length, mismatches, 
             # gap openings, query start, query end, subject start, subject end, 
             # e-value, bit score

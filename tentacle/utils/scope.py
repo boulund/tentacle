@@ -1,5 +1,18 @@
 import unittest as _unittest
 
+__all__ = ["Scope", "ScopedObject"]
+
+class ScopedObject(object):
+    def __init__(self):
+        self._scope = Scope()
+        self._scope.__enter__()
+    def __enter__(self): 
+        pass
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._scope.__exit__(exc_type, exc_value, traceback)
+    def close(self):
+        self.__exit__(None,None,None)
+
 class Scope(object):
     def __init__(self, on_exit=[]):
         self.exit_handlers = list(reversed(on_exit))

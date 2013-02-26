@@ -2,22 +2,20 @@
 # Fredrik Boulund 2013
 # Anders Sjogren 2013
 
-import sys
 from sys import exit, stdout
 from subprocess import Popen, PIPE
 from collections import namedtuple
 import argparse
 import os
 import shutil
-import parseModule
-import logging
 
+import parseModule
 from .. import utils
 
-InFiles = namedtuple("InFiles", ["contigs", "reads", "annotations"])
+#InFiles = namedtuple("InFiles", ["contigs", "reads", "annotations"])
 AllFiles = namedtuple("AllFiles", ["contigs", "reads", "annotations", "annotationStats", "log"])
 
-class Executor:
+class TentacleCore:
     def __init__(self, logger):
         self.logger = logger
         
@@ -421,9 +419,9 @@ class Executor:
         Is used both for the single contig-file and many-contig-files cases.
         """
         
-        parser = argparse.ArgumentParser(parents=[Executor.create_fastq_argparser(), 
-                                                  Executor.create_razerS3_argparser(),
-                                                  Executor.create_pblat_argparser()], add_help=False)
+        parser = argparse.ArgumentParser(parents=[TentacleCore.create_fastq_argparser(), 
+                                                  TentacleCore.create_razerS3_argparser(),
+                                                  TentacleCore.create_pblat_argparser()], add_help=False)
      
         debug_group = parser.add_argument_group("DEBUG developer options", "Use with caution!")
         debug_group.add_argument("--outputCoverage", dest="outputCoverage", action="store_true", default=False,
@@ -442,68 +440,49 @@ class Executor:
         self.logger.info("Results available in %s", files.annotationStats)
         self.logger.info(" ----- ===== LOGGING COMPLETED ===== ----- ")
 
-
-def extract_file_options(options):
-    # Define original source files
-    # Simple quick validity check of positional arguments.
-    # RazerS3 will complain about file contents of CONTIGS and READS
-    # later if they are incorrectly formatted etc.
-    utils.assert_file_exists("contigs", options.contigs);
-    utils.assert_file_exists("reads", options.reads);
-    utils.assert_file_exists("annotations", options.annotations);
-    return AllFiles(options.contigs, options.reads, options.annotations, options.annotationStatsFile, options.logfile)
-
-
-def create_single_data_argparser():
-    """
-    Creates parser for all arguments for when a single triplet (contigs, reads, annotions) are to be processed.
     
-    Performs some rudimental file existance assertions
-    """
-
-    parser = argparse.ArgumentParser(description="Maps reads to annotations in contigs and produces corresponding stats.", parents=[Executor.create_processing_argarser()], add_help=True)
-    
-    parser.add_argument("contigs", help="path to contigs file (gzippped FASTQ)")
-    parser.add_argument("reads", help="path to read file (gzipped FASTQ)")
-    parser.add_argument("annotations", help="path to annotation file (tab separated text)")    
-    #TODO: change default tentacle.log to something like reads_filename-extensions+".tab.log"?
-    parser.add_argument("-l", "--logfile", dest="logfile", default="tentacle.log",
-       help="Set a different log filename. [Default: %(default)s]")
-    #TODO: change default annotationStats.tab to something like reads_filename-extensions+".tab"?
-    #TODO: Make dest and option have same nomenclature (e.g. --annotationStatsFile, or rather dest="output", "-o" and "--output")
-    parser.add_argument("-o", "--outAnnotationCounts", dest="annotationStatsFile", 
-      default="annotationStats.tab",
-      help="Output filename for the counts of reads that matched to annotations [default: %(default)s]")
-    
-    return parser
+    @staticmethod
+    def extract_file_options(options):
+        # Define original source files
+        # Simple quick validity check of positional arguments.
+        # RazerS3 will complain about file contents of CONTIGS and READS
+        # later if they are incorrectly formatted etc.
+        utils.assert_file_exists("contigs", options.contigs);
+        utils.assert_file_exists("reads", options.reads);
+        utils.assert_file_exists("annotations", options.annotations);
+        return AllFiles(options.contigs, options.reads, options.annotations, options.annotationStatsFile, options.logfile)
     
     
-def parse_args(argv):
-    parser = create_single_data_argparser()
-    options = parser.parse_args()
-    files = extract_file_options(options)
-
-    return (files, options)
-
-
-def run(argv):
-    files, options = parse_args(argv)
-
-    # Instantiate a logger that writes to both stdout and logfile
-    # This logger is available globally after its creation
-    _logger = utils.start_logging(options.logdebug, files.log)
-
-    utils.print_run_settings(options, _logger)
-    utils.print_files_settings(files, _logger)
-
-    Executor(_logger).analyse(files, options)
+    @staticmethod
+    def create_single_data_argparser():
+        """
+        Creates parser for all arguments for when a single triplet (contigs, reads, annotions) are to be processed.
+        
+        Performs some rudimental file existance assertions
+        """
     
+        parser = argparse.ArgumentParser(description="Maps reads to annotations in contigs and produces corresponding stats.", parents=[TentacleCore.create_processing_argarser()], add_help=True)
+        
+        parser.add_argument("contigs", help="path to contigs file (gzippped FASTQ)")
+        parser.add_argument("reads", help="path to read file (gzipped FASTQ)")
+        parser.add_argument("annotations", help="path to annotation file (tab separated text)")    
+        #TODO: change default tentacle.log to something like reads_filename-extensions+".tab.log"?
+        parser.add_argument("-l", "--logfile", dest="logfile", default="tentacle.log",
+           help="Set a different log filename. [Default: %(default)s]")
+        #TODO: change default annotationStats.tab to something like reads_filename-extensions+".tab"?
+        #TODO: Make dest and option have same nomenclature (e.g. --annotationStatsFile, or rather dest="output", "-o" and "--output")
+        parser.add_argument("-o", "--outAnnotationCounts", dest="annotationStatsFile", 
+          default="annotationStats.tab",
+          help="Output filename for the counts of reads that matched to annotations [default: %(default)s]")
+        
+        return parser
+        
+        
+    @staticmethod
+    def parse_args(argv):
+        parser = TentacleCore.create_single_data_argparser()
+        options = parser.parse_args()
+        files = TentacleCore.extract_file_options(options)
     
-###################
-#
-# MAIN
-#
-###################
-if __name__ == "__main__":
-    run(sys.argv)
-    exit(0)
+        return (files, options)
+

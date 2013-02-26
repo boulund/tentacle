@@ -1,16 +1,21 @@
 import os, logging
 from sys import stdout
 
+__all__ = list()
+
+__all__.append("fmt")
 def fmt(in_str):
     in_str.format(**globals())
 
 
+__all__.append("printer")
 def printer(msg):
     def p():
         print msg
     return p
 
 
+__all__.append("resolve_executable")
 def resolve_executable(program):
     #inspired by http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python
     import platform
@@ -28,6 +33,7 @@ def resolve_executable(program):
 
 
 unique_logger_id = 0;
+__all__.append("start_logging")
 def start_logging(verbose, logfile):
     """
     Set logger basic config and start logging
@@ -65,6 +71,7 @@ def format_dict(d):
     return s   
 
 
+__all__.append("print_run_settings")
 def print_run_settings(options, logger):
     """
     Prints the settings used for the current run to log
@@ -72,10 +79,12 @@ def print_run_settings(options, logger):
     logger.info("The program was run with the following settings:\n{}\n".format(format_dict(options.__dict__)))
 
 
+__all__.append("print_files_settings")
 def print_files_settings(files, logger):
     logger.info("Processing the following files:\n{}\n".format(format_dict(files._asdict())))
 
 
+__all__.append("assert_file_exists")
 def assert_file_exists(fileDesc, fileName):
     if not os.path.isfile(fileName):
         print "ERROR: " + fileDesc.capitalize() + " file not supplied correctly ("+ fileName +")."

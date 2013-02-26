@@ -2,6 +2,8 @@
 import unittest as _unittest
 import Queue as _Queue
 
+__all__ = ["dequeueingIteration"]
+
 def dequeueingIteration(q):
     try:
         while True:

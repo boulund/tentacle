@@ -17,12 +17,12 @@ Options = collections.namedtuple("Options", ["zerorpc_master_worker_executor", "
 
 def run(role, shell_setup_code, options_file_path):
     from zerorpc_master_worker_executor import Executor
-    from tentacle_master_worker import MasterWorker
+    from tentacle_master_worker import TentacleMaster, TentacleWorker
     
     options = deserialize_options(options_file_path)
     
     e_options = options.zerorpc_master_worker_executor
-    mw_executor = call(Executor, e_options)
+    mw_executor = Executor(e_options)
     
     mw_options = options.tentacle_master_worker
     master_worker = call(MasterWorker, mw_options)

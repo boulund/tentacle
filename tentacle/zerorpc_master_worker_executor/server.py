@@ -1,13 +1,15 @@
 from __future__ import print_function
 
-from zerorpc_utils import create_server, run_single_rpc
 #from multiprocessing import Process, Pipe, JoinableQueue
 import gevent
 import zerorpc
 import sys
 import random
 import traceback
-from utils import printer, dequeueingIteration, Scope, start_logging
+
+from ..zerorpc_utils import create_server, run_single_rpc
+
+from ..utils import printer, dequeueingIteration, Scope, start_logging
 
 
 #from collections import namedtuple
@@ -17,9 +19,9 @@ from utils import printer, dequeueingIteration, Scope, start_logging
 #class ZeroRpcWorkersRegistryService:
 
 from gevent.queue import Queue, JoinableQueue
-from gevent_utils import IterableQueue
-gevent.monkey.patch_subprocess()
+from ..gevent_utils import IterableQueue
 
+gevent.monkey.patch_subprocess()
 
 class ScopedObject(object):
     def __init__(self):

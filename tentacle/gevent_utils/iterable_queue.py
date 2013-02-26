@@ -2,6 +2,8 @@ import unittest as _unittest
 import gevent.queue
 import random
 
+__all__ = ["IsClosed", "IterableQueue"]
+
 class IsClosed(Exception): pass
 
 class IterableQueue():

@@ -1,1 +1,1 @@
-from iterable_queue import IsClosed, IterableQueue
+from iterable_queue import *

@@ -1,13 +1,7 @@
-#!/usr/bin/env python
 # Fredrik Boulund 2012
 
 from sys import argv, exit
 import numpy as np
-import logging
-
-# Define a logger 
-#logger = logging.getLogger("Tentacle.parseModule")
-
 
 def indexContigs(contigsFile, logger):
     """

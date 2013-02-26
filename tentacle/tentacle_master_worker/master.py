@@ -1,13 +1,35 @@
 #!/usr/bin/env python
-import os
 from os import path, listdir, mkdir
-import sys
 import argparse
-import tentacle_executor
-from tentacle_executor import Executor
 
-import utils
+from .. import tentacle_core
+from .. import utils
 
+# --- Public/Exported functions and classes ---
+
+__all__ = ["TentacleMaster"]
+
+class TentacleMaster(object):
+    @staticmethod
+    def parse_args(argv):
+        parser = create_multiple_data_argparser()
+        options = parser.parse_args()
+        return options
+    
+    
+    def process(self, options):
+    #TODO: handle logging (some at creation, some for each file, possibly some for error)
+        masterLogger = utils.start_logging(options.logdebug, "tentacle.log")
+        utils.print_run_settings(options, masterLogger)
+        log_dir, result_dir = determine_and_create_out_dirs(options)
+    #TODO: print_run_settings(options)
+        return identify_linked_files({"annotations":(options.annotationsDirectory, "_annotation."),
+                                      "contigs":(options.contigsDirectory, "_contigs."),
+                                      "reads":(options.readsDirectory, "_")},
+                                      log_dir, result_dir, masterLogger)
+        
+# --- Private/Internal functions and classes ---
+        
 def core_name(file_path, end_symbol):
     filename = path.basename(file_path)
     return filename.split(end_symbol,1)[0]
@@ -39,7 +61,7 @@ def identify_linked_files(dir_and_end_symbol_by_category, log_dir, result_dir, l
     def create_fileset(core_name, reads_file):
         result_file = path.join(result_dir, path.basename(reads_file)+".tab")
         log_file = path.join(log_dir, path.basename(reads_file)+".log")
-        return tentacle_executor.AllFiles( contigs_files_by_core_name[core_name], reads_file, annotations_files_by_core_name[core_name], result_file, log_file )
+        return tentacle_core.AllFiles( contigs_files_by_core_name[core_name], reads_file, annotations_files_by_core_name[core_name], result_file, log_file )
                                         
     return [(core_name, create_fileset(core_name,reads_file)) for (core_name,reads_file) in reads_core_names_and_files]
 
@@ -49,7 +71,7 @@ def create_multiple_data_argparser():
     Creates parser for all arguments for when a collection of triplets (contigs, reads, annotions) are to be processed.
     """
 
-    parser = argparse.ArgumentParser(description="Maps reads to annotations in contigs and produces corresponding stats.", parents=[Executor.create_processing_argarser()], add_help=True)
+    parser = argparse.ArgumentParser(description="Maps reads to annotations in contigs and produces corresponding stats.", parents=[tentacle_core.TentacleCore.create_processing_argarser()], add_help=True)
     
     parser.add_argument("contigsDirectory", help="path to directory containing contigs files (gzippped FASTQ)")
     parser.add_argument("readsDirectory", help="path to directory containing read files (gzipped FASTQ)")
@@ -57,12 +79,6 @@ def create_multiple_data_argparser():
     parser.add_argument("-o", "--outputDirectory", default="tentacle_results", dest="outputDirectory", help="path to directory being created and holding the logfiles and annotations [default =  %(default)s]")
     
     return parser
-
-
-def parse_args(argv):
-    parser = create_multiple_data_argparser()
-    options = parser.parse_args()
-    return options
 
 
 def determine_and_create_out_dirs(options):
@@ -75,52 +91,3 @@ def determine_and_create_out_dirs(options):
     mkdir(log_dir)
     mkdir(result_dir)
     return log_dir, result_dir
-
-
-class TentacleMaster():
-    def process(self, options):
-    #TODO: handle logging (some at creation, some for each file, possibly some for error)
-        masterLogger = utils.start_logging(options.logdebug, "tentacle.log")
-        utils.print_run_settings(options, masterLogger)
-        log_dir, result_dir = determine_and_create_out_dirs(options)
-    #TODO: print_run_settings(options)
-        return identify_linked_files({"annotations":(options.annotationsDirectory, "_annotation."),
-                                      "contigs":(options.contigsDirectory, "_contigs."),
-                                      "reads":(options.readsDirectory, "_")},
-                                      log_dir, result_dir, masterLogger)        
-
-        
-class TentacleWorker():
-    def __init__(self, options):
-        self.options = options
-    def process(self, job):  
-        (core_name, files) = job
-        print "---Starting work on {}, logging to {}---".format(core_name, files.log)
-        # Instantiate a logger that writes to both stdout and logfile
-        # This logger is available globally after its creation
-        workerLogger = utils.start_logging(self.options.logdebug, files.log)
-        utils.print_files_settings(files, workerLogger)
-        Executor(workerLogger).analyse(files, self.options)          
-        
-
-def run(argv):
-    options = parse_args(argv)
-    master = TentacleMaster()
-    worker = TentacleWorker(options)
-    
-    #run the master
-    jobs = master.process(options)
-    
-    #run the single worker
-    for job in jobs:
-        worker.process(job)
-
-
-###################
-#
-# MAIN
-#
-###################
-if __name__ == "__main__":
-    run(sys.argv)
-    exit(0)

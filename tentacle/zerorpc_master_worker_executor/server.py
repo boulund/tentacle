@@ -1,38 +1,19 @@
 from __future__ import print_function
 
 #from multiprocessing import Process, Pipe, JoinableQueue
-import gevent
-import zerorpc
 import sys
 import random
 import traceback
 
-from ..zerorpc_utils import create_server, run_single_rpc
-
-from ..utils import printer, dequeueingIteration, Scope, start_logging
-
-
-#from collections import namedtuple
-
-#ExceptionDescription = namedtuple("ExceptionDescription", ["exc_type", "exc_value", "traceback"])
-
-#class ZeroRpcWorkersRegistryService:
-
+import gevent
+import zerorpc
 from gevent.queue import Queue, JoinableQueue
+
+from ..zerorpc_utils import create_server, run_single_rpc
+from ..utils import printer, dequeueingIteration, Scope, start_logging, ScopedObject
 from ..gevent_utils import IterableQueue
 
 gevent.monkey.patch_subprocess()
-
-class ScopedObject(object):
-    def __init__(self):
-        self._scope = Scope()
-        self._scope.__enter__()
-    def __enter__(self): 
-        pass
-    def __exit__(self, exc_type, exc_value, traceback):
-        self._scope.__exit__(exc_type, exc_value, traceback)
-    def close(self):
-        self.__exit__(None,None,None)
              
 class WorkerProxy(ScopedObject, zerorpc.Client):
     def __init__(self, workerEndpoint):

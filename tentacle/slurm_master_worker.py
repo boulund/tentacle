@@ -36,10 +36,11 @@ def create_sbatch_script(commands, options):
     return setupStr + jobsStr
 
 def start_slurm_master_worker(argv):
-    #TODO: Parse args
-    node_count = 10
-    account = "001-12-175"
-    time_limit = "7-0:0:0" #one week
-    #TODO: create and submit master job
-    #TODO: create and submit workers jobs
-    
+    pass
+    #collect parsers from worker + master + master job desc + output_dir + slurm_opts + logger opts (verbosity)
+    #create joint parser and parse to handle help
+    #for each parser parse output, to get fine-grained options
+    #create result_dir (and subdirs), with name from options
+    #serialize opts into output/communication/options
+    #create master and worker slurm scripts, with slurm_opts
+    #launch master and worker with output_dir as argument, from where they can access the communication and result dirs

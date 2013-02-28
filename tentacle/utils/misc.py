@@ -89,3 +89,7 @@ def assert_file_exists(fileDesc, fileName):
     if not os.path.isfile(fileName):
         print "ERROR: " + fileDesc.capitalize() + " file not supplied correctly ("+ fileName +")."
         exit(1) 
+
+
+#def call(o, arguments):
+#    o.__call__(*arguments.get('args',list()), **arguments.get('kwargs',dict()))

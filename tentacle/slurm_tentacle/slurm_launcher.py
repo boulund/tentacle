@@ -48,5 +48,23 @@ class SlurmLauncher(object):
         script = self.create_sbatch_script(commands, options)
         call_pars = [utils.resolve_executable("sbatch")]
         call_pars.extend(additional_slurm_args)
+        print "launching: " + " ".join(call_pars) + " with input " + script
+        #Make the sbatch call
         (out, err) = Popen(call_pars, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate(script)
-        print
+        print out
+        print err
+    
+    @staticmethod
+    def create_python_function_command(f):
+        import base64
+        import cloud.serialization
+        python_prog_template = "import base64; import cloud.serialization; f=cloud.serialization.deserialize(base64.b64decode('{0}')); f();"
+        base64_serialized_cmd = base64.b64encode(cloud.serialization.serialize(f,True))
+        python_prog = python_prog_template.format(base64_serialized_cmd)
+        return "python -c \"{}\"".format(python_prog)
+    
+    def launch_python_function(self, f, options, additional_slurm_args):
+        commands = [
+            '. /c3se/NOBACKUP/groups/c3-snic001-12-175/activate_python', #load python module, activate virtual_env, add libs dir to LD_PATH
+            self.create_python_function_command(f) ]
+        self.launch(commands, options, additional_slurm_args)

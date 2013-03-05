@@ -4,11 +4,18 @@ import argparse
 
 from .. import tentacle_core
 from .. import utils
-from output_dir_structure import OutputDirStructure
+from ..output_dir_structure import OutputDirStructure
 
 # --- Public/Exported functions and classes ---
 
 __all__ = ["TentacleMaster"]
+
+def create_input_dirs_argparser():
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("contigsDirectory", help="path to directory containing contigs files (gzippped FASTQ)")
+    parser.add_argument("readsDirectory", help="path to directory containing read files (gzipped FASTQ)")
+    parser.add_argument("annotationsDirectory", help="path to directory containing annotation files (tab separated text)")
+    return parser
 
 class TentacleMaster(object):
     @staticmethod
@@ -25,17 +32,17 @@ class TentacleMaster(object):
         options = parser.parse_args()
         return options
     
-    def __init__(self, master_logger):
-        self.master_logger = master_logger
+    def __init__(self, logger_provider):
+        self.master_logger = logger_provider.get_logger("master")
         #masterLogger = utils.start_logging(options.logdebug, "tentacle.log")
     
-    def process(self, options, output_dir_structure):
+    def process(self, parsed_args, output_dir_structure):
     #TODO: handle logging (some at creation, some for each file, possibly some for error)
-        utils.print_run_settings(options, self.master_logger)
+        utils.print_run_settings(parsed_args, self.master_logger)
     #TODO: print_run_settings(options)
-        return identify_linked_files({"annotations":(options.annotationsDirectory, "_annotation."),
-                                      "contigs":(options.contigsDirectory, "_contigs."),
-                                      "reads":(options.readsDirectory, "_")},
+        return identify_linked_files({"annotations":(parsed_args.annotationsDirectory, "_annotation."),
+                                      "contigs":(parsed_args.contigsDirectory, "_contigs."),
+                                      "reads":(parsed_args.readsDirectory, "_")},
                                       output_dir_structure, self.master_logger)
         
 # --- Private/Internal functions and classes ---
@@ -74,13 +81,6 @@ def identify_linked_files(dir_and_end_symbol_by_category, output_dir_structure, 
         return tentacle_core.AllFiles( contigs_files_by_core_name[core_name], reads_file, annotations_files_by_core_name[core_name], result_file, log_file )
                                         
     return [(core_name, create_fileset(core_name,reads_file)) for (core_name,reads_file) in reads_core_names_and_files]
-
-def create_input_dirs_argparser():
-    parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("contigsDirectory", help="path to directory containing contigs files (gzippped FASTQ)")
-    parser.add_argument("readsDirectory", help="path to directory containing read files (gzipped FASTQ)")
-    parser.add_argument("annotationsDirectory", help="path to directory containing annotation files (tab separated text)")
-    return parser
 
 def create_multiple_data_argparser():
     """

@@ -14,7 +14,11 @@ from ..utils import printer, dequeueingIteration, Scope, start_logging, ScopedOb
 from ..gevent_utils import IterableQueue
 
 gevent.monkey.patch_subprocess()
-             
+
+def launch_slurm_pool_locally():
+    pool=RegisteringWorkerPool()
+    
+
 class WorkerProxy(ScopedObject, zerorpc.Client):
     def __init__(self, workerEndpoint):
         super(WorkerProxy, self).__init__()
@@ -26,48 +30,48 @@ class WorkerProxy(ScopedObject, zerorpc.Client):
         #Note that on_exit methods are run in reverse order, so this happens before closing the connection above.
         self._scope.on_exit(self("close"))
                        
-class WorkerTeam(ScopedObject):
+class RegisteringWorkerPool(ScopedObject):
     def __init__(self):
-        super(WorkerTeam, self).__init__()
-        self.jobs_and_results = IterableQueue()
+        super(RegisteringWorkerPool, self).__init__()
+        self.tasks_and_results = IterableQueue()
         self.workers = IterableQueue()
         self.scope.on_exit(lambda: self.workers.close(),
-                           lambda: self.jobs_and_results.close(),
+                           lambda: self.tasks_and_results.close(),
                            lambda: [w.close() for w in self.workers])
 
     def register_worker(self, worker):
-        #Start a greenlet that puts the worker to work, processing jobs from the queue
-        gevent.spawn(self._process_jobs_from_queue, worker)
+        #Start a greenlet that puts the worker to work, processing tasks from the queue
+        gevent.spawn(self._process_tasks_from_queue, worker)
         
-    def _process_jobs_from_queue(self, worker):
+    def _process_tasks_from_queue(self, worker):
         with worker:
-            for (job,async_result) in self.jobs_and_results:
-                #print "Asking " + workerEndpoint + " to process " + str(job)
+            for (task,async_result) in self.tasks_and_results:
+                #print "Asking " + workerEndpoint + " to process " + str(task)
                 try:
-                    async_result.set(worker.process(job))
+                    async_result.set(worker.process(task))
                 except Exception as e:
-                    self.logger.error("Error when trying to execute job {} by worker {}\n{}".format(job, worker, extra=traceback.format_exc()))
+                    self.logger.error("Error when trying to execute task {} by worker {}\n{}".format(task, worker, extra=traceback.format_exc()))
                     async_result.set_exception(e)
-                #print "Done   " + workerEndpoint + " to process " + str(job)
+                #print "Done   " + workerEndpoint + " to process " + str(task)
         print("Worker {} ended gracefully".format(worker))
     
-    def process(self, jobs):
-        jobs_and_results = [(job, gevent.event.AsyncResult()) for job in jobs]
-        for item in jobs_and_results: self.jobs.putMany(item)
-        for (job,async_result) in jobs_and_results:
+    def process(self, tasks):
+        tasks_and_results = [(task, gevent.event.AsyncResult()) for task in tasks]
+        for item in tasks_and_results: self.tasks.putMany(item)
+        for (task,async_result) in tasks_and_results:
             async_result.wait()
-        return jobs_and_results
+        return tasks_and_results
     
 class ZeroRpcWorkersProxy(object):
     #inspired by http://www.gevent.org/gevent.queue.html
     def __init__(self, logger):
         self.logger = logger
         
-    def process(self, jobs):
+    def process(self, tasks):
         with Scope() as scope:
-            self.jobs = JoinableQueue()
-            for item in jobs:
-                self.jobs.put(item)
+            self.tasks = JoinableQueue()
+            for item in tasks:
+                self.tasks.put(item)
 
             self.spawned_workers = Queue()
                 
@@ -78,14 +82,14 @@ class ZeroRpcWorkersProxy(object):
             gevent.spawn(s.run)
             scope.on_exit(s.stop)
             
-            #Wait for the jobs to be completed
-            self.jobs.join()
+            #Wait for the tasks to be completed
+            self.tasks.join()
             
             #Wait for all workers to have cleaned up
             for w in dequeueingIteration(self.spawned_workers):
                 w.join()       
         
-    def _processJobs(self, workerEndpoint):
+    def _processtasks(self, workerEndpoint):
         try:
             with Scope() as scope:
                 workerProxy = zerorpc.Client()
@@ -96,24 +100,24 @@ class ZeroRpcWorkersProxy(object):
                               workerProxy.close, 
                               printer("Closed worker " + workerEndpoint))
             
-                for job in dequeueingIteration(self.jobs):
+                for task in dequeueingIteration(self.tasks):
                     try:
-                        #print "Asking " + workerEndpoint + " to process " + str(job)
-                        workerProxy.process(job)
-                        #print "Done   " + workerEndpoint + " to process " + str(job)
+                        #print "Asking " + workerEndpoint + " to process " + str(task)
+                        workerProxy.process(task)
+                        #print "Done   " + workerEndpoint + " to process " + str(task)
                     finally:
-                        self.jobs.task_done()
+                        self.tasks.task_done()
         except Exception:
-            self.logger.error("Error when trying to execute jobs by worker at {}\n{}".format(workerEndpoint, extra=traceback.format_exc()))
+            self.logger.error("Error when trying to execute tasks by worker at {}\n{}".format(workerEndpoint, extra=traceback.format_exc()))
         print("{} ended gracefully".format(workerEndpoint))
 
     def register_worker(self, workerEndpoint):
         print("Registering worker {}".format(workerEndpoint))
-        g = gevent.spawn(self._processJobs, workerEndpoint)
+        g = gevent.spawn(self._processtasks, workerEndpoint)
         self.spawned_workers.put(g)
         return "Registered as worker nr {}".format(self.spawned_workers.qsize())
 
-class ZeroRpcMasterProxy(object):
+class ZeroRpcRegisteringWorkerPoolProxy(object):
     def __init__(self, logger, masterEndpoint):
         self.logger = logger
         self.masterEndpoint = masterEndpoint
@@ -149,7 +153,7 @@ class IntMasterWorker(object):
     class Master:
         def __init__(self, item_count):
             self.item_count = item_count
-        def get_jobs(self):
+        def get_tasks(self):
             return range(self.item_count)
     class Worker(BaseWorker):
         def process(self, i):
@@ -168,7 +172,7 @@ if __name__=="__main__":
         logger.info("Starting up as master")
         master = IntMasterWorker.Master(10)
         workersProxy = ZeroRpcWorkersProxy(logger)
-        workersProxy.process(master.get_jobs())
+        workersProxy.process(master.get_tasks())
     else:
         masterAddress = sys.argv[2]
         logger.info("Starting up as worker for " + masterAddress)
@@ -177,6 +181,6 @@ if __name__=="__main__":
 
     logger.info("Done")
 
-#create jobs, putMany in queue
+#create tasks, putMany in queue
 #register MasterServer
 #

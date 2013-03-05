@@ -63,11 +63,11 @@ class _Test_IterableQueue(_unittest.TestCase):
         self.assertSequenceEqual(l, list(q))
         self.assertSequenceEqual([], list(q))
     def test_concurrent(self):
-        l = range(100)
+        l = range(1000)
         q = IterableQueue()
         l2 = []
-        write_yield_rate = 0.5
-        read_yield_rate = 0.4
+        write_yield_rate = 0.1
+        read_yield_rate = 0.8
         #Each time a reader/writer yields, the control is passed over to the other thread.
         #Setting the reader yield rate lower than the writer yieild rate acts so that the 
         #reader sometimes empties the queue and has to wait
@@ -80,14 +80,15 @@ class _Test_IterableQueue(_unittest.TestCase):
             q.close()
         def read():
             for i in q:
+                l2.append(i)
                 do_yield=(random.random()<read_yield_rate)
                 if do_yield:
                     gevent.sleep(0)
-                l2.append(i)
         writer = gevent.spawn(write)
-        reader = gevent.spawn(read)
-        gevent.joinall([reader,writer])
+        readers = [gevent.spawn(read) for _ in range(10)]
+        gevent.joinall(readers + [writer])
         self.assertSequenceEqual(l, l2)
+        
     def test_is_closed(self):
         q = IterableQueue()
         q.close()

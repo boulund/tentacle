@@ -1,18 +1,6 @@
 import collections
 import tentacle_master_worker
 
-def call(o, arguments):
-    o.__call__(*arguments.get('args',list()), **arguments.get('kwargs',dict()))
-
-def serialize_options(options, options_file_path):
-    import pickle
-    with open(options_file_path, 'w') as f:
-        pickle.dump(options, f)
-
-def deserialize_options(options_file_path):
-    import pickle
-    with open(options_file_path, 'r') as f:
-        return pickle.load(f)
 
 Options = collections.namedtuple("Options", ["zerorpc_master_worker_executor", "tentacle_master", "tentacle_worker"])
 

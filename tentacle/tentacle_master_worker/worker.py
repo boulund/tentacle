@@ -4,11 +4,11 @@ from .. import utils
 __all__ = ["TentacleWorker"]
 
 class TentacleWorker():
-    def __init__(self, options):
+    def __init__(self, logger_provider, options):
         self.options = options
         
-    def process(self, job):  
-        (core_name, files) = job
+    def process(self, task):  
+        (core_name, files) = task
         print "---Starting work on {}, logging to {}---".format(core_name, files.log)
         # Instantiate a logger that writes to both stdout and logfile
         # This logger is available globally after its creation

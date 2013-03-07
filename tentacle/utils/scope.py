@@ -1,4 +1,6 @@
 import unittest as _unittest
+import gevent
+import traceback
 
 __all__ = ["Scope", "ScopedObject"]
 
@@ -12,28 +14,31 @@ class ScopedObject(object):
         self._scope.__exit__(exc_type, exc_value, traceback)
     def close(self):
         self.__exit__(None,None,None)
+    @property
+    def closed(self):
+        return self._scope.closed
 
 class Scope(object):
     def __init__(self, on_exit=[]):
-        self.exit_handlers = list(reversed(on_exit))
-        self.exit_handlers_has_run = False
+        self._exit_handlers = list(reversed(on_exit))
+        self._is_closing = False
+        self.closed = gevent.event.Event()
         
     def on_exit(self, *args):
-        self.exit_handlers.extend(reversed(args))
+        self._exit_handlers.extend(reversed(args))
         
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        #ed = ExceptionDescription(exc_type, exc_value, traceback)
-        if self.exit_handlers_has_run:
-            return
-        for exit_handler in reversed(self.exit_handlers):
-            self.exit_handlers_has_run = True
+    def __exit__(self, exc_type, exc_value, traceback_):
+        if self._is_closing: return
+        self._is_closing = True
+        for exit_handler in reversed(self._exit_handlers):
             try:
                 exit_handler()
             except:
                 print "Exception in exitHandle of Scope. Skipping.\n" + traceback.format_exc()
+        self.closed.set()
                 
 class _Test_Scope(_unittest.TestCase):
     def test_simple(self):

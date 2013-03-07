@@ -10,7 +10,7 @@ class IterableQueue():
     def __init__(self, *args):
         self._inner_queue = gevent.queue.Queue()
         self._is_closed = False
-        self.putMany(args)
+        self.put_many(args)
     def close(self):
         try:
             self._is_closed = True
@@ -21,7 +21,7 @@ class IterableQueue():
         if self._is_closed:
             raise IsClosed
         self._inner_queue.put(item)
-    def putMany(self, items):
+    def put_many(self, items):
         if self._is_closed:
             raise IsClosed
         for item in items:
@@ -36,7 +36,7 @@ class IterableQueue():
             raise result
         return result
 
-class _Test_IterableQueue(_unittest.TestCase):
+class Test_IterableQueue(_unittest.TestCase):
     def test_empty(self):
         q = IterableQueue()
         q.close()
@@ -58,7 +58,7 @@ class _Test_IterableQueue(_unittest.TestCase):
     def test_ordered_putMany(self):
         l = range(2)
         q = IterableQueue()
-        q.putMany(l)
+        q.put_many(l)
         q.close()
         self.assertSequenceEqual(l, list(q))
         self.assertSequenceEqual([], list(q))
@@ -92,7 +92,7 @@ class _Test_IterableQueue(_unittest.TestCase):
     def test_is_closed(self):
         q = IterableQueue()
         q.close()
-        self.assertRaises(IsClosed, lambda: q.putMany(1))
+        self.assertRaises(IsClosed, lambda: q.put_many(1))
         
         
         

@@ -9,59 +9,10 @@ import gevent
 import zerorpc
 from gevent.queue import Queue, JoinableQueue
 
-from ..zerorpc_utils import create_server, run_single_rpc
+from ..zerorpc_utils import spawn_server, run_single_rpc
 from ..utils import printer, dequeueingIteration, Scope, start_logging, ScopedObject
-from ..gevent_utils import IterableQueue
 
-gevent.monkey.patch_subprocess()
-
-def launch_slurm_pool_locally():
-    pool=RegisteringWorkerPool()
-    
-
-class WorkerProxy(ScopedObject, zerorpc.Client):
-    def __init__(self, workerEndpoint):
-        super(WorkerProxy, self).__init__()
-        #On close: Close the connection
-        self._scope.on_exit(lambda:zerorpc.Client.close(self))
-        #Do connect
-        self.client.connect(workerEndpoint)
-        #On close: Send a close call to the worker side. 
-        #Note that on_exit methods are run in reverse order, so this happens before closing the connection above.
-        self._scope.on_exit(self("close"))
-                       
-class RegisteringWorkerPool(ScopedObject):
-    def __init__(self):
-        super(RegisteringWorkerPool, self).__init__()
-        self.tasks_and_results = IterableQueue()
-        self.workers = IterableQueue()
-        self.scope.on_exit(lambda: self.workers.close(),
-                           lambda: self.tasks_and_results.close(),
-                           lambda: [w.close() for w in self.workers])
-
-    def register_worker(self, worker):
-        #Start a greenlet that puts the worker to work, processing tasks from the queue
-        gevent.spawn(self._process_tasks_from_queue, worker)
-        
-    def _process_tasks_from_queue(self, worker):
-        with worker:
-            for (task,async_result) in self.tasks_and_results:
-                #print "Asking " + workerEndpoint + " to process " + str(task)
-                try:
-                    async_result.set(worker.process(task))
-                except Exception as e:
-                    self.logger.error("Error when trying to execute task {} by worker {}\n{}".format(task, worker, extra=traceback.format_exc()))
-                    async_result.set_exception(e)
-                #print "Done   " + workerEndpoint + " to process " + str(task)
-        print("Worker {} ended gracefully".format(worker))
-    
-    def process(self, tasks):
-        tasks_and_results = [(task, gevent.event.AsyncResult()) for task in tasks]
-        for item in tasks_and_results: self.tasks.putMany(item)
-        for (task,async_result) in tasks_and_results:
-            async_result.wait()
-        return tasks_and_results
-    
+                           
 class ZeroRpcWorkersProxy(object):
     #inspired by http://www.gevent.org/gevent.queue.html
     def __init__(self, logger):
@@ -76,7 +27,7 @@ class ZeroRpcWorkersProxy(object):
             self.spawned_workers = Queue()
                 
             self.logger.info("Starting ZeroRpcWorkersProxy server")
-            s, addresses = create_server(self)
+            s, addresses = spawn_server(self)
             for addr in addresses:
                 print(addr)
             gevent.spawn(s.run)
@@ -117,6 +68,7 @@ class ZeroRpcWorkersProxy(object):
         self.spawned_workers.put(g)
         return "Registered as worker nr {}".format(self.spawned_workers.qsize())
 
+
 class ZeroRpcRegisteringWorkerPoolProxy(object):
     def __init__(self, logger, masterEndpoint):
         self.logger = logger
@@ -125,7 +77,7 @@ class ZeroRpcRegisteringWorkerPoolProxy(object):
         try:
             with Scope() as scope:
                 #Create the worker service.     
-                worker_service, addresses = create_server(worker)
+                worker_service, addresses = spawn_server(worker)
                 for addr in addresses:
                     print(addr)
                 addr = addresses[0]
@@ -142,12 +94,14 @@ class ZeroRpcRegisteringWorkerPoolProxy(object):
                 worker.done.wait()
         except Exception:
             self.logger.error("Error when trying to work for {}\n{}".format(self.masterEndpoint, traceback.format_exc()))    
+
            
 class BaseWorker(object):
     def __init__(self):
         self.done = gevent.event.Event()
     def close(self):
         self.done.set()
+
 
 class IntMasterWorker(object):
     class Master:

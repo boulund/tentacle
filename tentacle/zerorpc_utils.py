@@ -31,16 +31,17 @@ def bind_to_free_port(server, addr, min_port=49152, max_port=65536, max_tries=10
 def get_ip_addresses():
     return [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")]
 
-def create_server(functor):
-    s = zerorpc.Server(functor)
+def spawn_server(target, started=True):
+    s = zerorpc.Server(target)
     addr = "tcp://0.0.0.0"
     port = bind_to_free_port(s, addr)
     addresses = ["tcp://{}:{}".format(ip,port) for ip in get_ip_addresses()]
     return s, addresses
-
-def run_single_rpc(remote_endpoint, functor):
+    
+def run_single_rpc(remote_endpoints, f):
     with Scope() as scope:
         client = zerorpc.Client()
         scope.on_exit(client.close)
+        remote_endpoint = remote_endpoints[0] #TODO:handle case with several alternative endpoints and some not reachable
         client.connect(remote_endpoint)
-        return functor(client)
+        return f(client)

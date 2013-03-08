@@ -1,5 +1,6 @@
 import unittest as _unittest
 import gevent
+import gevent.event
 import traceback
 
 __all__ = ["Scope", "ScopedObject"]
@@ -17,6 +18,7 @@ class ScopedObject(object):
     @property
     def closed(self):
         return self._scope.closed
+    
 
 class Scope(object):
     def __init__(self, on_exit=[]):
@@ -33,14 +35,25 @@ class Scope(object):
     def __exit__(self, exc_type, exc_value, traceback_):
         if self._is_closing: return
         self._is_closing = True
+        exceptions = []
         for exit_handler in reversed(self._exit_handlers):
             try:
                 exit_handler()
-            except:
-                print "Exception in exitHandle of Scope. Skipping.\n" + traceback.format_exc()
+            except Exception as e:
+                traceback.print_exc()
+                exceptions.append(e)
         self.closed.set()
+        if exceptions:
+            raise AggregateException(exceptions)
                 
-class _Test_Scope(_unittest.TestCase):
+
+class AggregateException(Exception):
+    def __init__(self, exceptions):
+        Exception.__init__(self, "Aggregate exception")
+        self.exceptions = exceptions
+
+
+class Test_Scope(_unittest.TestCase):
     def test_simple(self):
         inserted = "delayed"
         with Scope() as s:
@@ -88,5 +101,22 @@ class _Test_Scope(_unittest.TestCase):
             pass
         self.assertEqual(len(l), 1, "The on_exit lambda should have been run, even in case of an exception")
         
+    def test_exception_in_handler(self):
+        didThrow = False
+        def f(msg): 
+            raise Exception(msg)
+        try:
+            with Scope(on_exit=[lambda:f("0"),lambda:f("1")]): pass
+        except AggregateException as e:
+            self.assertEqual(len(e.exceptions), 2)
+            for i in range(2):
+                self.assertEqual(e.exceptions[i].message, str(i))
+            didThrow = True
+        except Exception as e:
+            print(e.value)
+            didThrow = True
+        self.assert_(didThrow)
+            
+                
 if __name__ == '__main__':
     _unittest.main()

@@ -1,3 +1,4 @@
-from slurm_launcher import *
+from launchers import *
 from launching_master_worker_executor import *
-from distributed_processing import *
+from registering_worker_pool import *
+from zero_rpc_worker_pool import *

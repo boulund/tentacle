@@ -18,7 +18,7 @@ def bind_to_free_port(server, addr, min_port=49152, max_port=65536, max_tries=10
     candidate_ports = itertools.chain( xrange(min_port, min_port+nd), random.sample(xrange(min_port+nd,max_port+1),max_tries-nd) )
     for port in candidate_ports:
         try:
-            print("Attempting to bind to: " + addr + ":" + str(port))
+            #print("Attempting to bind to: " + addr + ":" + str(port))
             server.bind(addr + ":" + str(port))
             return port
         except zmq.core.error.ZMQError as e:
@@ -36,6 +36,8 @@ def spawn_server(target, started=True):
     addr = "tcp://0.0.0.0"
     port = bind_to_free_port(s, addr)
     addresses = ["tcp://{}:{}".format(ip,port) for ip in get_ip_addresses()]
+    if started:
+        gevent.spawn(s.run)
     return s, addresses
     
 def run_single_rpc(remote_endpoints, f):

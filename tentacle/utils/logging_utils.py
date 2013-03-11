@@ -1,9 +1,12 @@
+import argparse
 import os
+import random
+from os import path
 from sys import stdout
 import logging
 __all__ = list()
 
-unique_logger_id = 0;
+unique_logger_id = 0
 __all__.append("create_file_logger")
 def create_file_logger(verbose, logfile):
     """
@@ -39,13 +42,47 @@ def create_std_logger():
     # create logger
     logger = logging.getLogger('std')
     return logger
+
+
+__all__.append("LoggerProvider")
+class LoggerProvider(object):
+    @classmethod
+    def create_argparser(cls):
+        parser = argparse.ArgumentParser(add_help=False)
+        log_group = parser.add_argument_group("Logging options")
+        log_group.add_argument("-v", "--verbose", "--logdebug", dest="logdebug", action="store_true", default=False,
+            help="Set the logging level to DEBUG (i.e. verbose), default level is INFO. No other levels available")
+        parser.add_argument_group(log_group)
+        return parser
+        
+    @classmethod 
+    def create_from_parsed_args(cls, parsed_args, base_dir_path):
+        return cls(base_dir_path=base_dir_path, logdebug=parsed_args.logdebug)
+    
+    def __init__(self, base_dir_path, logdebug):
+        self.base_dir_path = base_dir_path
+        self.logdebug = logdebug
+    
+    def _setup_directory_structure(self, hierarchy):
+        #create any dirs
+        curr_dir_path = self.base_dir_path
+        for d in hierarchy:
+            curr_dir_path = path.join(curr_dir_path, d)
+            if not path.isdir(curr_dir_path):
+                os.mkdir(curr_dir_path)
+        return curr_dir_path
+    
+    def get_logger(self, filename, hierarchy=None):
+        d = self._setup_directory_structure(hierarchy or [])
+        file_path = path.join(d, filename+"_"+str(random.randint)+".log") #TODO: fix uniqueness in a better way
+        create_file_logger(self.logdebug, file_path)
     
     
 __all__.append("get_std_logger")
 _std_logger=None
 def get_std_logger():
+    global _std_logger
     if not _std_logger:
-        global _std_logger
         _std_logger = create_std_logger()
     return _std_logger
 

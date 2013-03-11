@@ -426,11 +426,7 @@ class TentacleCore:
         debug_group = parser.add_argument_group("DEBUG developer options", "Use with caution!")
         debug_group.add_argument("--outputCoverage", dest="outputCoverage", action="store_true", default=False,
             help="Outputs complete coverage information into contigCoverage.txt")
-    
-        log_group = parser.add_argument_group("Logging options")
-        log_group.add_argument("-v", "--verbose", "--logdebug", dest="logdebug", action="store_true", default=False,
-            help="Set the logging level to DEBUG (i.e. verbose), default level is INFO. No other levels available")
-        
+            
         return parser
     
         

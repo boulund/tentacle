@@ -4,49 +4,32 @@ import argparse
 
 from .. import tentacle_core
 from .. import utils
-from ..output_dir_structure import OutputDirStructure
+from output_dir_structure import OutputDirStructure
 
 # --- Public/Exported functions and classes ---
 
 __all__ = ["TentacleMaster"]
 
-def create_input_dirs_argparser():
-    parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("contigsDirectory", help="path to directory containing contigs files (gzippped FASTQ)")
-    parser.add_argument("readsDirectory", help="path to directory containing read files (gzipped FASTQ)")
-    parser.add_argument("annotationsDirectory", help="path to directory containing annotation files (tab separated text)")
-    return parser
-
 class TentacleMaster(object):
     @staticmethod
-    def create_init_argparser():
-        return argparse.ArgumentParser(add_help=False)
-
-    @staticmethod
-    def create_job_description_arg_parser():
-        return create_input_dirs_argparser()
-
-    @staticmethod
-    def parse_args(argv):
-        parser = create_multiple_data_argparser()
-        options = parser.parse_args()
-        return options
+    def create_get_tasks_argparser():
+        parser = argparse.ArgumentParser(add_help=False)
+        parser.add_argument("contigsDirectory", help="path to directory containing contigs files (gzippped FASTQ)")
+        parser.add_argument("readsDirectory", help="path to directory containing read files (gzipped FASTQ)")
+        parser.add_argument("annotationsDirectory", help="path to directory containing annotation files (tab separated text)")
+        return parser
     
     def __init__(self, logger_provider):
         self.master_logger = logger_provider.get_logger("master")
-        #masterLogger = utils.start_logging(options.logdebug, "tentacle.log")
     
-    def process(self, parsed_args, output_dir_structure):
-    #TODO: handle logging (some at creation, some for each file, possibly some for error)
+    def get_tasks(self, parsed_args, output_dir_structure):
         utils.print_run_settings(parsed_args, self.master_logger)
-    #TODO: print_run_settings(options)
         return identify_linked_files({"annotations":(parsed_args.annotationsDirectory, "_annotation."),
                                       "contigs":(parsed_args.contigsDirectory, "_contigs."),
                                       "reads":(parsed_args.readsDirectory, "_")},
                                       output_dir_structure, self.master_logger)
         
 # --- Private/Internal functions and classes ---
-        
 def core_name(file_path, end_symbol):
     filename = path.basename(file_path)
     return filename.split(end_symbol,1)[0]
@@ -81,12 +64,3 @@ def identify_linked_files(dir_and_end_symbol_by_category, output_dir_structure, 
         return tentacle_core.AllFiles( contigs_files_by_core_name[core_name], reads_file, annotations_files_by_core_name[core_name], result_file, log_file )
                                         
     return [(core_name, create_fileset(core_name,reads_file)) for (core_name,reads_file) in reads_core_names_and_files]
-
-def create_multiple_data_argparser():
-    """
-    Creates parser for all arguments for when a collection of triplets (contigs, reads, annotions) are to be processed.
-    """
-    parser = argparse.ArgumentParser(description="Maps reads to annotations in contigs and produces corresponding stats.", 
-                                     parents=[tentacle_core.TentacleCore.create_processing_argarser(), create_input_dirs_argparser(), OutputDirStructure.create_argparser()], 
-                                     add_help=True)    
-    return parser

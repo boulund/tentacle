@@ -1,6 +1,5 @@
 # Fredrik Boulund 2012
 
-from sys import argv, exit
 import numpy as np
 
 def indexContigs(contigsFile, logger):
@@ -65,7 +64,7 @@ def parse_razers3(mappings, contigCoverage, logger):
             # to end (non-inclusive) so a 75bp read with complete matching
             # could possible have a starting position of 0 and end at 75.
             try:
-                read, rstart, rend, direction, contig, cstart, cend, identity = line.split()
+                read, rstart, rend, direction, contig, cstart, cend, identity = line.split() #pylint: disable=W0612
             except ValueError, e:
                 logger.error("Unable to parse results file %s\n%s", mappings, e)
                 exit(1)
@@ -100,8 +99,8 @@ def parse_pblat_blast8(mappings, contigCoverage, logger):
             # to end (inclusive) so a 75bp read with complete matching
             # could possible have a starting position of 1 and end at 75.
             try:
-                read, contig, identity, length, mismatches, gaps, \
-                    qstart, qend, sstart, send, evalue, bitscore= line.split()
+                (read, contig, identity, length, mismatches, gaps,            #pylint: disable=W0612
+                 qstart, qend, sstart, send, evalue, bitscore) = line.split() #pylint: disable=W0612
             except ValueError, e:
                 logger.error("Unable to parse results file %s\n%s", mappings, e)
                 exit(1)
@@ -213,20 +212,3 @@ def printAnnotationCounts(annotationCounts, outputFile=""):
                     annotationCounts[annotation][2]]
             info = [str(text) for text in info]
             print '\t'.join(info)
-                            
-                            
-
-if __name__ == "__main__":
-    if len(argv)<2:
-        print "Usage:", argv[0], "CONTIGS MAPPINGRESULTS ANNOTATION"
-        print "Running this file stand-alone is deprecated and will probably not work!"
-
-    contigCoverage = indexContigs(argv[1])
-
-    contigCoverage = sumMapCounts(argv[2], contigCoverage)
-
-    #set_printoptions(threshold='nan')
-    #print contigCoverage["scaffold1309_7_MH0014"]
-
-    annotationCounts = computeAnnotationCounts(argv[3], contigCoverage)
-

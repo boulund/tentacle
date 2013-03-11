@@ -1,18 +1,24 @@
 from ..tentacle_core import TentacleCore
-from .. import utils
+from ..utils import logging_utils
 
 __all__ = ["TentacleWorker"]
 
 class TentacleWorker():
-    def __init__(self, logger_provider, options):
-        self.options = options
-        
+    def __init__(self, parsed_args, logger_provider):
+        self.logger_provider = logger_provider
+        self.parsed_args = parsed_args
+    
+    @classmethod
+    def create_from_parsed_args(cls, parsed_args, logger_provider):
+        return cls(parsed_args, logger_provider)
+    
+    @classmethod
+    def create_argparser(cls):
+        return TentacleCore.create_processing_argarser()
+
     def process(self, task):  
         (core_name, files) = task
-        print "---Starting work on {}, logging to {}---".format(core_name, files.log)
-        # Instantiate a logger that writes to both stdout and logfile
-        # This logger is available globally after its creation
-        workerLogger = utils.start_logging(self.options.logdebug, files.log)
-        utils.print_files_settings(files, workerLogger)
-        executor = TentacleCore(workerLogger)
-        executor.analyse(files, self.options)
+        processing_logger = self.logger_provider.get_logger(core_name, ["processing"])
+        logging_utils.print_files_settings(files, processing_logger)
+        executor = TentacleCore(processing_logger)
+        executor.analyse(files, self.parsed_args)

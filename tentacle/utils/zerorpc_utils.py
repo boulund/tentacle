@@ -8,7 +8,7 @@ import socket
 import itertools
 from math import floor
 
-from utils.scope import Scope
+from .scope import Scope
 
 def bind_to_free_port(server, addr, min_port=49152, max_port=65536, max_tries=100):
     """Mimicking zmq.Socket.bind_to_free_port(...), which is hidden by wrapper classes. 

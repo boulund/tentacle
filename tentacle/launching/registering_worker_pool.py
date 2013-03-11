@@ -1,16 +1,19 @@
 from __future__ import print_function
 import unittest
 import gevent
-from ..gevent_utils import IterableQueue
+from ..utils.gevent_utils import IterableQueue
 from ..utils import ScopedObject
 
+__all__ = []
 
+__all__.append("Worker")
 class Worker(ScopedObject):
     def run(self, task):
         result = apply(task,[])
         return result
 
 
+__all__.append("RegisteringWorkerPool")
 class RegisteringWorkerPool(ScopedObject):
     def __init__(self):
         #TODO: Handle errors in init?

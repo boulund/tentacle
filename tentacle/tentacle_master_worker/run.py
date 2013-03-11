@@ -1,29 +1,14 @@
 #!/usr/bin/env python
-from master import *
-from worker import * 
+from tentacle.tentacle_master_worker import TentacleMaster, TentacleWorker, LaunchingMasterWorkerExecutor
+from tentacle.launching.zero_rpc_worker_pool import ZeroRpcDistributedWorkerPoolFactory
+from tentacle.launching.launchers import SubprocessLauncher, SlurmLauncher, GeventLauncher
 
 __all__ = ["run"]
 
-def run(argv):
-    options = TentacleMaster.parse_args(argv)
-    master = TentacleMaster()
-    worker = TentacleWorker(options)
-    
-    #run the master
-    jobs = master.process(options)
-    
-    #run the single worker
-    for job in jobs:
-        worker.process(job)
-
-
-class SingleWorkerTeam(object):
-    def __init__(self, worker):
-        self.worker = worker        
-        
-    def process(self, jobs):
-        for job in jobs:
-            self.worker.process(job)
+def run(argv, launcher_factory=GeventLauncher, distributed_worker_pool_factory = ZeroRpcDistributedWorkerPoolFactory()):
+    master_factory = TentacleMaster
+    worker_factory = TentacleWorker
+    return LaunchingMasterWorkerExecutor.launch_master_worker(argv, master_factory, worker_factory, launcher_factory, distributed_worker_pool_factory)
 
 ###################
 #

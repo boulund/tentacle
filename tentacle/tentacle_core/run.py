@@ -1,23 +1,22 @@
 #!/usr/bin/env python
 
 def run(argv):
-    from .. import utils
-    from ..utils.logging_utils import create_file_logger
+    from ..utils.logging_utils import create_file_logger, print_run_settings, print_files_settings
     from core import TentacleCore
 
     files, options = TentacleCore.parse_args(argv)
 
     # Instantiate a logger that writes to both stdout and logfile
     # This logger is available globally after its creation
-    logger = utils.create_file_logger(options.logdebug, files.log)
+    logger = create_file_logger(options.logdebug, files.log)
 
-    utils.print_run_settings(options, logger)
-    utils.print_files_settings(files, logger)
+    print_run_settings(options, logger)
+    print_files_settings(files, logger)
 
     executor = TentacleCore(logger)
     executor.analyse(files, options)
     
-    
+
 ###################
 #
 # MAIN

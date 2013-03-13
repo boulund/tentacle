@@ -1,13 +1,13 @@
 from __future__ import print_function
-
 import argparse
+import os.path
+import random
+import shlex
 from subprocess import PIPE
+import sys
+import unittest
 import gevent
 from gevent.subprocess import Popen
-import unittest
-import os.path
-import shlex
-
 from tentacle import utils
 
 gevent.monkey.patch_subprocess()
@@ -60,11 +60,18 @@ class GeventLauncher(Launcher):
 
 __all__.append("SubprocessLauncher")
 class SubprocessLauncher(Launcher):
-    def launch_python_function(self, f, stdout_file_path="/dev/null", stderr_file_path="/dev/null"): #TODO: add file_paths to config
+    def __init__(self, *args, **kwargs):
+        super(SubprocessLauncher,self).__init__(*args, **kwargs)
+        
+    def launch_python_function(self, f): #TODO: add file_paths to config
         cmd = create_python_function_command(f)
         call_pars = shlex.split(cmd)
+        rand_id = random.randint(0, sys.maxint)
+        stdout_file_path = os.path.join(self.stdio_dir, hex(rand_id)+"_stdout.log")
+        stderr_file_path = os.path.join(self.stdio_dir, hex(rand_id)+"_stderr.log")
         stdout_file = open(stdout_file_path, "w")
         stderr_file = open(stderr_file_path, "w")
+        #TODO: Close files on failure. Use: scope.on_exception
         g = gevent.spawn(Popen(call_pars,stdout=stdout_file,stderr=stderr_file).communicate)
         g.link(lambda _: stdout_file.close())
         g.link(lambda _: stderr_file.close())

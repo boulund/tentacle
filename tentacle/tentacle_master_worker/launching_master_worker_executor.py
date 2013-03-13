@@ -19,8 +19,8 @@ class LaunchingMasterWorkerExecutor(object):
         
         joint_parser = argparse.ArgumentParser(description="Run the distributed Tentacle metagenomics workflow", parents=parsers, add_help=True)
         
-        #Verify args and make the help section appear if asked for
-        return joint_parser.parse_args(argv)
+        #Parse the args and make the help section appear if asked for
+        return joint_parser.parse_args(argv[1:])
     
     @classmethod
     def launch_master_worker(Cls, argv, master_factory, worker_factory, launcher_factory=SubprocessLauncher, distributed_worker_pool_factory=ZeroRpcDistributedWorkerPoolFactory(), logger_provider_factory=LoggerProvider, output_dir_structure_factory = OutputDirStructure):
@@ -30,7 +30,7 @@ class LaunchingMasterWorkerExecutor(object):
         output_dir_structure = output_dir_structure_factory.create_from_parsed_args(parsed_args)
         stdio_dir_path = output_dir_structure.get_logs_subdir("stdio")
         logger_provider = logger_provider_factory.create_from_parsed_args(parsed_args, output_dir_structure.logs)
-        launcher = launcher_factory.create_from_parsed_args(stdio_dir=stdio_dir_path, options=parsed_args)
+        launcher = launcher_factory.create_from_parsed_args(stdio_dir=stdio_dir_path, parsed_args=parsed_args)
         
         #Get the tasks
         master = master_factory.create(logger_provider)

@@ -10,9 +10,9 @@ class ScopedObject(object):
         self._scope = Scope()
         self._scope.__enter__()
     def __enter__(self): 
-        pass
-    def __exit__(self, exc_type, exc_value, traceback):
-        self._scope.__exit__(exc_type, exc_value, traceback)
+        return self
+    def __exit__(self, exc_type, exc_value, traceback_):
+        self._scope.__exit__(exc_type, exc_value, traceback_)
     def close(self):
         self.__exit__(None,None,None)
     @property
@@ -21,8 +21,8 @@ class ScopedObject(object):
     
 
 class Scope(object):
-    def __init__(self, on_exit=[]):
-        self._exit_handlers = list(reversed(on_exit))
+    def __init__(self, on_exit=None):
+        self._exit_handlers = list(reversed(on_exit or []))
         self._is_closing = False
         self.closed = gevent.event.Event()
         
@@ -39,7 +39,7 @@ class Scope(object):
         for exit_handler in reversed(self._exit_handlers):
             try:
                 exit_handler()
-            except Exception as e:
+            except Exception as e: #Catching all exceptions by intent. They are taken care of in the AggregateExceptions . | pylint: disable=W0703
                 traceback.print_exc()
                 exceptions.append(e)
         self.closed.set()

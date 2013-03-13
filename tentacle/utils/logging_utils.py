@@ -2,7 +2,7 @@ import argparse
 import os
 import random
 from os import path
-from sys import stdout
+from sys import stdout, maxint
 import logging
 __all__ = list()
 
@@ -74,8 +74,8 @@ class LoggerProvider(object):
     
     def get_logger(self, filename, hierarchy=None):
         d = self._setup_directory_structure(hierarchy or [])
-        file_path = path.join(d, filename+"_"+str(random.randint)+".log") #TODO: fix uniqueness in a better way
-        create_file_logger(self.logdebug, file_path)
+        file_path = path.join(d, filename+"_"+str(random.randint(0, maxint))+".log") #TODO: fix uniqueness in a better way
+        return create_file_logger(self.logdebug, file_path)
     
     
 __all__.append("get_std_logger")

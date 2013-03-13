@@ -3,7 +3,8 @@
 # Anders Sjogren 2013
 
 from sys import exit, stdout
-from subprocess import Popen, PIPE
+from subprocess import PIPE
+from gevent.subprocess import Popen
 from collections import namedtuple
 import argparse
 import os

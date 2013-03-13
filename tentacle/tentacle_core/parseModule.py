@@ -42,7 +42,7 @@ def indexContigs(contigsFile, logger):
                         # This will sum the number of
                         # bases (characters) for each line together
                         seqlength = seqlength + len(line)
-                        line = file.readline().strip()
+                        line = f.readline().strip()
                         if line == "":
                             # Finish the last contig
                             contigCoverage[header] = np.zeros(seqlength+1)

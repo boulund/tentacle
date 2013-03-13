@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 from os import path, listdir, mkdir
 import argparse
+import random
+import sys
 
 from .. import tentacle_core
 from .. import utils
@@ -19,10 +21,14 @@ class TentacleMaster(object):
         parser.add_argument("annotationsDirectory", help="path to directory containing annotation files (tab separated text)")
         return parser
     
+    @staticmethod
+    def create(logger_provider):
+        return TentacleMaster(logger_provider) 
+
     def __init__(self, logger_provider):
         self.master_logger = logger_provider.get_logger("master")
     
-    def get_tasks(self, parsed_args, output_dir_structure):
+    def get_tasks_from_parsed_args(self, parsed_args, output_dir_structure):
         utils.print_run_settings(parsed_args, self.master_logger)
         return identify_linked_files({"annotations":(parsed_args.annotationsDirectory, "_annotation."),
                                       "contigs":(parsed_args.contigsDirectory, "_contigs."),
@@ -58,9 +64,10 @@ def identify_linked_files(dir_and_end_symbol_by_category, output_dir_structure, 
             master_logger.error("Incomplete file set for %s\n", core_name)
         exit(1)
     
+    task_logs_dir = output_dir_structure.get_logs_subdir("task_logs")
     def create_fileset(core_name, reads_file):
         result_file = path.join(output_dir_structure.results, path.basename(reads_file)+".tab")
-        log_file = path.join(output_dir_structure.task_logs, path.basename(reads_file)+".log")
+        log_file = path.join(task_logs_dir, path.basename(reads_file)+"_"+str(random.randint(0,sys.maxint))+".log")
         return tentacle_core.AllFiles( contigs_files_by_core_name[core_name], reads_file, annotations_files_by_core_name[core_name], result_file, log_file )
                                         
     return [(core_name, create_fileset(core_name,reads_file)) for (core_name,reads_file) in reads_core_names_and_files]

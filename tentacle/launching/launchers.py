@@ -51,18 +51,21 @@ class Launcher(object):
 
 
 __all__.append("GeventLauncher")
-class GeventLauncher(Launcher):
+class GeventLauncher(object):
+    @classmethod
+    def create_argparser(cls):
+        return argparse.ArgumentParser(add_help=False)
+
+    @classmethod
+    def create_from_parsed_args(cls, parsed_args, *args, **kwargs):
+        return cls()
+
     def launch_python_function(self, f):
         return gevent.spawn(f)
-    def __init__(self):
-        pass
-
+        
 
 __all__.append("SubprocessLauncher")
 class SubprocessLauncher(Launcher):
-    def __init__(self, *args, **kwargs):
-        super(SubprocessLauncher,self).__init__(*args, **kwargs)
-        
     def launch_python_function(self, f): #TODO: add file_paths to config
         cmd = create_python_function_command(f)
         call_pars = shlex.split(cmd)

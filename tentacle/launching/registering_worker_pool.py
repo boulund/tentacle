@@ -1,6 +1,8 @@
 from __future__ import print_function
+import argparse
 import unittest
 import gevent
+from .launchers import GeventLauncher
 from ..utils.gevent_utils import IterableQueue
 from ..utils import ScopedObject
 
@@ -52,6 +54,36 @@ class RegisteringWorkerPool(ScopedObject):
             async_result.wait()
         results = [r for (_,r) in tasks_and_results]
         return results
+
+
+__all__.append("GeventWorkerPoolFactory")
+class GeventWorkerPoolFactory(object):
+    def create_argparser(self):
+        parser = argparse.ArgumentParser(add_help=False)
+        group = parser.add_argument_group("General distribution options")
+        group.add_argument("-N", "--distributionNodeCount", dest="node_count", type=int,
+            default=1,
+            help="The number of distributed nodes to run on. [default =  %(default)s]")
+#        group.add_argument("--distributionUseDedicatedCoordinatorNode", dest="use_dedicated_coordinator",
+#            action="store_true", default=False,
+#            help="Should a dedicated coordinator node be launched (instead of also processing jobs on that node). [default =  %(default)s]")
+        parser.add_argument_group(group)
+        return parser
+    
+    def create_from_parsed_args(self, parsed_args, *args, **kwargs):
+        return self.create(worker_count=parsed_args.node_count)
+    
+    def create(self, worker_count):
+        #Create the pool
+        pool = RegisteringWorkerPool()
+        try:
+            ws = [Worker() for _ in range(worker_count)]
+            for w in ws: 
+                pool.register_worker(w) 
+        except:
+            pool.close()
+            raise
+        return pool
 
 
 class RegisteringWorkerPoolTests(unittest.TestCase):

@@ -9,6 +9,7 @@ from collections import namedtuple
 import argparse
 import os
 import shutil
+import tempfile
 
 import parseModule
 from .. import utils
@@ -134,23 +135,7 @@ class TentacleCore:
         write = Popen([utils.resolve_executable("cat")], stdin=source.stdout, stdout=destination_file)
         return write
     
-    
-    def check_TMPDIR(self):
-        """
-        Checks if TMPDIR environment variable is set
-        """
-        try:
-            TMPDIR = str(os.environ.get("TMPDIR"))
-            if TMPDIR == "None":
-                self.logger.error("Environment varible $TMPDIR empty or not valid, exiting")
-                self.logger.info("If your trying to run locally, "
-                            "try 'TMPDIR=./; export TMPDIR' before running again")
-                exit(1)
-        except KeyError:
-            self.logger.error("Environment variable $TMPDIR not set, exiting")
-            exit(1)
-    
-    
+        
     def prepare_reads(self, reads, destination, options):
         """
         Takes a set of reads and prepares them for mapping on the node.
@@ -225,16 +210,15 @@ class TentacleCore:
         before running Razers3.
         """
         
-        self.logger.info("Checking for TMPDIR environment variable.")
-        self.check_TMPDIR()
+        temp_dir = tempfile.mkdtemp()
+        self.logger.info("Using created tempdir {} .".format(temp_dir))
     
         #remote = extract_file_options(options)
         # Define local filenames of source files
-        contigs = os.path.basename(files.contigs)
-        reads = os.path.basename(files.reads)
-        annotations = os.path.basename(files.annotations)
+        def rebase_to_local_tmp(f):
+            return os.path.join(temp_dir, os.path.basename(f))
         LocalTuple = namedtuple("local", ["contigs", "reads", "annotations"])
-        local = LocalTuple(contigs, reads, annotations)
+        local = LocalTuple(rebase_to_local_tmp(files.contigs), rebase_to_local_tmp(files.reads), rebase_to_local_tmp(files.annotations))
     
         # Copy annotation and contig files to node, returns updated local filename
         # TODO: This could be parallelized
@@ -253,16 +237,22 @@ class TentacleCore:
             mapper_call = [utils.resolve_executable("pblat"),
                            "-threads=" + str(options.pblatThreads),
                            "-out=blast8" ]
+            
+            #A workaround for pblat not working correctly with some absolute path names for the result:
+            # Run the command in the result dir and give the file_name relative to that.
+            mapped_reads_file_path = local.reads+".result"
+            result_base = os.path.dirname(mapped_reads_file_path)
+
             # Append arguments to mapper_call
-            mapper_call.append(local.contigs)
-            mapper_call.append(local.reads)
-            mapper_call.append(local.reads+".result")
+            mapper_call.append(os.path.relpath(local.contigs, result_base))
+            mapper_call.append(os.path.relpath(local.reads, result_base))
+            mapper_call.append(os.path.relpath(mapped_reads_file_path, result_base))
     
             # Run pblat
             self.logger.info("Running pblat...")
             self.logger.debug("pblat call: {0}".format(' '.join(mapper_call)))
             stdout.flush() # Force printout so user knows what's going on
-            pblat = Popen(mapper_call, stdout=PIPE, stderr=PIPE)
+            pblat = Popen(mapper_call, stdout=PIPE, stderr=PIPE, cwd=result_base)
             pblat_stream_data = pblat.communicate()
             if pblat.returncode is not 0:
                 self.logger.error("pblat:\n{}".format(pblat_stream_data[1])) # [1] is stderr
@@ -304,9 +294,9 @@ class TentacleCore:
     
         # Prepare and return a named tuple with essential information from mapping
         MappedReadsTuple = namedtuple("mapped_reads", ["contigs", "mapped_reads", "annotations"])
-        mapped_reads = MappedReadsTuple(os.path.basename(local.contigs),
-                                        os.path.basename(local.reads)+".result", # TODO: Fix output filename
-                                        os.path.basename(local.annotations))
+        mapped_reads = MappedReadsTuple(local.contigs,
+                                        mapped_reads_file_path, # TODO: Fix output filename
+                                        local.annotations)
         return mapped_reads
     
     

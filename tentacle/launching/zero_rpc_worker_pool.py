@@ -39,7 +39,7 @@ class ZeroRpcWorkerPool(RegisteringWorkerPool):
             super(ZeroRpcWorkerPool.WorkerProxy, self).__init__()
 
             _debugPrint("Creating zerorpc.Client")
-            self._zerorpc_client = zerorpc.Client()
+            self._zerorpc_client = zerorpc.Client(timeout=10000) #TODO: add back
             self._scope.on_exit(lambda: _debugPrint("Closing zerorpc.Client for " + " ".join(worker_endpoints)),
                                 self._zerorpc_client.close)
             
@@ -128,7 +128,6 @@ class ZeroRpcDistributedWorkerPoolFactory(object):
         except:
             pool.close()
             raise
-
         return pool
             
 

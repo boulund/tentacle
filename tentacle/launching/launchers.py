@@ -26,13 +26,7 @@ def create_python_function_command(f):
 
 __all__.append("Launcher")
 class Launcher(object):
-    def launch_python_function(self, f, options=None):
-        default_options = self.create_argparser().parse_args([])
-        options = options or default_options
-        commands = [create_python_function_command(f)]
-        return self.launch_commands(commands, options)
-    
-    def launch_commands(self, commands, options):
+    def launch_python_function(self, f):
         raise Exception("Abstract function not implemented.")
     
     @classmethod
@@ -112,19 +106,19 @@ class SlurmLauncher(Launcher):
         sbatch_bin = utils.resolve_executable("sbatch", "sbatch not found!")
         group.add_argument("--slurmBinary",
             default=sbatch_bin,
-            required=(sbatch_bin == "sbatch not found!"),
+            #required=(sbatch_bin == "sbatch not found!"),
             help="The binary for executing sbatch. May also e.g. use \"ssh remote sbatch\" for starting on a remote cluster. [default: %(default)s]")
         return parser
     
-    @staticmethod
-    def create_sbatch_script(commands, stdio_dir, options):
-        opt_dict = options.__dict__
-        stdout_file_name = options.slurmStdOut.format(**opt_dict)   #Options magic ok in this case : pylint: disable=W0142
+    @classmethod
+    def create_sbatch_script(cls, commands, stdio_dir, parsed_args):
+        parsed_args_dict = parsed_args.__dict__
+        stdout_file_name = parsed_args.slurmStdOut.format(**parsed_args_dict)   #Options magic ok in this case : pylint: disable=W0142
         stdout_file_path=os.path.join(stdio_dir,stdout_file_name) 
-        stderr_file_name = options.slurmStdErr.format(**opt_dict)   #Options magic ok in this case : pylint: disable=W0142
+        stderr_file_name = parsed_args.slurmStdErr.format(**parsed_args_dict)   #Options magic ok in this case : pylint: disable=W0142
         stderr_file_path=os.path.join(stdio_dir,stderr_file_name)
         
-        setupStr = ("\n".join(["#!/usr/bin/env bash",              #Options magic below ok in this case : #pylint: disable=W0142
+        setupTemplate = ("\n".join(["#!/usr/bin/env bash",              #Options magic below ok in this case : #pylint: disable=W0142
                                "#SBATCH -N {slurmNodesPerJob}",
                                "#SBATCH -p {slurmPartition}",
                                "#SBATCH -A {slurmAccount}",
@@ -132,22 +126,25 @@ class SlurmLauncher(Launcher):
                                "#SBATCH -o {stdout_file_path}",
                                "#SBATCH -e {stderr_file_path}",
                                "#SBATCH -t {slurmTimeLimit}",
-                               ""])).format(slurmNodesPerJob=1, stdout_file_path=stdout_file_path, stderr_file_path=stderr_file_path, **opt_dict)
+                               ""]))
+        setupStr = setupTemplate.format(slurmNodesPerJob=1, stdout_file_path=stdout_file_path, stderr_file_path=stderr_file_path, **parsed_args_dict)
         jobsStr = "\n".join(commands)
         
         return setupStr + jobsStr
     
-    @classmethod
-    def launch_commands(cls, commands, stdio_dir, options=None):
-        options = options or cls.create_argparser().parse_args([])
-        all_commands = [options.slurmSetupCommands] + commands
-        script = cls.create_sbatch_script(all_commands, stdio_dir, options)
-        call_pars = shlex.split(options.slurmBinary)
+    def launch_commands(self, commands):
+        all_commands = [self.parsed_args.slurmSetupCommands] + commands
+        script = self.create_sbatch_script(all_commands, self.stdio_dir, self.parsed_args)
+        call_pars = shlex.split(self.parsed_args.slurmBinary)
         print("launching: " + " ".join(call_pars) + " with input " + script)
         #Make the sbatch call
         (out, err) = Popen(call_pars, stdout=PIPE, stderr=PIPE).communicate(script)
         return (out, err)
 
+    def launch_python_function(self, f):
+        commands = [create_python_function_command(f)]
+        return self.launch_commands(commands)
+    
 
 class test(unittest.TestCase):
     def test_local(self):
@@ -156,5 +153,5 @@ class test(unittest.TestCase):
         
     def test_slurm(self):
         res = SlurmLauncher().launch_python_function(lambda: print("yes!"),"stdout")
-        print(res.get())
+        print(res)
     

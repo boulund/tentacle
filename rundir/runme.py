@@ -30,7 +30,9 @@ argv = ["",
         "--makeUniqueOutputDirectoryNameIfNeeded", 
         "--pblat", 
         "-N", "2", 
-        "--localCoordinator",
-        "-o", out_dir
+        #"--localCoordinator",
+        "-o", out_dir,
+        "--slurmBinary", "dummySlurm"
         ]
+run(argv, SlurmLauncher)
 run(argv, GeventLauncher, GeventWorkerPoolFactory())

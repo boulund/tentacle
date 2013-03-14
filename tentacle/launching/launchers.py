@@ -138,7 +138,9 @@ class SlurmLauncher(Launcher):
         call_pars = shlex.split(self.parsed_args.slurmBinary)
         print("launching: " + " ".join(call_pars) + " with input " + script)
         #Make the sbatch call
-        (out, err) = Popen(call_pars, stdout=PIPE, stderr=PIPE).communicate(script)
+        (out, err) = Popen(call_pars, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate(script)
+        print("launch result: " + str((out,err)))
+        #assert that correct results was received
         return (out, err)
 
     def launch_python_function(self, f):

@@ -137,7 +137,7 @@ class SlurmLauncher(Launcher):
         return setupStr + jobsStr
     
     @classmethod
-    def launch(cls, commands, stdio_dir, options=None):
+    def launch_commands(cls, commands, stdio_dir, options=None):
         options = options or cls.create_argparser().parse_args([])
         all_commands = [options.slurmSetupCommands] + commands
         script = cls.create_sbatch_script(all_commands, stdio_dir, options)

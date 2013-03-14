@@ -118,9 +118,10 @@ class SlurmLauncher(Launcher):
     
     @staticmethod
     def create_sbatch_script(commands, stdio_dir, options):
-        stdout_file_name = options.slurmStdOut.format(**options)   #Options magic ok in this case : pylint: disable=W0142
+        opt_dict = options.__dict__
+        stdout_file_name = options.slurmStdOut.format(**opt_dict)   #Options magic ok in this case : pylint: disable=W0142
         stdout_file_path=os.path.join(stdio_dir,stdout_file_name) 
-        stderr_file_name = options.slurmStdErr.format(**options)   #Options magic ok in this case : pylint: disable=W0142
+        stderr_file_name = options.slurmStdErr.format(**opt_dict)   #Options magic ok in this case : pylint: disable=W0142
         stderr_file_path=os.path.join(stdio_dir,stderr_file_name)
         
         setupStr = ("\n".join(["#!/usr/bin/env bash",              #Options magic below ok in this case : #pylint: disable=W0142
@@ -131,7 +132,7 @@ class SlurmLauncher(Launcher):
                                "#SBATCH -o {stdout_file_path}",
                                "#SBATCH -e {stderr_file_path}",
                                "#SBATCH -t {slurmTimeLimit}",
-                               ""])).format(slurmNodesPerJob=1, stdout_file_path=stdout_file_path, stderr_file_path=stderr_file_path, **options)
+                               ""])).format(slurmNodesPerJob=1, stdout_file_path=stdout_file_path, stderr_file_path=stderr_file_path, **opt_dict)
         jobsStr = "\n".join(commands)
         
         return setupStr + jobsStr

@@ -1,0 +1,1 @@
+from tentacle.tentacle_master_worker import run

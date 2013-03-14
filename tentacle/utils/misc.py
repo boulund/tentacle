@@ -17,7 +17,7 @@ def printer(msg):
 __all__.append("ExecutableNotFound")
 __all__.append("resolve_executable")
 class ExecutableNotFound(Exception): pass
-def resolve_executable(program):
+def resolve_executable(program, fallback=None):
     #inspired by http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python
     import platform
     
@@ -26,13 +26,12 @@ def resolve_executable(program):
     
     dirs = [s.strip('"') for s in os.environ["PATH"].split(os.pathsep)]
     current_file_dir = os.path.dirname(os.path.realpath(__file__)) 
-    dirs.append(os.path.join(current_file_dir,"dependencies","bin",platform.system())) #e.g. SOMEDIR/dependencies/bin/Linux
     valids = filter(is_exe,[os.path.join(path, program) for path in dirs])
     if valids:
         return valids[0]
-    else:
-        print("Could not find \"{}\" among \"{}\".".format(program, ":".join(dirs)))
-        raise ExecutableNotFound(program)
+    if fallback:
+        return fallback
+    raise ExecutableNotFound("Could not find \"{}\" among \"{}\".".format(program, ":".join(dirs)))
 
 
 __all__.append("assert_file_exists")

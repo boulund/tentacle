@@ -10,7 +10,11 @@ __all__ = ["run"]
 def run(argv, launcher_factory=SubprocessLauncher, distributed_worker_pool_factory = ZeroRpcDistributedWorkerPoolFactory()):
     master_factory = TentacleMaster
     worker_factory = TentacleWorker
-    return LaunchingMasterWorkerExecutor.launch_master_worker(argv, master_factory, worker_factory, launcher_factory, distributed_worker_pool_factory)
+    g = LaunchingMasterWorkerExecutor.launch_master_worker(argv, master_factory, worker_factory, launcher_factory, distributed_worker_pool_factory)
+    if hasattr(g, 'get'):
+        print("Waiting for processing to complete")
+        g.get()
+    print("Done")
 
 ###################
 #
@@ -19,9 +23,5 @@ def run(argv, launcher_factory=SubprocessLauncher, distributed_worker_pool_facto
 ###################
 if __name__ == "__main__":
     import sys
-    g = run(sys.argv)#, GeventLauncher, GeventWorkerPoolFactory())
-    if hasattr(g, 'get'):
-        print("Waiting for processing to complete")
-        g.get()
-        print("Done")
+    run(sys.argv, GeventLauncher, GeventWorkerPoolFactory())
     exit(0)

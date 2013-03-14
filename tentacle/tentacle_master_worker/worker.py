@@ -1,5 +1,6 @@
 from ..tentacle_core import TentacleCore
 from ..utils import logging_utils
+import traceback
 
 __all__ = ["TentacleWorker"]
 
@@ -19,6 +20,11 @@ class TentacleWorker():
     def process(self, task):  
         (core_name, files) = task
         processing_logger = self.logger_provider.get_logger(core_name, ["processing"])
-        logging_utils.print_files_settings(files, processing_logger)
-        executor = TentacleCore(processing_logger)
-        executor.analyse(files, self.parsed_args)
+        #TODO: Use logger from files
+        try:
+            logging_utils.print_files_settings(files, processing_logger)
+            executor = TentacleCore(processing_logger)
+            executor.analyse(files, self.parsed_args)
+        except:
+            processing_logger.error(traceback.format_exc())
+            raise

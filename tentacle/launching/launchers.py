@@ -14,8 +14,6 @@ gevent.monkey.patch_subprocess()
 
 __all__ = []
 
-default_tentacle_slurm_options = ({"slurmPartition":"glenn", "slurmAccount":"SNIC001-12-175", "slurmJobName":"TentacleTest", "slurmTimeLimit":"1:00:00"})
-
 def create_python_function_command(f):
     import base64
     import cloud.serialization
@@ -111,12 +109,11 @@ class SlurmLauncher(Launcher):
         group.add_argument("--slurmSetupCommands",
             default='. /c3se/NOBACKUP/groups/c3-snic001-12-175/activate_python',
             help="A command to be executed by the shell, e.g. to activate the proper version of python. [default: %(default)s]")
-        sbatch_bin = utils.resolve_executable("sbatch") or "sbatch not found!"
+        sbatch_bin = utils.resolve_executable("sbatch", "sbatch not found!")
         group.add_argument("--slurmBinary",
             default=sbatch_bin,
             required=(sbatch_bin == "sbatch not found!"),
             help="The binary for executing sbatch. May also e.g. use \"ssh remote sbatch\" for starting on a remote cluster. [default: %(default)s]")
-        
         return parser
     
     @staticmethod

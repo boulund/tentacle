@@ -4,12 +4,14 @@
 
 from sys import exit, stdout
 from subprocess import PIPE
-from gevent.subprocess import Popen
 from collections import namedtuple
 import argparse
 import os
 import shutil
 import tempfile
+
+from gevent.subprocess import Popen
+import psutil
 
 import parseModule
 from .. import utils
@@ -397,8 +399,8 @@ class TentacleCore:
             default=False, action="store_true",
             help="pblat: Use pblat instead of RazerS3 [default: %(default)s]")
         mapping_group.add_argument("--pblatThreads", dest="pblatThreads",
-            type=int, default=4, metavar="N",
-            help="pblat: Set number of threads for parallel blat mapping [default: N=%(default)s]")
+            type=int, default=psutil.NUM_CPUS, metavar="N",
+            help="pblat: Set number of threads for parallel blat mapping [default: N=%(default)s [=the current number of CPUs]]")
         return parser
     
     

@@ -100,9 +100,9 @@ class SlurmLauncher(Launcher):
         group.add_argument("--slurmStdErr",
             default="{slurmJobName}%j_%n.stderr", 
             help="The name of the saved standard error file from when slurm has run. Will be placed in a stdio-directory. [default: %(default)s]")
-        group.add_argument("--slurmSetupCommands",
-            default='. /c3se/NOBACKUP/groups/c3-snic001-12-175/activate_python',
-            help="A command to be executed by the shell, e.g. to activate the proper version of python. [default: %(default)s]")
+#        group.add_argument("--slurmSetupCommands",
+#            default='. /c3se/NOBACKUP/groups/c3-snic001-12-175/activate_python',
+#            help="A command to be executed by the shell, e.g. to activate the proper version of python. [default: %(default)s]")
         sbatch_bin = utils.resolve_executable("sbatch", "sbatch not found!")
         group.add_argument("--slurmBinary",
             default=sbatch_bin,
@@ -133,7 +133,7 @@ class SlurmLauncher(Launcher):
         return setupStr + jobsStr
     
     def launch_commands(self, commands):
-        all_commands = [self.parsed_args.slurmSetupCommands] + commands
+        all_commands = commands #[self.parsed_args.slurmSetupCommands] + commands
         script = self.create_sbatch_script(all_commands, self.stdio_dir, self.parsed_args)
         call_pars = shlex.split(self.parsed_args.slurmBinary)
         print("launching: " + " ".join(call_pars) + " with input " + script)

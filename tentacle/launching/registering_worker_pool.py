@@ -52,7 +52,7 @@ class RegisteringWorkerPool(ScopedObject):
         self.tasks_with_result_slots_queue.put_many(tasks_and_results)
         for (item,async_result) in tasks_and_results:
             async_result.wait()
-        results = [r for (_,r) in tasks_and_results]
+        results = [result for (task,result) in tasks_and_results] #pylint: disable=W0601
         return results
 
 

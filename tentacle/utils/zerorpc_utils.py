@@ -47,3 +47,6 @@ def run_single_rpc(remote_endpoints, f):
         remote_endpoint = remote_endpoints[0] #TODO:handle case with several alternative endpoints and some not reachable
         client.connect(remote_endpoint)
         return f(client)
+
+def join_all_greenlets(timeout=None):
+    return gevent.hub.get_hub().join(timeout);

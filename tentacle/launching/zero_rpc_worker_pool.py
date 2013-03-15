@@ -2,6 +2,7 @@ from __future__ import print_function
 import argparse
 import gevent
 import zerorpc
+from ..utils.zerorpc_utils import join_all_greenlets
 from ..utils import ScopedObject
 from ..utils.zerorpc_utils import run_single_rpc, spawn_server
 from ..serialization.cloud_serializer import CloudSerializer
@@ -39,14 +40,15 @@ class ZeroRpcWorkerPool(RegisteringWorkerPool):
             super(ZeroRpcWorkerPool.WorkerProxy, self).__init__()
 
             _debugPrint("Creating zerorpc.Client")
-            self._zerorpc_client = zerorpc.Client(timeout=10000) #TODO: add back
+            self._zerorpc_client = zerorpc.Client()
             self._scope.on_exit(lambda: _debugPrint("Closing zerorpc.Client for " + " ".join(worker_endpoints)),
                                 self._zerorpc_client.close)
             
             _debugPrint("Connecting zerorpc.Client to " + " ".join(worker_endpoints))
             self._zerorpc_client.connect(worker_endpoints[0])
             self._scope.on_exit(lambda: _debugPrint("Send close call to worker at " + " ".join(worker_endpoints)),
-                                lambda: self._zerorpc_client("close")) #Send a close call to the worker side, note that this will be done _before_ self.zerorpc_client.close above
+                                self._zerorpc_client.close_, #Send a close call to the worker side, note that this will be done _before_ self.zerorpc_client.close above
+                                lambda: _debugPrint("Returned from close call to worker at " + " ".join(worker_endpoints))) 
 
         def run(self, task):
             _debugPrint("running task at "  + " ".join(self._worker_endpoints))
@@ -55,13 +57,42 @@ class ZeroRpcWorkerPool(RegisteringWorkerPool):
 
 __all__.append("ZeroRpcWorkerPoolWorker")
 class ZeroRpcWorkerPoolWorker(Worker):
-    def __init__(self):
+    def __init__(self, idle_timeout):
         super(ZeroRpcWorkerPoolWorker, self).__init__()
-        self._endpoints = None #Is needed since zerorpc invokes endpoints property for some reason when starting server
-        s, self._endpoints = spawn_server(self)
+        
+        self._endpoints = None
+        self._worker_server = None
+        self.start_worker_server()
+        self._scope.on_exit(lambda: gevent.getcurrent().link(lambda _: self.stop_worker_server())) #Stop the server after the current call is done, so that the response is sent.
+                
+        self.is_running = False
+        self.has_run_since_last_check = True
+        self.idle_closer = gevent.spawn(self.close_on_idle, idle_timeout)
+        
+    def start_worker_server(self):
+        self._worker_server, self._endpoints = spawn_server(self)
         _debugPrint("Started ZeroRpcWorkerPoolWorker server with endpoints: " + " ".join(self._endpoints))
-        self._scope.on_exit(lambda: _debugPrint("Stopping ZeroRpcWorkerPoolWorker server " + " ".join(self._endpoints)),
-                            s.stop)
+        
+    def stop_worker_server(self):
+        _debugPrint("Stopping ZeroRpcWorkerPoolWorker server with endpoints: " + " ".join(self._endpoints))
+        self._endpoints = None
+        self._worker_server.stop()
+        self._worker_server = None
+
+    def close_(self):
+        print("close_ received, closing")
+        self.close()
+        
+    def close_on_idle(self, idle_timeout):
+        while (self.is_running or self.has_run_since_last_check) and (not self.closed.is_set()):
+            print("Checking idle status. Is running:" + str(self.is_running) + ". Has run since last check:" + str(self.has_run_since_last_check) + ".")
+            self.has_run_since_last_check = False
+            self.closed.wait(timeout=idle_timeout)
+            
+        if not self.closed.is_set():
+            print("Idle timed out")
+            self.close()
+    
     @property
     def endpoints(self): 
         return self._endpoints
@@ -69,16 +100,20 @@ class ZeroRpcWorkerPoolWorker(Worker):
     def run_serialized(self, serialized_task):
         _debugPrint("ZeroRpcWorkerPoolWorker: run_serialized called")
         task = CloudSerializer().deserialize_from_string(serialized_task)
-        return self.run(task)
+        self.is_running = True
+        try:
+            return self.run(task)
+        finally:
+            self.has_run_since_last_check = True
+            self.is_running = False
     
     @staticmethod
-    def create_worker_runner(pool_endpoints, timeout=None):
+    def create_worker_runner(pool_endpoints, idle_timeout):
         def run_remote_worker():
-            w = ZeroRpcWorkerPoolWorker()
+            w = ZeroRpcWorkerPoolWorker(idle_timeout=idle_timeout)
             register_zero_rpc_pool_worker_at_remote_pool(w, pool_endpoints)
-            w.closed.wait(timeout)
-            if not w.closed.is_set():
-                w.close() #needed if timed out     
+            w.closed.wait()
+            join_all_greenlets()
         return run_remote_worker
 
 
@@ -98,6 +133,9 @@ class ZeroRpcDistributedWorkerPoolFactory(object):
         group.add_argument("--distributionUseDedicatedCoordinatorNode", dest="use_dedicated_coordinator",
             action="store_true", default=False,
             help="Should a dedicated coordinator node be launched (instead of also processing jobs on that node). [default =  %(default)s]")
+        group.add_argument("--distributedNodeIdleTimeout", 
+            default = 5, type=int, 
+            help="The duriation (in seconds) after which an idle node should timeout. [default =  %(default)s]")
         parser.add_argument_group(group)
         return parser
     
@@ -105,17 +143,18 @@ class ZeroRpcDistributedWorkerPoolFactory(object):
     def create_from_parsed_args(self, parsed_args, remote_launcher, local_launcher=GeventLauncher()):
         return self.create(worker_count=parsed_args.node_count, 
                            use_dedicated_coordinator=parsed_args.use_dedicated_coordinator, 
+                           idle_timeout=parsed_args.distributedNodeIdleTimeout,
                            remote_launcher=remote_launcher, local_launcher=local_launcher)
     
     
-    def create(self, remote_launcher, worker_count, use_dedicated_coordinator, local_launcher=GeventLauncher()):
+    def create(self, remote_launcher, worker_count, use_dedicated_coordinator, idle_timeout, local_launcher=GeventLauncher()):
         #Create the pool
         pool = ZeroRpcWorkerPool()
         try:
             #Launch the workers
             if worker_count==0:
                 return
-            worker_runner = ZeroRpcWorkerPoolWorker.create_worker_runner(pool.endpoints)
+            worker_runner = ZeroRpcWorkerPoolWorker.create_worker_runner(pool_endpoints=pool.endpoints, idle_timeout=idle_timeout)
             
             if use_dedicated_coordinator:
                 remote_worker_count = worker_count
@@ -152,13 +191,20 @@ class ZeroRpcWorkerPoolTests(unittest.TestCase):
     def Test_map(self):
         pool = ZeroRpcWorkerPool()
         with pool:
-            ws = [ZeroRpcWorkerPoolWorker() for _ in range(3)]
+            ws = [ZeroRpcWorkerPoolWorker(idle_timeout = 1) for _ in range(3)]
             for w in ws: 
                 register_zero_rpc_pool_worker_at_remote_pool(w, pool.endpoints)
             _test_map(pool, self)
         self.assert_(pool.closed.is_set())
-        for w in ws: 
+        for w in ws:
             self.assert_(w.closed.is_set())
+        join_all_greenlets(timeout=1)
+
+    def Test_timeout(self):
+        timeout = 0.0001
+        w = ZeroRpcWorkerPoolWorker(idle_timeout = timeout)
+        is_closed = w.closed.wait(10*timeout)
+        self.assertTrue(is_closed)
 
     def Test_a_serialize_run_remote_worker(self):
         runner = ZeroRpcWorkerPoolWorker.create_worker_runner("tcp://127.0.0.1:1234", 10)
@@ -180,7 +226,8 @@ class ZeroRpcDistributedWorkerPoolFactoryTests(unittest.TestCase):
         for (worker_count, do_launch_local_worker) in itertools.product([1,2,10],[True,False]):
             print()
             print("Testing with (worker_count, do_launch_local_worker) = " + str((worker_count, do_launch_local_worker)))
-            pool = ZeroRpcDistributedWorkerPoolFactory().create(SubprocessLauncher(stdio_dir=_create_stdio_dir()), worker_count=worker_count, use_dedicated_coordinator=True, local_launcher=GeventLauncher())
+            pool = ZeroRpcDistributedWorkerPoolFactory().create(SubprocessLauncher(stdio_dir=_create_stdio_dir()
+                                                                               ), worker_count=worker_count, use_dedicated_coordinator=True, idle_timeout=10, local_launcher=GeventLauncher())
             with pool:        
                 _test_map(pool, self)
             self.assert_(pool.closed.is_set())

@@ -37,7 +37,7 @@ class Launcher(object):
     def create_from_parsed_args(cls, stdio_dir, parsed_args):
         return cls(stdio_dir, parsed_args)
     
-    def __init__(self, stdio_dir, parsed_args):
+    def __init__(self, stdio_dir=".", parsed_args=argparse.Namespace()):
         self.stdio_dir = stdio_dir
         self.parsed_args = parsed_args
 
@@ -135,7 +135,7 @@ class SlurmLauncher(Launcher):
     def launch_commands(self, commands):
         all_commands = commands #[self.parsed_args.slurmSetupCommands] + commands
         script = self.create_sbatch_script(all_commands, self.stdio_dir, self.parsed_args)
-        call_pars = shlex.split(self.parsed_args.slurmBinary)
+        call_pars = shlex.split(self.parsed_args.slurmBinary) #pylint: disable=E1103
         print("launching: " + " ".join(call_pars) + " with input " + script)
         #Make the sbatch call
         (out, err) = Popen(call_pars, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate(script)

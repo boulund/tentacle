@@ -134,7 +134,12 @@ class ZeroRpcDistributedWorkerPoolFactory(object):
 import unittest
 import itertools
 
-
+def _create_stdio_dir():
+    import tempfile
+    d = tempfile.mkdtemp()
+    print("stdio-dir: " + d)
+    return d
+    
 def _test_map(pool, test_case):
     def identity(i):
         if i==0: gevent.sleep(0) #yield before returning the results. Checking that the order of the results is correct anyways.
@@ -162,10 +167,9 @@ class ZeroRpcWorkerPoolTests(unittest.TestCase):
 
     def Test_map_different_process(self):
         timeout = 10
-
         pool = ZeroRpcWorkerPool()
         with pool:        
-            SubprocessLauncher().launch_python_function(ZeroRpcWorkerPoolWorker.create_worker_runner(pool.endpoints, timeout))                
+            SubprocessLauncher(stdio_dir=_create_stdio_dir()).launch_python_function(ZeroRpcWorkerPoolWorker.create_worker_runner(pool.endpoints, timeout))                
             _test_map(pool, self)
         self.assert_(pool.closed.is_set())
 
@@ -173,12 +177,10 @@ class ZeroRpcWorkerPoolTests(unittest.TestCase):
 class ZeroRpcDistributedWorkerPoolFactoryTests(unittest.TestCase):
     def Test_map_different_process(self):
         print()
-        timeout = 10
-
         for (worker_count, do_launch_local_worker) in itertools.product([1,2,10],[True,False]):
             print()
             print("Testing with (worker_count, do_launch_local_worker) = " + str((worker_count, do_launch_local_worker)))
-            pool = ZeroRpcDistributedWorkerPoolFactory().create(SubprocessLauncher(), worker_count, do_launch_local_worker, timeout)
+            pool = ZeroRpcDistributedWorkerPoolFactory().create(SubprocessLauncher(stdio_dir=_create_stdio_dir()), worker_count=worker_count, use_dedicated_coordinator=True, local_launcher=GeventLauncher())
             with pool:        
                 _test_map(pool, self)
             self.assert_(pool.closed.is_set())

@@ -22,7 +22,7 @@ def bind_to_free_port(server, addr, min_port=49152, max_port=65536, max_tries=10
             server.bind(addr + ":" + str(port))
             return port
         except zmq.core.error.ZMQError as e:
-            if e.errno == 48: #Address already in use, try another port
+            if (e.errno==48) or ("Address already in use" in str(e)): #Two ways of finding out Address already in use. The former does not seem to always work, but seems more robust when it does.
                 pass #Do nothing
             else:
                 raise e

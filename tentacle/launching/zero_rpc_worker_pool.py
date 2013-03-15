@@ -77,8 +77,8 @@ class ZeroRpcWorkerPoolWorker(Worker):
             w = ZeroRpcWorkerPoolWorker()
             register_zero_rpc_pool_worker_at_remote_pool(w, pool_endpoints)
             w.closed.wait(timeout)
-            gevent.sleep() #workaround: yield to wait for the close call to have ended
-            w.close() #needed if timed out, ok to close twice if not        
+            if not w.closed.is_set():
+                w.close() #needed if timed out     
         return run_remote_worker
 
 

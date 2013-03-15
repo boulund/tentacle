@@ -21,18 +21,19 @@ def dd(file_name):
 bin_dir = os.path.join(base_dir,"dependencies","bin",platform.system())
 os.environ["PATH"]  = os.environ["PATH"]  + os.pathsep + bin_dir
 
-tmp_dir = tempfile.mkdtemp()
-out_dir = join(tmp_dir,"tentacle_output")
-print("Saving results to temp dir: " + out_dir)
+#tmp_dir = tempfile.mkdtemp()
+out_dir = join(base_dir,"workdir","tentacle_output")
 
-argv = ["",
+argv = sys.argv + [
         dd("contigs"), dd("reads"), dd("annotations"), 
         "--makeUniqueOutputDirectoryNameIfNeeded", 
         "--pblat", 
-        "-N", "2", 
-        #"--localCoordinator",
+        "-N", "1", 
+        "--localCoordinator",
+        "--distributionUseDedicatedCoordinatorNode",
         "-o", out_dir,
-        "--slurmBinary", "dummySlurm"
         ]
-run(argv, SlurmLauncher)
+
+run(argv, GeventLauncher)
+exit(0)
 run(argv, GeventLauncher, GeventWorkerPoolFactory())

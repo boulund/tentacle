@@ -9,6 +9,7 @@ import unittest
 import gevent
 from gevent.subprocess import Popen
 from tentacle import utils
+from ..utils.zerorpc_utils import join_all_greenlets
 
 gevent.monkey.patch_subprocess()
 
@@ -23,6 +24,13 @@ def create_python_function_command(f):
     python_prog = python_prog_template.format(encoded_cmd)
     return "python -c \"{}\"".format(python_prog)
 
+def create_main_function_wrapper(f, join_all_greenlets_at_end=True):
+    def main():
+        f()
+        if join_all_greenlets_at_end:
+            join_all_greenlets()
+    return main
+            
 
 __all__.append("Launcher")
 class Launcher(object):
@@ -58,8 +66,9 @@ class GeventLauncher(object):
 
 __all__.append("SubprocessLauncher")
 class SubprocessLauncher(Launcher):
-    def launch_python_function(self, f): #TODO: add file_paths to config
-        cmd = create_python_function_command(f)
+    def launch_python_function(self, f, join_all_greenlets_at_end=True): #TODO: add file_paths to config
+        main_f = create_main_function_wrapper(f)
+        cmd = create_python_function_command(main_f)
         call_pars = shlex.split(cmd)
         rand_id = random.randint(0, sys.maxint)
         stdout_file_path = os.path.join(self.stdio_dir, hex(rand_id)+"_stdout.log")
@@ -144,7 +153,8 @@ class SlurmLauncher(Launcher):
         return (out, err)
 
     def launch_python_function(self, f):
-        commands = [create_python_function_command(f)]
+        main_f = create_main_function_wrapper(f)
+        commands = [create_python_function_command(main_f)]
         return self.launch_commands(commands)
     
 

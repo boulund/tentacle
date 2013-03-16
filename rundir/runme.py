@@ -28,12 +28,12 @@ argv = sys.argv + [
         dd("contigs"), dd("reads"), dd("annotations"), 
         "--makeUniqueOutputDirectoryNameIfNeeded", 
         "--pblat", 
-        "-N", "1", 
+        "-N", "3", 
         "--localCoordinator",
         "--distributionUseDedicatedCoordinatorNode",
         "-o", out_dir,
         ]
 
-run(argv, GeventLauncher)
+run(argv, SubprocessLauncher)
 exit(0)
 run(argv, GeventLauncher, GeventWorkerPoolFactory())

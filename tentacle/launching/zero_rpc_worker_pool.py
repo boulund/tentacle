@@ -48,12 +48,18 @@ class ZeroRpcWorkerPool(RegisteringWorkerPool):
             _debugPrint("Connecting zerorpc.Client to " + " ".join(worker_endpoints))
             self._zerorpc_client.connect(worker_endpoints[0])
             self._scope.on_exit(lambda: _debugPrint("Send close call to worker at " + " ".join(worker_endpoints)),
-                                self._zerorpc_client.close_, #Send a close call to the worker side, note that this will be done _before_ self.zerorpc_client.close above
+                                self.close_client, #Send a close call to the worker side, note that this will be done _before_ self.zerorpc_client.close above
                                 lambda: _debugPrint("Returned from close call to worker at " + " ".join(worker_endpoints))) 
 
         def run(self, task):
             _debugPrint("running task at "  + " ".join(self._worker_endpoints))
             return self._zerorpc_client.run_serialized(CloudSerializer().serialize_to_string(task))
+        
+        def close_client(self):
+            try:
+                self._zerorpc_client.close_, #Send a close call to the worker side, note that this will be done _before_ self.zerorpc_client.close above
+            except Exception as e:
+                print("Failed closing remote side ({},{}). No problem - will auto-close with timeout.".format(e.message,type(e)))
 
 
 __all__.append("ZeroRpcWorkerPoolWorker")
@@ -75,6 +81,8 @@ class ZeroRpcWorkerPoolWorker(Worker):
         _debugPrint("Started ZeroRpcWorkerPoolWorker server with endpoints: " + " ".join(self._endpoints))
         
     def stop_worker_server(self):
+        _debugPrint("Wating for stopping ZeroRpcWorkerPoolWorker server with endpoints: " + " ".join(self._endpoints))
+        gevent.sleep(10)
         _debugPrint("Stopping ZeroRpcWorkerPoolWorker server with endpoints: " + " ".join(self._endpoints))
         self._endpoints = None
         self._worker_server.stop()
@@ -134,8 +142,8 @@ class ZeroRpcDistributedWorkerPoolFactory(object):
             action="store_true", default=False,
             help="Should a dedicated coordinator node be launched (instead of also processing jobs on that node). [default =  %(default)s]")
         group.add_argument("--distributedNodeIdleTimeout", 
-            default = 5, type=int, 
-            help="The duriation (in seconds) after which an idle node should timeout. [default =  %(default)s]")
+            default = 10, type=int, 
+            help="The duration (in seconds) after which an idle node should timeout. [default =  %(default)s]")
         parser.add_argument_group(group)
         return parser
     

@@ -3,7 +3,7 @@ import gevent
 import gevent.event
 import traceback
 
-__all__ = ["Scope", "ScopedObject"]
+__all__ = ["Scope", "ScopedObject", "AggregateException"]
 
 class ScopedObject(object):
     def __init__(self):
@@ -40,8 +40,7 @@ class Scope(object):
             try:
                 exit_handler()
             except Exception as e: #Catching all exceptions by intent. They are taken care of in the AggregateExceptions . | pylint: disable=W0703
-                traceback.print_exc()
-                exceptions.append(e)
+                exceptions.append((e,traceback.format_exc()))
         self.closed.set()
         if exceptions:
             raise AggregateException(exceptions)
@@ -49,8 +48,21 @@ class Scope(object):
 
 class AggregateException(Exception):
     def __init__(self, exceptions):
-        Exception.__init__(self, "Aggregate exception")
+        message = self.create_message(exceptions)
+        Exception.__init__(self, message)
         self.exceptions = exceptions
+        
+    @classmethod
+    def create_message(cls, exceptions):
+        n=len(exceptions)
+        res = "Aggregate exception with {} inner exceptions\n".format(n)
+        i = 1
+        for (e,exc) in exceptions:
+            res = ("{res}===Start inner exception {i} of {n}===\n"
+                   "{exc}===End inner exception {i} of {n}===\n"
+                   .format(res=res,i=i,n=n,exc=exc))
+            i = i+1
+        return res
 
 
 class Test_Scope(_unittest.TestCase):
@@ -103,17 +115,22 @@ class Test_Scope(_unittest.TestCase):
         
     def test_exception_in_handler(self):
         didThrow = False
-        def f(msg): 
-            raise Exception(msg)
+        def f1(): 
+            raise Exception("1")
+        def f2(): 
+            raise Exception("2")
+        def f():
+            with Scope() as s:
+                s.on_exit(f2)
+                s.on_exit(f1)
+                pass
         try:
-            with Scope(on_exit=[lambda:f("0"),lambda:f("1")]): pass
+            f()
         except AggregateException as e:
+            traceback.print_exc()
             self.assertEqual(len(e.exceptions), 2)
             for i in range(2):
-                self.assertEqual(e.exceptions[i].message, str(i))
-            didThrow = True
-        except Exception as e:
-            print(e.value)
+                self.assertEqual(e.exceptions[i][0].message, str(i+1))
             didThrow = True
         self.assert_(didThrow)
             

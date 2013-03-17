@@ -28,7 +28,7 @@ def create_main_function_wrapper(f, join_all_greenlets_at_end=True):
     def main():
         f()
         if join_all_greenlets_at_end:
-            join_all_greenlets()
+            join_all_greenlets(timeout=20)
     return main
             
 

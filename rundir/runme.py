@@ -31,9 +31,10 @@ argv = sys.argv + [
         "-N", "3", 
         "--localCoordinator",
         "--distributionUseDedicatedCoordinatorNode",
+	"--distributedNodeIdleTimeout", "30",
         "-o", out_dir,
         ]
 
-run(argv, SubprocessLauncher)
+run(argv, SlurmLauncher)
 exit(0)
 run(argv, GeventLauncher, GeventWorkerPoolFactory())

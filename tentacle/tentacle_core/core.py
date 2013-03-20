@@ -3,14 +3,14 @@
 # Anders Sjogren 2013
 
 from sys import exit, stdout
-from subprocess import Popen, PIPE
+from subprocess import PIPE#, Popen
 from collections import namedtuple
 import argparse
 import os
 import shutil
 import tempfile
 
-#from gevent.subprocess import Popen
+from gevent.subprocess import Popen
 #import gevent
 #gevent.monkey.patch_subprocess()
 import psutil

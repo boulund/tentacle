@@ -41,7 +41,7 @@ class ZeroRpcWorkerPool(RegisteringWorkerPool):
             super(ZeroRpcWorkerPool.WorkerProxy, self).__init__()
 
             _debugPrint("Creating zerorpc.Client")
-            self._zerorpc_client = zerorpc.Client(heartbeat=None)
+            self._zerorpc_client = zerorpc.Client(timeout=None, heartbeat=None)
             self._scope.on_exit(lambda: _debugPrint("Closing zerorpc.Client for " + " ".join(worker_endpoints)),
                                 self._zerorpc_client.close)
             
@@ -53,7 +53,9 @@ class ZeroRpcWorkerPool(RegisteringWorkerPool):
 
         def run(self, task):
             _debugPrint("running task at "  + " ".join(self._worker_endpoints))
-            return self._zerorpc_client.run_serialized(CloudSerializer().serialize_to_string(task))
+            res = self._zerorpc_client.run_serialized(CloudSerializer().serialize_to_string(task),async=True)
+            res.get()
+            return res
         
         def close_client(self):
             try:

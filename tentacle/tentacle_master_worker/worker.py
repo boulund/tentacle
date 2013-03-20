@@ -26,6 +26,5 @@ class TentacleWorker():
             executor = TentacleCore(processing_logger)
             executor.analyse(files, self.parsed_args)
         except:
-            traceback.print_exc()
             processing_logger.error(traceback.format_exc())
             raise

@@ -29,7 +29,7 @@ def create_file_logger(verbose, logfile):
     # Create streamhandler to log to stdout as well as file
     ch = logging.FileHandler(logfile)
     # Set a better configFormat for console display
-    formatter = logging.Formatter("%(levelname)s: %(message)s")
+    formatter = logging.Formatter(configFormat)
     ch.setFormatter(formatter)
     # Add the handler to the Tentacle logger
     logger.addHandler(ch)
@@ -68,6 +68,11 @@ class LoggerProvider(object):
         curr_dir_path = self.base_dir_path
         for d in hierarchy:
             curr_dir_path = path.join(curr_dir_path, d)
+            try:
+                os.mkdir(curr_dir_path)
+            except OSError, e:
+                if not e.errno == 17:
+                    raise
             if not path.isdir(curr_dir_path):
                 os.mkdir(curr_dir_path)
         return curr_dir_path

@@ -15,7 +15,7 @@ from tentacle.launching.launchers import SubprocessLauncher, SlurmLauncher, Geve
 from tentacle import run
 
 def dd(file_name):
-    return join(base_dir,"dist_data",file_name)
+    return join(base_dir,"qin_data",file_name)
 
 #Add the built in dependencies to PATH
 bin_dir = os.path.join(base_dir,"dependencies","bin",platform.system())
@@ -28,13 +28,14 @@ argv = sys.argv + [
         dd("contigs"), dd("reads"), dd("annotations"), 
         "--makeUniqueOutputDirectoryNameIfNeeded", 
         "--pblat", 
-        "-N", "3", 
+        "-N", "1", 
         "--localCoordinator",
         "--distributionUseDedicatedCoordinatorNode",
-	"--distributedNodeIdleTimeout", "30",
+	    "--distributedNodeIdleTimeout", "30",
         "-o", out_dir,
         ]
 
 run(argv, SlurmLauncher)
 exit(0)
-run(argv, GeventLauncher, GeventWorkerPoolFactory())
+#run(argv, GeventLauncher, GeventWorkerPoolFactory())
+#run(argv, SubprocessLauncher)

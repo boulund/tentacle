@@ -32,7 +32,7 @@ def get_ip_addresses():
     return [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")]
 
 def spawn_server(target, started=True):
-    s = zerorpc.Server(target)
+    s = zerorpc.Server(target, heartbeat=None)
     addr = "tcp://0.0.0.0"
     port = bind_to_free_port(s, addr)
     addresses = ["tcp://{}:{}".format(ip,port) for ip in get_ip_addresses()]

@@ -6,6 +6,7 @@ from sys import stdout, maxint
 import logging
 __all__ = list()
 
+
 unique_logger_id = 0
 __all__.append("create_file_logger")
 def create_file_logger(verbose, logfile):
@@ -13,16 +14,15 @@ def create_file_logger(verbose, logfile):
     Set logger basic config and start logging
     """
 
-    configFormat = "%(asctime)s: %(message)s" #"%(asctime)s %(levelname)s: %(message)s"
+    configFormat = "%(asctime)s: %(levelname)s: %(message)s" 
     dateFormat = "%Y-%m-%d %H:%M:%S"
-
     logging.basicConfig(configFormat=configFormat,
                         dateFormat=dateFormat,
                         level=logging.DEBUG if verbose else logging.INFO,
                         stream=stdout)
 
     #Get a new unique_logger_id to ask for, forcing a new logger to be returned
-    #Ww really just want a new instance, not reuse an old one, since a new file is to be created.   
+    #We really just want a new instance, not reuse an old one, since a new file is to be created.   
     logger = logging.getLogger(os.path.basename(logfile))
 
     print "Creating logger with id {} writing to file {}".format(unique_logger_id, logfile)

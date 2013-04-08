@@ -104,8 +104,11 @@ def parse_pblat_blast8(mappings, contigCoverage, logger):
             except ValueError, e:
                 logger.error("Unable to parse results file %s\n%s", mappings, e)
                 exit(1)
+            # pblat outputs reverse coordinates if mapped in the other direction,
+            # so we put them in the positive direction.
             sstart = int(sstart)
             send = int(send)
+            sstart, send = sorted([int(sstart), int(send)]) 
 
             # Add 1 at the starting position of the mapped read and subtract
             # 1 at the end so that we later can compute the cumulative sum

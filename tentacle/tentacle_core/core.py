@@ -5,6 +5,7 @@
 from sys import exit, stdout
 from subprocess import PIPE#, Popen
 from collections import namedtuple
+from time import time
 import argparse
 import os
 import shutil
@@ -214,6 +215,7 @@ class TentacleCore:
         before running Razers3.
         """
         
+        preprocesstime = time()
         temp_dir = tempfile.mkdtemp()
         self.logger.info("Using created tempdir {} .".format(temp_dir))
     
@@ -235,6 +237,8 @@ class TentacleCore:
         # Returns updated local filename
         new_reads = self.prepare_reads(files.reads, local.reads, options)
         local = local._replace(reads=new_reads)
+
+        self.logger.info("Time to preprocess data: %s", time()-preprocesstime)
     
         # TODO: Add mapper agnostic paired-end capabilities
         if options.pblat:
@@ -256,6 +260,7 @@ class TentacleCore:
             self.logger.info("Running pblat...")
             self.logger.debug("pblat call: {0}".format(' '.join(mapper_call)))
             stdout.flush() # Force printout so user knows what's going on
+            maptime = time()
             pblat = Popen(mapper_call, stdout=PIPE, stderr=PIPE, cwd=result_base)
             pblat_stream_data = pblat.communicate()
             if pblat.returncode is not 0:
@@ -296,6 +301,7 @@ class TentacleCore:
                 self.logger.debug("RazerS3 stdout:\n%s", razers3_stream_data[0])
                 self.logger.debug("RazerS3 stderr:\n%s", razers3_stream_data[1])
     
+        self.logger.info("Time to map reads: %s", time()-maptime)
         # Prepare and return a named tuple with essential information from mapping
         MappedReadsTuple = namedtuple("mapped_reads", ["contigs", "mapped_reads", "annotations"])
         mapped_reads = MappedReadsTuple(local.contigs,
@@ -427,7 +433,9 @@ class TentacleCore:
         
     def analyse(self, files, options):
         mapped_reads = self.preprocess_data_and_map_reads(files, options)
+        coveragetime = time()
         self.analyse_coverage(mapped_reads, files.annotationStats, options)
+        self.logger.info("Time to analyse coverage was %s", time()-coveragetime)
         self.logger.info("Results available in %s", files.annotationStats)
         self.logger.info(" ----- ===== LOGGING COMPLETED ===== ----- ")
 

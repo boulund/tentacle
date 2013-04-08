@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from os.path import join, abspath, dirname
 import os
 import sys
@@ -28,11 +29,12 @@ argv = sys.argv + [
         dd("contigs"), dd("reads"), dd("annotations"), 
         "--makeUniqueOutputDirectoryNameIfNeeded", 
         "--pblat", 
-        "-N", "1", 
+        "-N", "200", 
+        "-o", out_dir,
         "--localCoordinator",
         "--distributionUseDedicatedCoordinatorNode",
 	    "--distributedNodeIdleTimeout", "30",
-        "-o", out_dir,
+        "--slurmTimeLimit", "8:00:00"
         ]
 
 run(argv, SlurmLauncher)

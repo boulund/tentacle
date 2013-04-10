@@ -239,6 +239,9 @@ class TentacleCore:
         local = local._replace(reads=new_reads)
 
         self.logger.info("Time to preprocess data: %s", time()-preprocesstime)
+        
+        # Node-local filename for mapping results
+        mapped_reads_file_path = local.reads+".result"
     
         # TODO: Add mapper agnostic paired-end capabilities
         if options.pblat:
@@ -246,9 +249,8 @@ class TentacleCore:
                            "-threads=" + str(options.pblatThreads),
                            "-out=blast8" ]
             
-            #A workaround for pblat not working correctly with some absolute path names for the result:
+            # A workaround for pblat not working correctly with some absolute path names for the result:
             # Run the command in the result dir and give the file_name relative to that.
-            mapped_reads_file_path = local.reads+".result"
             result_base = os.path.dirname(mapped_reads_file_path)
 
             # Append arguments to mapper_call
@@ -285,6 +287,7 @@ class TentacleCore:
             self.logger.info("Running RazerS3...")
             self.logger.debug("RazerS3 call: %s", ' '.join(mapper_call))
             stdout.flush() # Force printout so user knows what's going on
+            maptime = time()
             razers3 = Popen(mapper_call, stdout=PIPE, stderr=PIPE)
             razers3_stream_data = razers3.communicate()
             if razers3.returncode is not 0:

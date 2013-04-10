@@ -89,8 +89,10 @@ def parse_pblat_blast8(mappings, contigCoverage, logger):
     Parses pblat output (blast8 format) and fills the
     contigCoverage dictionary
     """
+    #np.set_printoptions(threshold='nan') #DEBUG
 
     with open(mappings) as f:
+        previous_readname = set()
         for line in f:
             # Read name, Contig name, percent identity, alignment length, mismatches, 
             # gap openings, query start, query end, subject start, subject end, 
@@ -104,17 +106,32 @@ def parse_pblat_blast8(mappings, contigCoverage, logger):
             except ValueError, e:
                 logger.error("Unable to parse results file %s\n%s", mappings, e)
                 exit(1)
-            # pblat outputs reverse coordinates if mapped in the other direction,
-            # so we put them in the positive direction.
-            sstart = int(sstart)
-            send = int(send)
-            sstart, send = sorted([int(sstart), int(send)]) 
 
-            # Add 1 at the starting position of the mapped read and subtract
-            # 1 at the end so that we later can compute the cumulative sum
-            # from left to right across the entire contig.
-            contigCoverage[contig][sstart] = contigCoverage[contig][sstart-1]+1
-            contigCoverage[contig][send] = contigCoverage[contig][send]-1
+            # Reads are ordered in the pblat output so we can safely assume no read will
+            # occur twice in the file if it has been previously seen. We can thus conserve 
+            # memory by removing previous reads from the set.
+            if read not in previous_readname:
+                previous_readname.clear() 
+                previous_readname.add(read) 
+
+                # pblat outputs reverse coordinates if mapped in the other direction,
+                # The are reversed so we do not get negative counts
+                sstart = int(sstart)
+                send = int(send)
+                if sstart > send:
+                    sstart, send = (send, sstart)
+
+                # Add 1 at the starting position of the mapped read and subtract
+                # 1 at the end so that we later can compute the cumulative sum
+                # from left to right across the entire contig.
+                contigCoverage[contig][sstart-1] = contigCoverage[contig][sstart-1]+1
+                contigCoverage[contig][send] = contigCoverage[contig][send]-1
+                
+                # DEBUG
+                #if np.min(np.cumsum(contigCoverage[contig])) < 0:
+                #    print read, contig, qstart, qend, sstart, send
+                #    print contigCoverage[contig]
+                #    exit(1)
 
     for contig in contigCoverage.keys():
         contigCoverage[contig] = np.cumsum(contigCoverage[contig])
@@ -138,7 +155,7 @@ def sumMapCounts(mappings, contigCoverage, pblat, logger):
 def computeAnnotationCounts(annotationFilename, contigCoverage, outFilename, logger):
     """
     Produces counts for each annotated region.
-    (Does not yet) Writes results to file.
+    Writes results to file.
     """
     
     with open(annotationFilename) as annotationFile:

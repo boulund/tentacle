@@ -264,11 +264,15 @@ class TentacleCore:
         pblat = Popen(mapper_call, stdout=PIPE, stderr=PIPE, cwd=result_base)
         pblat_stream_data = pblat.communicate()
         if pblat.returncode is not 0:
-            self.logger.error("pblat:\n{}".format(pblat_stream_data[1])) # [1] is stderr
+            self.logger.error("pblat: return code {}".format(pblat.returncode))
+            self.logger.error("pblat: stdout: {}".format(pblat_stream_data[0]))
+            self.logger.error("pblat: stderr: {}".format(pblat_stream_data[1]))
             exit(1)
         else:
             # assert_mapping_results()
             pass
+        self.logger.debug("pblat: stdout: {}".format(pblat_stream_data[0]))
+        self.logger.debug("pblat: stderr: {}".format(pblat_stream_data[1]))
 
         return output_filename
 
@@ -297,11 +301,13 @@ class TentacleCore:
         if blast.returncode is not 0:
             self.logger.error("blast: return code {}".format(blast.returncode))
             self.logger.error("blast: stdout: {}".format(blast_stream_data[0])) 
-            self.logger.error("blast: stderr: {}".format(blast_stream_data[1])) 
+            self.logger.error("blast: stdout: {}".format(blast_stream_data[0])) 
             exit(1)
         else:
             # assert mapping results
             pass
+        self.logger.debug("blast: stderr: {}".format(blast_stream_data[1])) 
+        self.logger.debug("blast: stderr: {}".format(blast_stream_data[1])) 
 
         return output_filename
 

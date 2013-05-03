@@ -4,6 +4,7 @@ import os
 import sys
 import platform
 import tempfile
+
 #Add the folder of tentacle to path, to be able to import it
 run_dir = abspath(dirname(__file__))
 base_dir = abspath(join(run_dir,".."))
@@ -16,7 +17,7 @@ from tentacle.launching.launchers import SubprocessLauncher, SlurmLauncher, Geve
 from tentacle import run
 
 def dd(file_name):
-    return join(base_dir,"qin_data",file_name)
+    return join(base_dir,"data_single_ref",file_name)
 
 #Add the built in dependencies to PATH
 bin_dir = os.path.join(base_dir,"dependencies","bin",platform.system())
@@ -26,18 +27,23 @@ os.environ["PATH"]  = os.environ["PATH"]  + os.pathsep + bin_dir
 out_dir = join(base_dir,"workdir","tentacle_output")
 
 argv = sys.argv + [
-        dd("contigs"), dd("reads"), dd("annotations"), 
-        "--makeUniqueOutputDirectoryNameIfNeeded", 
-        "--pblat", 
-        "-N", "200", 
+        dd("references"), dd("reads"), dd("annotations"), 
         "-o", out_dir,
+        "--makeUniqueOutputDirectoryNameIfNeeded", 
+        "--blast", 
+        #"--pblat",
+        #"--razers3",
+        "--blastProgram", "blastn",
+        "--blastTask", "megablast",
+        "--blastDBName", "references.fa",
+        #"-N", "2", 
         "--localCoordinator",
-        "--distributionUseDedicatedCoordinatorNode",
-	    "--distributedNodeIdleTimeout", "30",
-        "--slurmTimeLimit", "8:00:00"
+        #"--distributionUseDedicatedCoordinatorNode",
+	    #"--distributedNodeIdleTimeout", "30",
+        #"--slurmTimeLimit", "8:00:00"
         ]
 
-run(argv, SlurmLauncher)
-exit(0)
-#run(argv, GeventLauncher, GeventWorkerPoolFactory())
+#run(argv, SlurmLauncher)
+#exit(0)
+run(argv, GeventLauncher, GeventWorkerPoolFactory())
 #run(argv, SubprocessLauncher)

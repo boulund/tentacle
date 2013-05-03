@@ -84,9 +84,9 @@ def parse_razers3(mappings, contigCoverage, logger):
     return contigCoverage
 
 
-def parse_pblat_blast8(mappings, contigCoverage, logger):
+def parse_blast8(mappings, contigCoverage, logger):
     """
-    Parses pblat output (blast8 format) and fills the
+    Parses mapped data in blast8 format (used for blast and pblat) and fills the
     contigCoverage dictionary
     """
     #np.set_printoptions(threshold='nan') #DEBUG
@@ -138,16 +138,21 @@ def parse_pblat_blast8(mappings, contigCoverage, logger):
 
     return contigCoverage
 
-def sumMapCounts(mappings, contigCoverage, pblat, logger):
+def sumMapCounts(mappings, contigCoverage, options, logger):
     """
     Adds the number of mapped reads to the correct positions in 
     a contigCoverage dictionary.
     Uses NumPy.
     """
-    if pblat:
-        contigCoverage = parse_pblat_blast8(mappings, contigCoverage, logger)
-    else:
+    if options.pblat:
+        contigCoverage = parse_blast8(mappings, contigCoverage, logger)
+    if options.blast:
+        contigCoverage = parse_blast8(mappings, contigCoverage, logger)
+    elif options.razers3:
         contigCoverage = parse_razers3(mappings, contigCoverage, logger)
+    else:
+        logger.error("No mapper selected! This should never happen?!")
+        exit(1)
     return contigCoverage
 
 
@@ -176,9 +181,8 @@ def computeAnnotationCounts(annotationFilename, contigCoverage, outFilename, log
 
                 try:
                     stats = computeStatistics(contigCoverage[contig][start:end])
-                except KeyError, message:
-                    logger.error("Could not find contig header in annotation file.\n%s", message)
-                    logger.error("Maybe the contig headers do not match the annotation file?")
+                except KeyError, contigHeader:
+                    logger.error("Could not find match for contig header '{0}' in annotation file {1}".format(contigHeader, annotationFilename))
                     exit(1)
                 outFile.write(contig+"_"+annotation+":"+str(start)+":"+str(end)+":"+strand+"\t"+
                               str(stats[0])+"\t"+

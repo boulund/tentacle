@@ -30,8 +30,8 @@ class TentacleMaster(object):
     
     def get_tasks_from_parsed_args(self, parsed_args, output_dir_structure):
         utils.print_run_settings(parsed_args, self.master_logger)
-        return identify_linked_files({"annotations":(parsed_args.annotationsDirectory, "."),
-                                      "contigs":(parsed_args.contigsDirectory, "."),
+        return identify_linked_files({"annotations":(parsed_args.annotationsDirectory, "_"),
+                                      "contigs":(parsed_args.contigsDirectory, "_"),
                                       "reads":(parsed_args.readsDirectory, "_")},
                                       output_dir_structure, self.master_logger)
         
@@ -42,7 +42,7 @@ def core_name(file_path, end_symbol):
 
 
 def core_names_and_files(dir_path,  end_symbol):
-    return map(lambda f : (core_name(f, end_symbol), path.realpath(path.join(dir_path,f))), listdir(dir_path))
+    return map(lambda f : (core_name(f, end_symbol), path.join(path.realpath(dir_path), f)), listdir(dir_path))
 
 
 def files_by_core_name(dir_path,  end_symbol):

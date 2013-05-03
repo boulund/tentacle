@@ -25,6 +25,32 @@ AllFiles = namedtuple("AllFiles", ["contigs", "reads", "annotations", "annotatio
 class TentacleCore:
     def __init__(self, logger):
         self.logger = logger
+
+    def copy_untar_blastdb(self, source_file, destination):
+        """
+        Copy, uncompresses gzipped tar file with blast database to destination.
+        """
+
+        workdir = os.path.dirname(destination)
+
+        if source_file.endswith((".gz", ".GZ")) or source_file.endswith((".tar", ".TAR")):
+            self.logger.info("It appears reference DB is in .tar or .tar.gz format")
+            self.logger.info("Extracting (and if necessary gunzipping) database...")
+            shutil.copy(source_file, destination)
+            tar_call = [utils.resolve_executable("tar"), "-xf", source_file]
+            tar = Popen(tar_call, stdout=PIPE, stderr=PIPE, cwd=workdir)
+            self.logger.debug("tar call:{}".format(tar_call))
+            tar_stream_data = tar.communicate()
+            if tar.returncode is not 0:
+                self.logger.error("tar returncode {}".format(tar.returncode))
+                self.logger.error("tar stdout: {}\nstderr: {}".format(tar_stream_data))
+            else:
+                self.logger.info("Untar of reference BLAST DB successful")
+        else:
+            self.logger.error("Don't know what to do with {}, it does not look like a (gzipped) tar file".format(source_file))
+            exit(1)
+
+        return destination
         
     def gunzip_copy(self, source_file, destination):
         """
@@ -130,8 +156,7 @@ class TentacleCore:
     
     def write_reads(self, source, destination):
         """
-        Takes a Popen object or Pipe (multiprocessing) and writes
-        its content to filename destination
+        Takes a Popen object and writes its content to file.
         """
     
         # TODO: Create a thread that writes the source.stdout to a file
@@ -162,7 +187,7 @@ class TentacleCore:
     
         # Perform filtering and trimming if FASTQ, 
         # otherwise just write to disk
-        if fastq_format:
+        if fastq_format and not options.noQualityControl:
             self.logger.info("Filtering reads...")
             filtered_reads = self.filtered_call(source=read_source, 
                                     program="fastq_quality_filter",
@@ -175,7 +200,7 @@ class TentacleCore:
                                    **{"-t":options.fastqThreshold,
                                       "-l":options.fastqMinLength,
                                       "-v":""})
-            if options.pblat:
+            if options.pblat or options.blast:
                 self.logger.info("Converting FASTQ to FASTA...")
                 fasta_reads = self.filtered_call(source=trimmed_reads,
                                      program="fastq_to_fasta",
@@ -198,7 +223,10 @@ class TentacleCore:
             self.logger.info("Trimming statistics:\n%s", trimmed_reads.stderr.read())
             if options.pblat: self.logger.info("FASTA conversion statistics:\n%s", fasta_reads.stderr.read())
         else:
-            self.logger.info("Writing reads to local storage...")
+            if options.noQualityControl:
+                self.logger.info("Skipping quality control and writing reads to local storage...")
+            else:
+                self.logger.info("Writing reads to local storage...")
             written_reads = self.write_reads(read_source, destination)
             # Calling .communicate() on the Popen object runs the
             # entire pipeline that has been pending
@@ -208,6 +236,113 @@ class TentacleCore:
         self.logger.info("Finished preparing %s for mapping.", reads)
     
         return destination
+
+    def run_pblat(self, local_files, options):
+        """
+        Runs pblat
+        """
+
+        output_filename = local.reads+".results"
+        mapper_call = [utils.resolve_executable("pblat"),
+                       "-threads=" + str(options.pblatThreads),
+                       "-out=blast8" ]
+        
+        # A workaround for pblat not working correctly with some absolute path 
+        # names for the result:
+        # Run the command in the result dir and give the file_name relative to that.
+        result_base = os.path.dirname(mapped_reads_file_path)
+
+        # Append arguments to mapper_call
+        mapper_call.append(os.path.relpath(local.contigs, result_base))
+        mapper_call.append(os.path.relpath(local.reads, result_base))
+        mapper_call.append(os.path.relpath(output_filename, result_base))
+
+        # Run pblat
+        self.logger.info("Running pblat...")
+        self.logger.debug("pblat call: {0}".format(' '.join(mapper_call)))
+        stdout.flush() # Force printout so user knows what's going on
+        pblat = Popen(mapper_call, stdout=PIPE, stderr=PIPE, cwd=result_base)
+        pblat_stream_data = pblat.communicate()
+        if pblat.returncode is not 0:
+            self.logger.error("pblat:\n{}".format(pblat_stream_data[1])) # [1] is stderr
+            exit(1)
+        else:
+            # assert_mapping_results()
+            pass
+
+        return output_filename
+
+    def run_blast(self, local, options):
+        """
+        Runs NCBI blast
+        """
+
+        output_filename = local.reads+".results"
+        mapper_call = [utils.resolve_executable(options.blastProgram),
+                       "-outfmt", "6", # blast8 tabular output format
+                       "-task", str(options.blastTask),
+                       "-query", str(local.reads),
+                       "-db", options.blastDBName.split(".", 1)[0], 
+                       "-out", output_filename, # Output written to here!
+                       "-num_threads", str(options.blastThreads)]
+
+        # Run the command in the result dir and give the file_name relative to that.
+        result_base = os.path.dirname(output_filename)
+        # Run BLAST
+        self.logger.info("Running BLAST...")
+        self.logger.debug("blast call: {0}".format(' '.join(mapper_call), result_base))
+        stdout.flush() # Force printout so users knows what's going on
+        blast = Popen(mapper_call, stdout=PIPE, stderr=PIPE, cwd=result_base)
+        blast_stream_data = blast.communicate()
+        if blast.returncode is not 0:
+            self.logger.error("blast: return code {}".format(blast.returncode))
+            self.logger.error("blast: stdout: {}".format(blast_stream_data[0])) 
+            self.logger.error("blast: stderr: {}".format(blast_stream_data[1])) 
+            exit(1)
+        else:
+            # assert mapping results
+            pass
+
+        return output_filename
+
+    def run_razers3(self, local, options):
+        """
+        Run RazerS3
+        """
+        mapper_call = [utils.resolve_executable("razers3"),
+                       "-i", str(options.razers3Identity),
+                       "-rr", str(options.razers3Recognition), 
+                       "-m", str(options.razers3Max)]
+        if options.razers3Swift:
+            mapper_call.append("-fl")
+            mapper_call.append("swift")
+        # Append arguments to mapper_call
+        mapper_call.append(local.contigs)
+        mapper_call.append(local.reads)
+
+        # Run RazerS3
+        self.logger.info("Running RazerS3...")
+        self.logger.debug("RazerS3 call: %s", ' '.join(mapper_call))
+        stdout.flush() # Force printout so user knows what's going on
+        razers3 = Popen(mapper_call, stdout=PIPE, stderr=PIPE)
+        razers3_stream_data = razers3.communicate()
+        if razers3.returncode is not 0:
+            self.logger.error("RazerS3 return code: {}".format(razers3.returncode))
+            self.logger.error("RazerS3 stdout: {}".format(razers3_stream_data[0]))
+            self.logger.error("RazerS3 stderr: {}".format(razers3_stream_data[1]))
+            exit(1)
+        else:
+            # TODO: Add some kind of control of results file size or 
+            # contents to ensure mapping was actually successful?
+            # An empty result file might be ok? 
+            # Call function something like assert_mapping_results() ?
+            self.logger.info("RazerS3 mapping completed.")
+            if os.path.getsize(local.reads+".razers") == 0: 
+                self.logger.warning("Mapping results are empty.")
+            self.logger.debug("RazerS3 stdout:\n%s", razers3_stream_data[0])
+            self.logger.debug("RazerS3 stderr:\n%s", razers3_stream_data[1])
+
+        return local.reads+".razers"
     
     def preprocess_data_and_map_reads(self, files, options):
         """
@@ -215,7 +350,7 @@ class TentacleCore:
         before running Razers3.
         """
         
-        preprocesstime = time()
+        preprocess_time = time()
         temp_dir = tempfile.mkdtemp()
         self.logger.info("Using created tempdir {} .".format(temp_dir))
     
@@ -230,81 +365,39 @@ class TentacleCore:
         # TODO: This could be parallelized
         new_annotations = self.gunzip_copy(files.annotations, local.annotations)
         local = local._replace(annotations=new_annotations)
-        new_contigs = self.gunzip_copy(files.contigs, local.contigs)
-        local = local._replace(contigs=new_contigs)
+
+        # Blast requires a database to compare against,
+        # filename given by the user should be a .tar.gz archive
+        # containing the database files with --blastDBName being the name 
+        # of the FASTA file with the sequences indexed in the BLAST DB.
+        if options.blast:
+            self.copy_untar_blastdb(files.contigs, local.contigs)
+            local = local._replace(contigs=rebase_to_local_tmp(options.blastDBName))
+        else:
+            new_contigs = self.gunzip_copy(files.contigs, local.contigs)
+            local = local._replace(contigs=new_contigs)
+        self.logger.info("Time to transfer annotations and contigs: %s", time()-preprocess_time)
     
         # Prepare reads for mapping (gunzip, filter and transfer to node)
         # Returns updated local filename
+        reads_time = time()
         new_reads = self.prepare_reads(files.reads, local.reads, options)
         local = local._replace(reads=new_reads)
-
-        self.logger.info("Time to preprocess data: %s", time()-preprocesstime)
+        self.logger.info("Time to transfer and preprocess reads: %s", time()-reads_time)
         
-        # Node-local filename for mapping results
-        mapped_reads_file_path = local.reads+".result"
-    
+        maptime = time()
         # TODO: Add mapper agnostic paired-end capabilities
         if options.pblat:
-            mapper_call = [utils.resolve_executable("pblat"),
-                           "-threads=" + str(options.pblatThreads),
-                           "-out=blast8" ]
-            
-            # A workaround for pblat not working correctly with some absolute path names for the result:
-            # Run the command in the result dir and give the file_name relative to that.
-            result_base = os.path.dirname(mapped_reads_file_path)
-
-            # Append arguments to mapper_call
-            mapper_call.append(os.path.relpath(local.contigs, result_base))
-            mapper_call.append(os.path.relpath(local.reads, result_base))
-            mapper_call.append(os.path.relpath(mapped_reads_file_path, result_base))
-    
-            # Run pblat
-            self.logger.info("Running pblat...")
-            self.logger.debug("pblat call: {0}".format(' '.join(mapper_call)))
-            stdout.flush() # Force printout so user knows what's going on
-            maptime = time()
-            pblat = Popen(mapper_call, stdout=PIPE, stderr=PIPE, cwd=result_base)
-            pblat_stream_data = pblat.communicate()
-            if pblat.returncode is not 0:
-                self.logger.error("pblat:\n{}".format(pblat_stream_data[1])) # [1] is stderr
-                exit(1)
-            else:
-                # assert_mapping_results()
-                pass
+            mapped_reads_file_path = self.run_pblat(local, options)
+        elif options.blast:
+            mapped_reads_file_path = self.run_blast(local, options)
+        elif options.razers3:
+            mapped_reads_file_path = self.run_razers3(local, options)
         else:
-            mapper_call = [utils.resolve_executable("razers3"),
-                           "-i", str(options.razers3Identity),
-                           "-rr", str(options.razers3Recognition), 
-                           "-m", str(options.razers3Max)]
-            if options.razers3Swift:
-                mapper_call.append("-fl")
-                mapper_call.append("swift")
-            # Append arguments to mapper_call
-            mapper_call.append(local.contigs)
-            mapper_call.append(local.reads)
-    
-            # Run RazerS3
-            self.logger.info("Running RazerS3...")
-            self.logger.debug("RazerS3 call: %s", ' '.join(mapper_call))
-            stdout.flush() # Force printout so user knows what's going on
-            maptime = time()
-            razers3 = Popen(mapper_call, stdout=PIPE, stderr=PIPE)
-            razers3_stream_data = razers3.communicate()
-            if razers3.returncode is not 0:
-                self.logger.error("RazerS3:\n%s", razers3_stream_data[1]) # [1] contains stderr
-                exit(1)
-            else:
-                # TODO: Add some kind of control of results file size or 
-                # contents to ensure mapping was actually successful?
-                # An empty result file might be ok? 
-                # Call function something like assert_mapping_results() ?
-                self.logger.info("RazerS3 mapping completed.")
-                if os.path.getsize(local.reads+".result") == 0: # TODO: Fix output filename
-                    self.logger.warning("Mapping results are empty.")
-                self.logger.debug("RazerS3 stdout:\n%s", razers3_stream_data[0])
-                self.logger.debug("RazerS3 stderr:\n%s", razers3_stream_data[1])
-    
+            self.logger.error("No mapper selected! (this should never happen!)")
+            exit(1)
         self.logger.info("Time to map reads: %s", time()-maptime)
+
         # Prepare and return a named tuple with essential information from mapping
         MappedReadsTuple = namedtuple("mapped_reads", ["contigs", "mapped_reads", "annotations"])
         mapped_reads = MappedReadsTuple(local.contigs,
@@ -327,7 +420,7 @@ class TentacleCore:
         self.logger.info("Summing number of mapped contigs...")
         contig_coverage = parseModule.sumMapCounts(mapped_reads.mapped_reads, 
                                                    contig_coverage, 
-                                                   options.pblat,
+                                                   options,
                                                    self.logger)
         self.logger.info("Number of mapped contigs summation completed.")
     
@@ -345,17 +438,31 @@ class TentacleCore:
         self.logger.info("Computing counts per annotation, writing to {}...".format(outfile))
         parseModule.computeAnnotationCounts(mapped_reads.annotations, contig_coverage, outfile, self.logger)
         self.logger.info("Counts per annotation computation completed.")
+
+
+
+    def analyse(self, files, options):
+        mapped_reads = self.preprocess_data_and_map_reads(files, options)
+        coveragetime = time()
+        self.analyse_coverage(mapped_reads, files.annotationStats, options)
+        self.logger.info("Time to analyse coverage was %s", time()-coveragetime)
+        self.logger.info("Results available in %s", files.annotationStats)
+        self.logger.info(" ----- ===== LOGGING COMPLETED ===== ----- ")
+    
     
         
     @staticmethod
     def create_fastq_argparser():
         """
-        Creates parser for FASTQ options (used for quality filtering).
+        Creates parser for FASTQ quality control options (filtering and trimming). 
         """
         
         parser = argparse.ArgumentParser(add_help=False)
         quality_filtering_group = parser.add_argument_group("Quality filtering options", "Options for FASTQ")
         #TODO: Change dest to be the same as argument, e.g. fastqMinQ=>fqMinQuality. Will be useful when writing out config file with all options for future use with @saved-opts as argument.
+        quality_filtering_group.add_argument("--noQualityControl", dest="noQualityControl",
+            action="store_true", default=False,
+            help="FASTQ quality control: Do not perform quality filtering or trimming [default: %(default)s]")
         quality_filtering_group.add_argument("--fqMinQuality", dest="fastqMinQ", 
             type=int, default=10, 
             help="FASTQ filter: minimum base quality score, [default: %(default)s]")
@@ -379,6 +486,9 @@ class TentacleCore:
     
         parser = argparse.ArgumentParser(add_help=False)
         mapping_group = parser.add_argument_group("Mapping options", "Options for RazerS3.")
+        mapping_group.add_argument("--razers3", dest="razers3",
+            default=False, action="store_true",
+            help="Perform mapping using RazerS3 [default %(default)s]")
         mapping_group.add_argument("--r3Identity", dest="razers3Identity",
             type=int, default=95,
             help="RazerS3: Percent identity of matched reads [default: %(default)s]")
@@ -397,7 +507,33 @@ class TentacleCore:
         #    help="RazerS3: Paired end reads file [default: not used]")
         return parser
     
+
+    @staticmethod
+    def create_blast_argparser():
+        """
+        Creates parser for blast options (used for mapping).
+        """
     
+        parser = argparse.ArgumentParser(add_help=False)
+        mapping_group = parser.add_argument_group("Mapping options", "Options for blast.")
+        mapping_group.add_argument("--blast", dest="blast",
+            default=False, action="store_true",
+            help="blast: Perform mapping using blast [default: %(default)s]")
+        mapping_group.add_argument("--blastProgram", dest="blastProgram",
+            type=str, default="blastn", metavar="PROGNAME",
+            help="blast: Set what blast program to use [default: %(default)s]")
+        mapping_group.add_argument("--blastThreads", dest="blastThreads",
+            default=16, type=int,
+            help="blast: number of threads allowed [default: %(default)s]")
+        mapping_group.add_argument("--blastTask", dest="blastTask",
+            default="blastn", type=str,
+            help="blast: What task to be run, refer to blast manual for available options [default: %(default)s]")
+        mapping_group.add_argument("--blastDBName", dest="blastDBName",
+            type=str, default="", metavar="DBNAME",
+            help="blast: Name of the FASTA file in the database tarball (including extension). It must have the same basename as the rest of the DB.")
+        return parser
+    
+
     @staticmethod
     def create_pblat_argparser():
         """
@@ -408,7 +544,7 @@ class TentacleCore:
         mapping_group = parser.add_argument_group("Mapping options", "Options for pblat.")
         mapping_group.add_argument("--pblat", dest="pblat",
             default=False, action="store_true",
-            help="pblat: Use pblat instead of RazerS3 [default: %(default)s]")
+            help="pblat: Perform mapping using pblat [default: %(default)s]")
         mapping_group.add_argument("--pblatThreads", dest="pblatThreads",
             type=int, default=psutil.NUM_CPUS, metavar="N",
             help="pblat: Set number of threads for parallel blat mapping [default: N=%(default)s [=the current number of CPUs]]")
@@ -425,7 +561,8 @@ class TentacleCore:
         
         parser = argparse.ArgumentParser(parents=[TentacleCore.create_fastq_argparser(), 
                                                   TentacleCore.create_razerS3_argparser(),
-                                                  TentacleCore.create_pblat_argparser()], add_help=False)
+                                                  TentacleCore.create_pblat_argparser(),
+                                                  TentacleCore.create_blast_argparser()], add_help=False)
      
         debug_group = parser.add_argument_group("DEBUG developer options", "Use with caution!")
         debug_group.add_argument("--outputCoverage", dest="outputCoverage", action="store_true", default=False,
@@ -434,21 +571,12 @@ class TentacleCore:
         return parser
     
         
-    def analyse(self, files, options):
-        mapped_reads = self.preprocess_data_and_map_reads(files, options)
-        coveragetime = time()
-        self.analyse_coverage(mapped_reads, files.annotationStats, options)
-        self.logger.info("Time to analyse coverage was %s", time()-coveragetime)
-        self.logger.info("Results available in %s", files.annotationStats)
-        self.logger.info(" ----- ===== LOGGING COMPLETED ===== ----- ")
-
-    
     @staticmethod
     def extract_file_options(options):
         # Define original source files
         # Simple quick validity check of positional arguments.
-        # RazerS3 will complain about file contents of CONTIGS and READS
-        # later if they are incorrectly formatted etc.
+        # No check for actual validity of content here, 
+        # mappers will crash later if they are malformed.
         utils.assert_file_exists("contigs", options.contigs);
         utils.assert_file_exists("reads", options.reads);
         utils.assert_file_exists("annotations", options.annotations);
@@ -483,7 +611,9 @@ class TentacleCore:
     @staticmethod
     def parse_args(argv):
         parser = TentacleCore.create_single_data_argparser()
+
         options = parser.parse_args()
+
         files = TentacleCore.extract_file_options(options)
     
         return (files, options)

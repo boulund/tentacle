@@ -301,12 +301,12 @@ class TentacleCore:
         if blast.returncode is not 0:
             self.logger.error("blast: return code {}".format(blast.returncode))
             self.logger.error("blast: stdout: {}".format(blast_stream_data[0])) 
-            self.logger.error("blast: stdout: {}".format(blast_stream_data[0])) 
+            self.logger.error("blast: stderr: {}".format(blast_stream_data[1])) 
             exit(1)
         else:
             # assert mapping results
             pass
-        self.logger.debug("blast: stderr: {}".format(blast_stream_data[1])) 
+        self.logger.debug("blast: stdout: {}".format(blast_stream_data[0])) 
         self.logger.debug("blast: stderr: {}".format(blast_stream_data[1])) 
 
         return output_filename

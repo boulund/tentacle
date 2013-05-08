@@ -290,7 +290,8 @@ class TentacleCore:
                        "-num_threads", str(options.blastThreads)]
 
         if options.blastTask:
-            mapper_call.append(["-task", str(options.blastTask)])
+            mapper_call.append("-task")
+            mapper_call.append(str(options.blastTask))
         # Run the command in the result dir and give the file_name relative to that.
         result_base = os.path.dirname(output_filename)
         # Run BLAST

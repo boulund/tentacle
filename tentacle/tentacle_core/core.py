@@ -284,17 +284,18 @@ class TentacleCore:
         output_filename = local.reads+".results"
         mapper_call = [utils.resolve_executable(options.blastProgram),
                        "-outfmt", "6", # blast8 tabular output format
-                       "-task", str(options.blastTask),
                        "-query", str(local.reads),
                        "-db", options.blastDBName.split(".", 1)[0], 
                        "-out", output_filename, # Output written to here!
                        "-num_threads", str(options.blastThreads)]
 
+        if options.blastTask:
+            mapper_call.append(["-task", str(options.blastTask)])
         # Run the command in the result dir and give the file_name relative to that.
         result_base = os.path.dirname(output_filename)
         # Run BLAST
         self.logger.info("Running BLAST...")
-        self.logger.debug("blast call: {0}".format(' '.join(mapper_call), result_base))
+        self.logger.debug("blast call: {0}".format(' '.join(mapper_call)))
         stdout.flush() # Force printout so users knows what's going on
         blast = Popen(mapper_call, stdout=PIPE, stderr=PIPE, cwd=result_base)
         blast_stream_data = blast.communicate()
@@ -532,7 +533,7 @@ class TentacleCore:
             default=16, type=int,
             help="blast: number of threads allowed [default: %(default)s]")
         mapping_group.add_argument("--blastTask", dest="blastTask",
-            default="blastn", type=str,
+            default="", type=str,
             help="blast: What task to be run, refer to blast manual for available options [default: %(default)s]")
         mapping_group.add_argument("--blastDBName", dest="blastDBName",
             type=str, default="", metavar="DBNAME",

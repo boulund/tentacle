@@ -26,7 +26,7 @@ class TentacleCore:
     def __init__(self, logger):
         self.logger = logger
 
-    def copy_untar_blastdb(self, source_file, destination):
+    def copy_untar_ref_db(self, source_file, destination):
         """
         Copy, uncompresses gzipped tar file with blast database to destination.
         """
@@ -42,16 +42,18 @@ class TentacleCore:
             self.logger.debug("tar call:{}".format(tar_call))
             tar_stream_data = tar.communicate()
             if tar.returncode is not 0:
+                self.logger.error("{}".format(tar_stream_data))
                 self.logger.error("tar returncode {}".format(tar.returncode))
                 self.logger.error("tar stdout: {}\nstderr: {}".format(tar_stream_data))
+                exit(1)
             else:
-                self.logger.info("Untar of reference BLAST DB successful")
+                self.logger.info("Untar of reference DB successful")
         else:
             self.logger.error("Don't know what to do with {}, it does not look like a (gzipped) tar file".format(source_file))
             exit(1)
 
         return destination
-        
+
     def gunzip_copy(self, source_file, destination):
         """
         Takes a source file and a destination and determines whether to 
@@ -306,12 +308,47 @@ class TentacleCore:
             self.logger.error("blast: stderr: {}".format(blast_stream_data[1])) 
             exit(1)
         else:
-            # assert mapping results
+            # TODO: assert mapping results?
             pass
         self.logger.debug("blast: stdout: {}".format(blast_stream_data[0])) 
         self.logger.debug("blast: stderr: {}".format(blast_stream_data[1])) 
 
         return output_filename
+
+
+    def run_bowtie2(self, local, options):
+        """
+        Runs bowtie2
+        """
+
+        output_filename = local.reads+".results"
+        mapper_call = [utils.resolve_executable("bowtie2"),
+                       "-x", str(options.bowtie2DBName),
+                       "-S", output_filename,
+                       "-U", local.reads, 
+                       "-p", str(options.bowtie2Threads)]
+
+        # Run the command in the result dir and give the file_name relative to that.
+        result_base = os.path.dirname(output_filename)
+        # Run Bowtie2
+        self.logger.info("Running bowtie2...")
+        self.logger.debug("bowtie2 call: {0}".format(' '.join(mapper_call)))
+        stdout.flush() # Force printout so users knows what's going on
+        bowtie2 = Popen(mapper_call, stdout=PIPE, stderr=PIPE, cwd=result_base)
+        bowtie2_stream_data = bowtie2.communicate()
+        if bowtie2.returncode is not 0:
+            self.logger.error("bowtie2: return code {}".format(bowtie2.returncode))
+            self.logger.error("bowtie2: stdout: {}".format(bowtie2_stream_data[0])) 
+            self.logger.error("bowtie2: stderr: {}".format(bowtie2_stream_data[1])) 
+            exit(1)
+        else:
+            # TODO: assert mapping results?
+            pass
+        self.logger.debug("bowtie2: stdout: {}".format(bowtie2_stream_data[0])) 
+        self.logger.debug("bowtie2: stderr: {}".format(bowtie2_stream_data[1])) 
+
+        return output_filename
+
 
     def run_razers3(self, local, options):
         """
@@ -374,13 +411,16 @@ class TentacleCore:
         new_annotations = self.gunzip_copy(files.annotations, local.annotations)
         local = local._replace(annotations=new_annotations)
 
-        # Blast requires a database to compare against,
+        # Blast and bowtie2 requires a database to compare against,
         # filename given by the user should be a .tar.gz archive
         # containing the database files with --blastDBName being the name 
         # of the FASTA file with the sequences indexed in the BLAST DB.
-        if options.blast:
-            self.copy_untar_blastdb(files.contigs, local.contigs)
+        if options.blast: 
+            self.copy_untar_ref_db(files.contigs, local.contigs)
             local = local._replace(contigs=rebase_to_local_tmp(options.blastDBName))
+        elif options.bowtie2:
+            self.copy_untar_ref_db(files.contigs, local.contigs)
+            local = local._replace(contigs=rebase_to_local_tmp(options.bowtie2DBName))
         else:
             new_contigs = self.gunzip_copy(files.contigs, local.contigs)
             local = local._replace(contigs=new_contigs)
@@ -399,6 +439,8 @@ class TentacleCore:
             mapped_reads_file_path = self.run_pblat(local, options)
         elif options.blast:
             mapped_reads_file_path = self.run_blast(local, options)
+        elif options.bowtie2:
+            mapped_reads_file_path = self.run_bowtie2(local, options)
         elif options.razers3:
             mapped_reads_file_path = self.run_razers3(local, options)
         else:
@@ -409,7 +451,7 @@ class TentacleCore:
         # Prepare and return a named tuple with essential information from mapping
         MappedReadsTuple = namedtuple("mapped_reads", ["contigs", "mapped_reads", "annotations"])
         mapped_reads = MappedReadsTuple(local.contigs,
-                                        mapped_reads_file_path, # TODO: Fix output filename
+                                        mapped_reads_file_path, 
                                         local.annotations)
         return mapped_reads
     
@@ -493,7 +535,7 @@ class TentacleCore:
         """
     
         parser = argparse.ArgumentParser(add_help=False)
-        mapping_group = parser.add_argument_group("Mapping options", "Options for RazerS3.")
+        mapping_group = parser.add_argument_group("Mapping options", "Options for Razers3.")
         mapping_group.add_argument("--razers3", dest="razers3",
             default=False, action="store_true",
             help="Perform mapping using RazerS3 [default %(default)s]")
@@ -531,7 +573,7 @@ class TentacleCore:
             type=str, default="blastn", metavar="PROGNAME",
             help="blast: Set what blast program to use [default: %(default)s]")
         mapping_group.add_argument("--blastThreads", dest="blastThreads",
-            default=16, type=int,
+            default=psutil.NUM_CPUS, type=int, metavar="N",
             help="blast: number of threads allowed [default: %(default)s]")
         mapping_group.add_argument("--blastTask", dest="blastTask",
             default="", type=str,
@@ -541,6 +583,29 @@ class TentacleCore:
             help="blast: Name of the FASTA file in the database tarball (including extension). It must have the same basename as the rest of the DB.")
         return parser
     
+
+    @staticmethod
+    def create_bowtie2_argparser():
+        """
+        Creates parser for bowtie2 options (used for mapping).
+        """
+    
+        parser = argparse.ArgumentParser(add_help=False)
+        mapping_group = parser.add_argument_group("Mapping options", "Options for bowtie2.")
+        mapping_group.add_argument("--bowtie2", dest="bowtie2",
+            default=False, action="store_true",
+            help="bowtie2: Perform mapping using bowtie2 [default: %(default)s]")
+        mapping_group.add_argument("--bowtie2Fasta", dest="bowtie2Fasta",
+            default=False, action="store_true",
+            help="bowtie2: Input files are FASTA format and not FASTQ [default %(default)s].")
+        mapping_group.add_argument("--bowtie2Threads", dest="bowtie2Threads",
+            default=psutil.NUM_CPUS, type=int, metavar="N",
+            help="bowtie2: number of threads allowed [default: %(default)s]")
+        mapping_group.add_argument("--bowtie2DBName", dest="bowtie2DBName",
+            type=str, default="", metavar="DBNAME",
+            help="bowtie2: Name of the reference file BASENAME in the database tarball (NO extension). It must have the same basename as the rest of the DB.")
+        return parser
+
 
     @staticmethod
     def create_pblat_argparser():
@@ -570,7 +635,8 @@ class TentacleCore:
         parser = argparse.ArgumentParser(parents=[TentacleCore.create_fastq_argparser(), 
                                                   TentacleCore.create_razerS3_argparser(),
                                                   TentacleCore.create_pblat_argparser(),
-                                                  TentacleCore.create_blast_argparser()], add_help=False)
+                                                  TentacleCore.create_blast_argparser(),
+                                                  TentacleCore.create_bowtie2_argparser()], add_help=False)
      
         debug_group = parser.add_argument_group("DEBUG developer options", "Use with caution!")
         debug_group.add_argument("--outputCoverage", dest="outputCoverage", action="store_true", default=False,

@@ -17,7 +17,7 @@ from tentacle.launching.launchers import SubprocessLauncher, SlurmLauncher, Geve
 from tentacle import run
 
 def dd(file_name):
-    return join(base_dir,"data_single_ref",file_name)
+    return join(base_dir,"data_bowtie2",file_name)
 
 #Add the built in dependencies to PATH
 bin_dir = os.path.join(base_dir,"dependencies","bin",platform.system())
@@ -27,20 +27,20 @@ os.environ["PATH"]  = os.environ["PATH"]  + os.pathsep + bin_dir
 out_dir = join(base_dir,"workdir","tentacle_output")
 
 argv = sys.argv + [
-        dd("references"), dd("reads"), dd("annotations"), 
+        dd("contigs"), dd("reads"), dd("annotations"), 
         "-o", out_dir,
         "--makeUniqueOutputDirectoryNameIfNeeded", 
-        "--blast", 
+        #"--blast", 
         #"--pblat",
         #"--razers3",
-        "--blastProgram", "blastn",
-        "--blastTask", "megablast",
-        "--blastDBName", "references.fa",
+        "--bowtie2",
+        "--bowtie2DBName", "contigs.fa",
         #"-N", "2", 
         "--localCoordinator",
         #"--distributionUseDedicatedCoordinatorNode",
 	    #"--distributedNodeIdleTimeout", "30",
         #"--slurmTimeLimit", "8:00:00"
+        "--verbose"
         ]
 
 #run(argv, SlurmLauncher)

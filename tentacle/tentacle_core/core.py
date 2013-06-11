@@ -350,6 +350,43 @@ class TentacleCore:
         return output_filename
 
 
+    def run_gem(self, local, options):
+        """
+        Runs GEM
+        """
+        mapper_call = [utils.resolve_executable("gem-mapper"),
+                       "-I", str(options.gemDBName)+".gem",
+                       "-i", local.reads, 
+                       "-o", local.reads, #output prefix; is appended with .map
+                       "-T", str(options.gemThreads)]
+
+        if not options.gemFasta:
+            mapper_call.append("-q")
+            mapper_call.append('ignore')
+
+        output_filename = local.reads+".map"
+        # Run the command in the result dir and give the file_name relative to that.
+        result_base = os.path.dirname(output_filename)
+        # Run GEM
+        self.logger.info("Running gem...")
+        self.logger.debug("gem call: {0}".format(' '.join(mapper_call)))
+        stdout.flush() # Force printout so users knows what's going on
+        gem = Popen(mapper_call, stdout=PIPE, stderr=PIPE, cwd=result_base)
+        gem_stream_data = gem.communicate()
+        if gem.returncode is not 0:
+            self.logger.error("gem: return code {}".format(gem.returncode))
+            self.logger.error("gem: stdout: {}".format(gem_stream_data[0])) 
+            self.logger.error("gem: stderr: {}".format(gem_stream_data[1])) 
+            exit(1)
+        else:
+            # TODO: assert mapping results?
+            pass
+        self.logger.debug("gem: stdout: {}".format(gem_stream_data[0])) 
+        self.logger.debug("gem: stderr: {}".format(gem_stream_data[1])) 
+
+        return output_filename
+
+
     def run_razers3(self, local, options):
         """
         Run RazerS3
@@ -411,7 +448,7 @@ class TentacleCore:
         new_annotations = self.gunzip_copy(files.annotations, local.annotations)
         local = local._replace(annotations=new_annotations)
 
-        # Blast and bowtie2 requires a database to compare against,
+        # Blast, bowtie2 and GEM require a database to compare against,
         # filename given by the user should be a .tar.gz archive
         # containing the database files with --blastDBName being the name 
         # of the FASTA file with the sequences indexed in the BLAST DB.
@@ -421,6 +458,9 @@ class TentacleCore:
         elif options.bowtie2:
             self.copy_untar_ref_db(files.contigs, local.contigs)
             local = local._replace(contigs=rebase_to_local_tmp(options.bowtie2DBName))
+        elif options.gem:
+            self.copy_untar_ref_db(files.contigs, local.contigs)
+            local = local._replace(contigs=rebase_to_local_tmp(options.gemDBName))
         else:
             new_contigs = self.gunzip_copy(files.contigs, local.contigs)
             local = local._replace(contigs=new_contigs)
@@ -441,6 +481,8 @@ class TentacleCore:
             mapped_reads_file_path = self.run_blast(local, options)
         elif options.bowtie2:
             mapped_reads_file_path = self.run_bowtie2(local, options)
+        elif options.gem:
+            mapped_reads_file_path = self.run_gem(local, options)
         elif options.razers3:
             mapped_reads_file_path = self.run_razers3(local, options)
         else:
@@ -608,6 +650,29 @@ class TentacleCore:
 
 
     @staticmethod
+    def create_gem_argparser():
+        """
+        Creates parser for gem options (used for mapping).
+        """
+    
+        parser = argparse.ArgumentParser(add_help=False)
+        mapping_group = parser.add_argument_group("Mapping options", "Options for gem.")
+        mapping_group.add_argument("--gem", dest="gem",
+            default=False, action="store_true",
+            help="gem: Perform mapping using gem [default: %(default)s]")
+        mapping_group.add_argument("--gemFasta", dest="gemFasta",
+            default=False, action="store_true",
+            help="gem: Input files are FASTA format and not FASTQ [default %(default)s].")
+        mapping_group.add_argument("--gemThreads", dest="gemThreads",
+            default=psutil.NUM_CPUS, type=int, metavar="N",
+            help="gem: number of threads allowed [default: %(default)s]")
+        mapping_group.add_argument("--gemDBName", dest="gemDBName",
+            type=str, default="", metavar="DBNAME",
+            help="gem: Name of the reference file BASENAME in the database tarball (i.e. entire name of FASTA file). It must have the same basename as the rest of the DB.")
+        return parser
+
+
+    @staticmethod
     def create_pblat_argparser():
         """
         Creates parser for pblat options (used for mapping).
@@ -636,7 +701,8 @@ class TentacleCore:
                                                   TentacleCore.create_razerS3_argparser(),
                                                   TentacleCore.create_pblat_argparser(),
                                                   TentacleCore.create_blast_argparser(),
-                                                  TentacleCore.create_bowtie2_argparser()], add_help=False)
+                                                  TentacleCore.create_bowtie2_argparser(),
+                                                  TentacleCore.create_gem_argparser()], add_help=False)
      
         debug_group = parser.add_argument_group("DEBUG developer options", "Use with caution!")
         debug_group.add_argument("--outputCoverage", dest="outputCoverage", action="store_true", default=False,

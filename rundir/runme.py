@@ -17,7 +17,7 @@ from tentacle.launching.launchers import SubprocessLauncher, SlurmLauncher, Geve
 from tentacle import run
 
 def dd(file_name):
-    return join(base_dir,"data_bowtie2",file_name)
+    return join(base_dir,"data_gem",file_name)
 
 #Add the built in dependencies to PATH
 bin_dir = os.path.join(base_dir,"dependencies","bin",platform.system())
@@ -33,8 +33,8 @@ argv = sys.argv + [
         #"--blast", 
         #"--pblat",
         #"--razers3",
-        "--bowtie2",
-        "--bowtie2DBName", "contigs.fa",
+        "--gem",
+        "--gemDBName", "contigs.fa",
         #"-N", "2", 
         "--localCoordinator",
         #"--distributionUseDedicatedCoordinatorNode",

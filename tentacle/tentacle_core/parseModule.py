@@ -84,7 +84,6 @@ def parse_sam(mappings, contigCoverage, logger):
             contigCoverage[rname][end] += -1
             return contigCoverage
                 
-
     with open(mappings) as f:
         line = f.readline()
         if not line.startswith("@HD"):
@@ -98,8 +97,81 @@ def parse_sam(mappings, contigCoverage, logger):
         for line in f:
             contigCoverage = update_contig_coverage(line, contigCoverage)
 
-    for contig in contigCoverage.keys():
-        contigCoverage[contig] = np.cumsum(contigCoverage[contig])
+    return contigCoverage
+
+
+def parse_gem(mappings, contigCoverage, logger):
+    """
+    Parses GEM alignment format.
+    """
+
+    def find_end_pos_from_gigar(gigar, plus_strand):
+        """
+        Steps through a GIGAR string and returns the sum of the entities
+        that refer to advancements in the reference sequence.
+        """
+        import re
+        regex = r'\d+|\w|>\d+[\+\-\*/\?]|\(\d+\)'
+
+        nucleotides = set(["A", "T", "C", "G"])
+        endpos = 0
+        entities = re.findall(regex, gigar)
+        for entity in entities:
+            try:
+                endpos += int(entity)
+            except ValueError:
+                if entity in nucleotides:
+                    endpos += 1
+                elif entity.startswith(">"):
+                    h = re.search(r'\d+', entity)
+                    if h is not None:
+                        if entity.endswith("+"):
+                            if plus_strand:
+                                endpos += int(h.group(0))
+                            else:
+                                endpos -= int(h.group(0))
+                        elif entity.endswith("-"):
+                            endpos -= int(h.group(0))
+                        else:
+                            endpos += int(h.group(0))
+                    else:
+                        logger.error("Cannot parse GIGAR string: {}".format(gigar))
+                        exit(1)
+                elif entity.startswith("("):
+                    pass
+        return endpos
+
+    def update_contig_coverage(line, contigCoverage):
+        """
+        Takes a line, extracts the required information from it
+        and updates contigCoverage accordingly.
+        """
+        # reference contig, start, and end position are extracted from gigar string.
+        readname, readseq, readqual, matchsummary, alignments = line.split("\t", 4) 
+        if alignments.startswith("-"):
+            return contigCoverage
+        else:
+            # We only use the first alignment if there are several
+            alignments = alignments.split(",")[0] 
+            try:
+                contigname, strand, startpos, gigar = alignments.split(":")
+                if strand == "+": 
+                    plus_strand = True
+                else:
+                    plus_strand = False
+            except ValueError:
+                logger.error("Unable to split alignment information: '{}'".format(alignments))
+                exit(1)
+            startpos = int(startpos)
+            end = startpos + find_end_pos_from_gigar(gigar, plus_strand) - 1
+
+            contigCoverage[contigname][startpos-1] += 1
+            contigCoverage[contigname][end] += -1
+            return contigCoverage
+
+    with open(mappings) as f:
+        for line in f:
+            contigCoverage = update_contig_coverage(line, contigCoverage)
     return contigCoverage
 
 
@@ -129,9 +201,6 @@ def parse_razers3(mappings, contigCoverage, logger):
             # position is non-inclusive and thus already +1:ed.
             contigCoverage[contig][cstart] = contigCoverage[contig][cstart]+1
             contigCoverage[contig][cend] = contigCoverage[contig][cend]-1
-
-    for contig in contigCoverage.keys():
-        contigCoverage[contig] = np.cumsum(contigCoverage[contig])
 
     return contigCoverage
 
@@ -185,9 +254,6 @@ def parse_blast8(mappings, contigCoverage, logger):
                 #    print contigCoverage[contig]
                 #    exit(1)
 
-    for contig in contigCoverage.keys():
-        contigCoverage[contig] = np.cumsum(contigCoverage[contig])
-
     return contigCoverage
 
 
@@ -205,9 +271,14 @@ def sumMapCounts(mappings, contigCoverage, options, logger):
         contigCoverage = parse_razers3(mappings, contigCoverage, logger)
     elif options.bowtie2:
         contigCoverage = parse_sam(mappings, contigCoverage, logger)
+    elif options.gem:
+        contigCoverage = parse_gem(mappings, contigCoverage, logger)
     else:
         logger.error("No mapper selected! This should never happen?!")
         exit(1)
+
+    for contig in contigCoverage.keys():
+        contigCoverage[contig] = np.cumsum(contigCoverage[contig])
     return contigCoverage
 
 
@@ -224,13 +295,14 @@ def computeAnnotationCounts(annotationFilename, contigCoverage, outFilename, log
             annotationCounts = {}
             for line in annotationFile:
                 contig, start, end, strand, annotation = line.split()
-                start = int(start)
+                start = int(start)-1
                 end = int(end)
 
                 ## DEBUG: Print all annotations that are nonzero
                 ## WARNING, prints A LOT!
                 #if computeStatistics(contigCoverage[contig][start:end])[1] != 0:
                 #    print contig
+                #    print start, end
                 #    print contigCoverage[contig][start:end]
                 #    print computeStatistics(contigCoverage[contig][start:end])
 

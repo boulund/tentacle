@@ -681,16 +681,16 @@ class TentacleCore:
             help="GEM: Name of the reference file in the database tarball (i.e. entire name of FASTA file). It must have the same basename as the rest of the DB.")
         mapping_group.add_argument("--gemm", dest="gemm",
             type=float, default=0.04, metavar="m", 
-            help="GEM: max_mismatches | %_mismatches [default: %(default)s")
+            help="GEM: max_mismatches, percent mismatches [default: %(default)s]")
         mapping_group.add_argument("--geme", dest="geme",
             type=float, default=0.04, metavar="e", 
-            help="GEM: max_exit_distance | %_differences [default: %(default)s")
+            help="GEM: max_exit_distance, percent differences [default: %(default)s]")
         mapping_group.add_argument("--gemMinMatchedBases", dest="gemMinMatchedBases",
             type=float, default=0.80, metavar="B", 
-            help="GEM: min-matched-bases | % [default: %(default)s")
+            help="GEM: min-matched-bases, percent [default: %(default)s]")
         mapping_group.add_argument("--gemGranularity", dest="gemGranularity",
             type=float, default=2500000, metavar="G", 
-            help="GEM: granularity when reading from file (in bytes) [default: %(default)s")
+            help="GEM: granularity when reading from file (in bytes) [default: %(default)s]")
         return parser
 
 

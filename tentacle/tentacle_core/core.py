@@ -458,7 +458,7 @@ class TentacleCore:
         # TODO: This could be parallelized
         new_annotations = self.gunzip_copy(files.annotations, local.annotations)
         local = local._replace(annotations=new_annotations)
-        self.logger.info("Time to transfer and prepare annotations: %s", time()-preprocess_time)
+        self.logger.info("Time to transfer and prepare annotations: %s", time()-preprocess_annotation_time)
 
         # Blast, bowtie2 and GEM require a database to compare against,
         # filename given by the user should be a .tar.gz archive.

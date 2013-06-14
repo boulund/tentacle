@@ -28,7 +28,7 @@ class TentacleCore:
 
     def copy_untar_ref_db(self, source_file, destination):
         """
-        Copy, uncompresses gzipped tar file with blast database to destination.
+        Copies and uncompresses gzipped tar file containing reference database to destination.
         """
 
         workdir = os.path.dirname(destination)
@@ -53,6 +53,7 @@ class TentacleCore:
             exit(1)
 
         return destination
+
 
     def gunzip_copy(self, source_file, destination):
         """
@@ -107,7 +108,9 @@ class TentacleCore:
     
     def create_new_pipe(self, firstchar, source):
         """
-        Creates a new source pipe from a string and a Popen object
+        Creates a new source pipe from a string and a Popen object.
+        Inserts firstchar into the new stream and then appends the content
+        of source via external program 'cat'.
         """
     
         new_source = Popen([r"(printf '\x%02x' && cat)" % ord(firstchar)], 
@@ -124,11 +127,11 @@ class TentacleCore:
     
         firstchar = source.stdout.read(1)
         if firstchar == "@":
-            self.logger.info("Reads appear to be in FASTQ format, performing quality control.")
+            self.logger.info("Reads appear to be in FASTQ format.")
             fastq = True
             new_source = self.create_new_pipe(firstchar, source)
         elif firstchar == ">":
-            self.logger.info("Reads appear to be in FASTA format, skipping quality control.")
+            self.logger.info("Reads appear to be in FASTA format, cannot perform quality control.")
             fastq = False
             new_source = self.create_new_pipe(firstchar, source)
         else:
@@ -190,6 +193,7 @@ class TentacleCore:
         # Perform filtering and trimming if FASTQ, 
         # otherwise just write to disk
         if fastq_format and not options.noQualityControl:
+            self.logger.info("Performing quality control on reads...")
             self.logger.info("Filtering reads...")
             filtered_reads = self.filtered_call(source=read_source, 
                                     program="fastq_quality_filter",
@@ -239,6 +243,7 @@ class TentacleCore:
     
         return destination
 
+
     def run_pblat(self, local_files, options):
         """
         Runs pblat
@@ -277,6 +282,7 @@ class TentacleCore:
         self.logger.debug("pblat: stderr: {}".format(pblat_stream_data[1]))
 
         return output_filename
+
 
     def run_blast(self, local, options):
         """
@@ -358,7 +364,12 @@ class TentacleCore:
                        "-I", str(options.gemDBName)+".gem",
                        "-i", local.reads, 
                        "-o", local.reads, #output prefix; is appended with .map
-                       "-T", str(options.gemThreads)]
+                       "-T", str(options.gemThreads),
+                       "-m", str(options.gemm),
+                       "-e", str(options.geme),
+                       "--min-matched-bases", str(options.gemMinMatchedBases),
+                       "--granularity", str(options.gemGranularity)
+                       ]
 
         if not options.gemFasta:
             mapper_call.append("-q")
@@ -426,32 +437,32 @@ class TentacleCore:
 
         return local.reads+".razers"
     
+
     def preprocess_data_and_map_reads(self, files, options):
         """
         Performs file copy operations, gunzip, quality filtering etc. 
-        before running Razers3.
+        before running the mapper.
         """
         
-        preprocess_time = time()
+        preprocess_annotation_time = time()
         temp_dir = tempfile.mkdtemp()
         self.logger.info("Using created tempdir {} .".format(temp_dir))
     
-        #remote = extract_file_options(options)
         # Define local filenames of source files
         def rebase_to_local_tmp(f):
             return os.path.join(temp_dir, os.path.basename(f))
         LocalTuple = namedtuple("local", ["contigs", "reads", "annotations"])
         local = LocalTuple(rebase_to_local_tmp(files.contigs), rebase_to_local_tmp(files.reads), rebase_to_local_tmp(files.annotations))
     
-        # Copy annotation and contig files to node, returns updated local filename
+        # Copy annotation file to node, returns updated local filename
         # TODO: This could be parallelized
         new_annotations = self.gunzip_copy(files.annotations, local.annotations)
         local = local._replace(annotations=new_annotations)
+        self.logger.info("Time to transfer and prepare annotations: %s", time()-preprocess_time)
 
         # Blast, bowtie2 and GEM require a database to compare against,
-        # filename given by the user should be a .tar.gz archive
-        # containing the database files with --blastDBName being the name 
-        # of the FASTA file with the sequences indexed in the BLAST DB.
+        # filename given by the user should be a .tar.gz archive.
+        preprocess_references_time = time()
         if options.blast: 
             self.copy_untar_ref_db(files.contigs, local.contigs)
             local = local._replace(contigs=rebase_to_local_tmp(options.blastDBName))
@@ -464,7 +475,7 @@ class TentacleCore:
         else:
             new_contigs = self.gunzip_copy(files.contigs, local.contigs)
             local = local._replace(contigs=new_contigs)
-        self.logger.info("Time to transfer annotations and contigs: %s", time()-preprocess_time)
+        self.logger.info("Time to transfer and prepare references: %s", time()-preprocess_references_time)
     
         # Prepare reads for mapping (gunzip, filter and transfer to node)
         # Returns updated local filename
@@ -530,7 +541,6 @@ class TentacleCore:
         self.logger.info("Computing counts per annotation, writing to {}...".format(outfile))
         parseModule.computeAnnotationCounts(mapped_reads.annotations, contig_coverage, outfile, self.logger)
         self.logger.info("Counts per annotation computation completed.")
-
 
 
     def analyse(self, files, options):
@@ -652,23 +662,35 @@ class TentacleCore:
     @staticmethod
     def create_gem_argparser():
         """
-        Creates parser for gem options (used for mapping).
+        Creates parser for GEM options (used for mapping).
         """
     
         parser = argparse.ArgumentParser(add_help=False)
-        mapping_group = parser.add_argument_group("Mapping options", "Options for gem.")
+        mapping_group = parser.add_argument_group("Mapping options", "Options for GEM.")
         mapping_group.add_argument("--gem", dest="gem",
             default=False, action="store_true",
-            help="gem: Perform mapping using gem [default: %(default)s]")
+            help="GEM: Perform mapping using GEM [default: %(default)s]")
         mapping_group.add_argument("--gemFasta", dest="gemFasta",
             default=False, action="store_true",
-            help="gem: Input files are FASTA format and not FASTQ [default %(default)s].")
+            help="GEM: Input files are FASTA format and not FASTQ [default %(default)s].")
         mapping_group.add_argument("--gemThreads", dest="gemThreads",
             default=psutil.NUM_CPUS, type=int, metavar="N",
-            help="gem: number of threads allowed [default: %(default)s]")
+            help="GEM: number of threads allowed [default: %(default)s (autodetected)]")
         mapping_group.add_argument("--gemDBName", dest="gemDBName",
             type=str, default="", metavar="DBNAME",
-            help="gem: Name of the reference file BASENAME in the database tarball (i.e. entire name of FASTA file). It must have the same basename as the rest of the DB.")
+            help="GEM: Name of the reference file in the database tarball (i.e. entire name of FASTA file). It must have the same basename as the rest of the DB.")
+        mapping_group.add_argument("--gemm", dest="gemm",
+            type=float, default=0.04, metavar="m", 
+            help="GEM: max_mismatches | %_mismatches [default: %(default)s")
+        mapping_group.add_argument("--geme", dest="geme",
+            type=float, default=0.04, metavar="e", 
+            help="GEM: max_exit_distance | %_differences [default: %(default)s")
+        mapping_group.add_argument("--gemMinMatchedBases", dest="gemMinMatchedBases",
+            type=float, default=0.80, metavar="B", 
+            help="GEM: min-matched-bases | % [default: %(default)s")
+        mapping_group.add_argument("--gemGranularity", dest="gemGranularity",
+            type=float, default=2500000, metavar="G", 
+            help="GEM: granularity when reading from file (in bytes) [default: %(default)s")
         return parser
 
 

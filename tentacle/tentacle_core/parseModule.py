@@ -13,6 +13,7 @@ def indexContigs(contigsFile, logger):
     computations.
     """
 
+    array_size = 0
     contigCoverage = {} 
     # Parse contigsFile to fill out data structure
     with open(contigsFile) as f:
@@ -35,19 +36,22 @@ def indexContigs(contigsFile, logger):
                         # Create a list of zeros for current contig ("header")
                         # It is one element longer than the number of bases 
                         # in the contig.
-                        contigCoverage[header] = np.zeros(seqlength+1)
+                        contigCoverage[header] = np.zeros(seqlength+1, dtype=np.uint16)
+                        array_size += contigCoverage[header].nbytes
                         break
                     else:
                         # Prepared for contig sequences in multi-line FASTA.
-                        # This will sum the number of
-                        # bases (characters) for each line together
+                        # This will sum the number of bases (characters) 
+                        # for each line 
                         seqlength = seqlength + len(line)
                         line = f.readline().strip()
                         if line == "":
                             # Finish the last contig
-                            contigCoverage[header] = np.zeros(seqlength+1)
+                            contigCoverage[header] = np.zeros(seqlength+1, dtype=np.uint16)
+                            array_size += contigCoverage[header].nbytes
                             break
 
+    logger.debug("Sum of all numpy array sizes: {}".format(array_size))
     return contigCoverage
 
 

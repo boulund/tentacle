@@ -15,6 +15,12 @@ class LaunchingMasterWorkerExecutor(object):
         group.add_argument("--localCoordinator", action="store_true",
             default=False,
             help="Run the processing coordinator locally, synchronously in the current process, instead of launching it in a remote process. [default =  %(default)s]")
+        group.add_argument("--splitCharReads", type=str, default=".", metavar="C",
+            help="Character used to split filenames of reads [default=%(default)s]")
+        group.add_argument("--splitCharAnnotations", type=str, default=".", metavar="C",
+            help="Character used to split filenames of annotations [default=%(default)s]")
+        group.add_argument("--splitCharReferences", type=str, default=".", metavar="C",
+            help="Character used to split filenames of references [default=%(default)s]")
         parser.add_argument_group(group)
         return parser     
     

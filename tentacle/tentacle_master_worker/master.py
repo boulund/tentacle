@@ -30,9 +30,9 @@ class TentacleMaster(object):
     
     def get_tasks_from_parsed_args(self, parsed_args, output_dir_structure):
         utils.print_run_settings(parsed_args, self.master_logger)
-        return identify_linked_files({"annotations":(parsed_args.annotationsDirectory, "_"),
-                                      "contigs":(parsed_args.contigsDirectory, "_"),
-                                      "reads":(parsed_args.readsDirectory, "_")},
+        return identify_linked_files({"annotations":(parsed_args.annotationsDirectory, parsed_args.splitCharAnnotations),
+                                      "contigs":(parsed_args.contigsDirectory, parsed_args.splitCharReferences), 
+                                      "reads":(parsed_args.readsDirectory, parsed_args.splitCharReads)},
                                       output_dir_structure, self.master_logger)
         
 # --- Private/Internal functions and classes ---

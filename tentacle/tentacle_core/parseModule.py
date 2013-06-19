@@ -282,7 +282,7 @@ def sumMapCounts(mappings, contigCoverage, options, logger):
         exit(1)
 
     for contig in contigCoverage.keys():
-        contigCoverage[contig] = np.cumsum(contigCoverage[contig])
+        np.cumsum(contigCoverage[contig], dtype=np.uint16, out=contigCoverage[contig])
     return contigCoverage
 
 

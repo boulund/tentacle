@@ -244,20 +244,20 @@ class TentacleCore:
         return destination
 
 
-    def run_pblat(self, local_files, options):
+    def run_pblat(self, local, options):
         """
         Runs pblat
         """
 
-        output_filename = local.reads+".results"
         mapper_call = [utils.resolve_executable("pblat"),
                        "-threads=" + str(options.pblatThreads),
                        "-out=blast8" ]
         
         # A workaround for pblat not working correctly with some absolute path 
         # names for the result:
-        # Run the command in the result dir and give the file_name relative to that.
-        result_base = os.path.dirname(mapped_reads_file_path)
+        # Run the command in the result dir and give the file name relative to that.
+        output_filename = local.reads+".results"
+        result_base = os.path.dirname(output_filename)
 
         # Append arguments to mapper_call
         mapper_call.append(os.path.relpath(local.contigs, result_base))

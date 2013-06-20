@@ -36,7 +36,7 @@ def indexContigs(contigsFile, logger):
                         # Create a list of zeros for current contig ("header")
                         # It is one element longer than the number of bases 
                         # in the contig.
-                        contigCoverage[header] = np.zeros(seqlength+1, dtype=np.uint16)
+                        contigCoverage[header] = np.zeros(seqlength+1, dtype=np.int16)
                         array_size += contigCoverage[header].nbytes
                         break
                     else:
@@ -47,7 +47,7 @@ def indexContigs(contigsFile, logger):
                         line = f.readline().strip()
                         if line == "":
                             # Finish the last contig
-                            contigCoverage[header] = np.zeros(seqlength+1, dtype=np.uint16)
+                            contigCoverage[header] = np.zeros(seqlength+1, dtype=np.int16)
                             array_size += contigCoverage[header].nbytes
                             break
 
@@ -282,7 +282,7 @@ def sumMapCounts(mappings, contigCoverage, options, logger):
         exit(1)
 
     for contig in contigCoverage.keys():
-        np.cumsum(contigCoverage[contig], dtype=np.uint16, out=contigCoverage[contig])
+        np.cumsum(contigCoverage[contig], dtype=np.int16, out=contigCoverage[contig])
     return contigCoverage
 
 

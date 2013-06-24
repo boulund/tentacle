@@ -777,8 +777,6 @@ class TentacleCore:
         parser.add_argument("-o", "--outAnnotationCounts", dest="annotationStatsFile", 
           default="annotationStats.tab",
           help="Output filename for the counts of reads that matched to annotations [default: %(default)s]")
-        parser.add_argument("--deleteTempFiles", dest="deleteTempFiles", default=False,
-            action="store_true", help="Remove temporary files on nodes after successful completion [default: %(default)s]")
             
         
         return parser

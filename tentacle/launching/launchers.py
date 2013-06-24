@@ -87,7 +87,7 @@ class SlurmLauncher(Launcher):
     @classmethod
     def create_argparser(cls):
         parser = argparse.ArgumentParser(add_help=False)
-        group = parser.add_argument_group("SLURM options", "Options for the distributed computing though SLURM")
+        group = parser.add_argument_group("SLURM options", "Options for the distributed computing through SLURM")
         group.add_argument("--slurmPartition",
             default="glenn", #TODO: Remove this hardcoded default, move into config file for easy access
             help="The P option for sbatch. [default: %(default)s]")

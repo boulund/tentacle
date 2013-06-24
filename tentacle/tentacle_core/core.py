@@ -33,7 +33,7 @@ class TentacleCore:
 
         workdir = os.path.dirname(destination)
 
-        if source_file.endswith((".gz", ".GZ")) or source_file.endswith((".tar", ".TAR")):
+        if source_file.endswith((".gz", ".GZ")) or source_file.endswith((".tar", ".TAR")) or source_file.endswith((".tgz", ".TGZ")):
             self.logger.info("It appears reference DB is in .tar or .tar.gz format")
             self.logger.info("Extracting (and if necessary gunzipping) database...")
             shutil.copy(source_file, destination)
@@ -506,7 +506,7 @@ class TentacleCore:
         mapped_reads = MappedReadsTuple(local.contigs,
                                         mapped_reads_file_path, 
                                         local.annotations)
-        return mapped_reads
+        return (mapped_reads, temp_dir)
     
     
     def analyse_coverage(self, mapped_reads, outfile, options):
@@ -543,12 +543,23 @@ class TentacleCore:
         self.logger.info("Counts per annotation computation completed.")
 
 
+    def delete_temporary_files(self, temp_dir):
+        """
+        Deletes all temporary files created during analysis.
+        """
+        # TODO: More logic to determine if delete was actually successful etc.
+        shutil.rmtree(temp_dir)
+
+
     def analyse(self, files, options):
-        mapped_reads = self.preprocess_data_and_map_reads(files, options)
+        mapped_reads, temp_dir = self.preprocess_data_and_map_reads(files, options)
         coveragetime = time()
         self.analyse_coverage(mapped_reads, files.annotationStats, options)
-        self.logger.info("Time to analyse coverage was %s", time()-coveragetime)
+        self.logger.info("Time to analyse coverage: %s", time()-coveragetime)
         self.logger.info("Results available in %s", files.annotationStats)
+        if options.deleteTempFiles:
+            self.logger.info("Deleting temporary files...")
+            self.delete_temporary_files(temp_dir)
         self.logger.info(" ----- ===== LOGGING COMPLETED ===== ----- ")
     
     
@@ -766,6 +777,9 @@ class TentacleCore:
         parser.add_argument("-o", "--outAnnotationCounts", dest="annotationStatsFile", 
           default="annotationStats.tab",
           help="Output filename for the counts of reads that matched to annotations [default: %(default)s]")
+        parser.add_argument("--deleteTempFiles", dest="deleteTempFiles", default=False,
+            action="store_true", help="Remove temporary files on nodes after successful completion [default: %(default)s]")
+            
         
         return parser
         

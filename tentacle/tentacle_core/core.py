@@ -33,7 +33,7 @@ class TentacleCore:
 
         workdir = os.path.dirname(destination)
 
-        if source_file.endswith((".gz", ".GZ")) or source_file.endswith((".tar", ".TAR")) or source_file.endswith((".tgz", ".TGZ")):
+        if source_file.lower().endswith((".gz", ".tar", ".tgz")):
             self.logger.info("It appears reference DB is in .tar or .tar.gz format")
             self.logger.info("Extracting (and if necessary gunzipping) database...")
             shutil.copy(source_file, destination)
@@ -548,6 +548,7 @@ class TentacleCore:
         Deletes all temporary files created during analysis.
         """
         # TODO: More logic to determine if delete was actually successful etc.
+        self.logger.info("Deleting temporary files in folder '{}'...".format(temp_dir))
         shutil.rmtree(temp_dir)
 
 
@@ -558,7 +559,6 @@ class TentacleCore:
         self.logger.info("Time to analyse coverage: %s", time()-coveragetime)
         self.logger.info("Results available in %s", files.annotationStats)
         if options.deleteTempFiles:
-            self.logger.info("Deleting temporary files...")
             self.delete_temporary_files(temp_dir)
         self.logger.info(" ----- ===== LOGGING COMPLETED ===== ----- ")
     

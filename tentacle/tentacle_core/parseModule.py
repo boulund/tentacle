@@ -36,8 +36,8 @@ def indexContigs(contigsFile, logger):
                         # Create a list of zeros for current contig ("header")
                         # It is one element longer than the number of bases 
                         # in the contig.
-                        contigCoverage[header] = np.zeros(seqlength+1, dtype=np.int16)
-                        array_size += contigCoverage[header].nbytes
+                        contigCoverage[header] = [np.zeros(seqlength+1, dtype=np.int16), 0]
+                        array_size += contigCoverage[header][0].nbytes
                         break
                     else:
                         # Prepared for contig sequences in multi-line FASTA.
@@ -47,8 +47,8 @@ def indexContigs(contigsFile, logger):
                         line = f.readline().strip()
                         if line == "":
                             # Finish the last contig
-                            contigCoverage[header] = np.zeros(seqlength+1, dtype=np.int16)
-                            array_size += contigCoverage[header].nbytes
+                            contigCoverage[header] = [np.zeros(seqlength+1, dtype=np.int16), 0]
+                            array_size += contigCoverage[header][0].nbytes
                             break
 
     logger.debug("Sum of all numpy array sizes: {}".format(array_size))
@@ -84,8 +84,9 @@ def parse_sam(mappings, contigCoverage, logger):
         else:
             start = int(pos)
             end = start + find_end_pos_from_cigar(cigar) - 1
-            contigCoverage[rname][start-1] += 1
-            contigCoverage[rname][end] += -1
+            contigCoverage[rname][0][start-1] += 1
+            contigCoverage[rname][0][end] += -1
+            contigCoverage[rname][1] += 1 # Update mapped read count
             return contigCoverage
                 
     with open(mappings) as f:
@@ -169,8 +170,9 @@ def parse_gem(mappings, contigCoverage, logger):
             startpos = int(startpos)
             end = startpos + find_end_pos_from_gigar(gigar, plus_strand) - 1
 
-            contigCoverage[contigname][startpos-1] += 1
-            contigCoverage[contigname][end] += -1
+            contigCoverage[contigname][0][startpos-1] += 1
+            contigCoverage[contigname][0][end] += -1
+            contigCoverage[contigname][1] += 1 # Number of mapped reads
             return contigCoverage
 
     with open(mappings) as f:
@@ -203,8 +205,9 @@ def parse_razers3(mappings, contigCoverage, logger):
             # 1 at the end so that we later can compute the cumulative sum
             # from left to right across the entire contig. Note that the end
             # position is non-inclusive and thus already +1:ed.
-            contigCoverage[contig][cstart] = contigCoverage[contig][cstart]+1
-            contigCoverage[contig][cend] = contigCoverage[contig][cend]-1
+            contigCoverage[contig][0][cstart] = contigCoverage[contig][cstart]+1
+            contigCoverage[contig][0][cend] = contigCoverage[contig][cend]-1
+            contigCoverage[contig][1] += 1
 
     return contigCoverage
 
@@ -249,8 +252,9 @@ def parse_blast8(mappings, contigCoverage, logger):
                 # Add 1 at the starting position of the mapped read and subtract
                 # 1 at the end so that we later can compute the cumulative sum
                 # from left to right across the entire contig.
-                contigCoverage[contig][sstart-1] = contigCoverage[contig][sstart-1]+1
-                contigCoverage[contig][send] = contigCoverage[contig][send]-1
+                contigCoverage[contig][0][sstart-1] = contigCoverage[contig][sstart-1]+1
+                contigCoverage[contig][0][send] = contigCoverage[contig][send]-1
+                contigCoverage[contig][1] += 1 # Number of mapped reads
                 
                 # DEBUG
                 #if np.min(np.cumsum(contigCoverage[contig])) < 0:
@@ -282,7 +286,7 @@ def sumMapCounts(mappings, contigCoverage, options, logger):
         exit(1)
 
     for contig in contigCoverage.keys():
-        np.cumsum(contigCoverage[contig], dtype=np.int16, out=contigCoverage[contig])
+        np.cumsum(contigCoverage[contig][0], dtype=np.int16, out=contigCoverage[contig][0])
     return contigCoverage
 
 
@@ -304,18 +308,19 @@ def computeAnnotationCounts(annotationFilename, contigCoverage, outFilename, log
 
                 ## DEBUG: Print all annotations that are nonzero
                 ## WARNING, prints A LOT!
-                #if computeStatistics(contigCoverage[contig][start:end])[1] != 0:
+                #if computeStatistics(contigCoverage[contig][0][start:end])[1] != 0:
                 #    print contig
                 #    print start, end
-                #    print contigCoverage[contig][start:end]
-                #    print computeStatistics(contigCoverage[contig][start:end])
+                #    print contigCoverage[contig][0][start:end]
+                #    print computeStatistics(contigCoverage[contig][0][start:end])
 
                 try:
-                    stats = computeStatistics(contigCoverage[contig][start:end])
+                    stats = computeStatistics(contigCoverage[contig][0][start:end])
                 except KeyError, contigHeader:
                     logger.error("Could not find match for contig header '{0}' in annotation file {1}".format(contigHeader, annotationFilename))
                     exit(1)
                 outFile.write(contig+"_"+annotation+":"+str(start)+":"+str(end)+":"+strand+"\t"+
+                              str(contigCoverage[contig][1])+"\t"+
                               str(stats[0])+"\t"+
                               str(stats[1])+"\t"+
                               str(stats[2])+"\n")

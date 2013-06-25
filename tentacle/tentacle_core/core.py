@@ -34,7 +34,7 @@ class TentacleCore:
         workdir = os.path.dirname(destination)
 
         if source_file.lower().endswith((".gz", ".tar", ".tgz")):
-            self.logger.info("It appears reference DB is in .tar or .tar.gz format")
+            self.logger.info("It appears reference DB '%s' is in tar/gz format", source_file)
             self.logger.info("Extracting (and if necessary gunzipping) database...")
             shutil.copy(source_file, destination)
             tar_call = [utils.resolve_executable("tar"), "-xf", source_file]
@@ -61,7 +61,7 @@ class TentacleCore:
         gunzip the file before moving it to the destination.
         """
     
-        if source_file.endswith((".gz", ".GZ")):
+        if source_file.lower().endswith((".gz")):
             self.logger.info("File %s seems gzipped, uncompressing to node...", source_file)
             
             # Remove the .gz suffix and redirect stdout to this file
@@ -170,6 +170,7 @@ class TentacleCore:
         write = Popen([utils.resolve_executable("cat")], stdin=source.stdout, stdout=destination_file)
         return write
     
+
         
     def prepare_reads(self, reads, destination, options):
         """
@@ -238,10 +239,57 @@ class TentacleCore:
             # entire pipeline that has been pending
             written_reads.communicate() # Writes to disk
             self.logger.info("Successfully wrote reads to local disk.")
+
+        if options.bowtie2FilterReads:
+            # Transfer genome index for bowtie2 and perform read filtering
+            db_destination = os.path.dirname(destination)+"/"+os.path.basename(options.bowtie2FilterDB)
+            self.copy_untar_ref_db(options.bowtie2FilterDB, db_destination)
+            filtered_reads = self.filter_human_reads_bowtie2(destination, options)
+            self.logger.info("Finished preparing %s for mapping.", reads)
+            return filtered_reads
     
         self.logger.info("Finished preparing %s for mapping.", reads)
-    
         return destination
+
+
+    def filter_human_reads_bowtie2(self, reads, options):
+        """
+        Runs bowtie2 to filter out reads that DO NOT map to the given reference.
+        """
+
+        output_filename = reads+".filtered.fq"
+        if not options.bowtie2FilterDB:
+            self.log.error("--bowtie2FilterDB is empty!")
+            exit(1)
+        db_name = os.path.basename(options.bowtie2FilterDB.split(".")[0])
+        mapper_call = [utils.resolve_executable("bowtie2"),
+                       "-x", db_name,
+                       "-U", reads, 
+                       "-S", "/dev/null", #output_filename,
+                       "--un", output_filename,
+                       "-p", str(options.bowtie2Threads)]
+
+        # Run the command in the result dir and give the file_name relative to that.
+        result_base = os.path.dirname(output_filename)
+        # Run Bowtie2
+        self.logger.info("Running bowtie2 to filter reads before mapping...")
+        self.logger.debug("bowtie2 call: {0}".format(' '.join(mapper_call)))
+        stdout.flush() # Force printout so users knows what's going on
+        bowtie2 = Popen(mapper_call, stdout=PIPE, stderr=PIPE, cwd=result_base)
+        bowtie2_stream_data = bowtie2.communicate()
+        if bowtie2.returncode is not 0:
+            self.logger.error("bowtie2: return code {}".format(bowtie2.returncode))
+            self.logger.error("bowtie2: stdout: {}".format(bowtie2_stream_data[0])) 
+            self.logger.error("bowtie2: stderr: {}".format(bowtie2_stream_data[1])) 
+            exit(1)
+        else:
+            # TODO: assert mapping results?
+            pass
+        self.logger.debug("bowtie2: stdout: {}".format(bowtie2_stream_data[0])) 
+        self.logger.debug("bowtie2: stderr: {}".format(bowtie2_stream_data[1])) 
+
+        return output_filename
+
 
 
     def run_pblat(self, local, options):
@@ -667,6 +715,12 @@ class TentacleCore:
         mapping_group.add_argument("--bowtie2DBName", dest="bowtie2DBName",
             type=str, default="", metavar="DBNAME",
             help="bowtie2: Name of the reference file BASENAME in the database tarball (NO extension). It must have the same basename as the rest of the DB.")
+        mapping_group.add_argument("--bowtie2FilterReads", dest="bowtie2FilterReads",
+            action="store_true", 
+            help="bowtie2: Use bowtie2 to filter out for example human reads in the read preprocessing step [default: %(default)s].")
+        mapping_group.add_argument("--bowtie2FilterDB", dest="bowtie2FilterDB",
+            type=str, default="", metavar="FilterDB", 
+            help="bowtie2: Name of the filtering reference database tarball (including extension). It must have the same basename as the rest of the actual DB files.")
         return parser
 
 

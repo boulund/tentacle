@@ -17,7 +17,7 @@ from tentacle.launching.launchers import SubprocessLauncher, SlurmLauncher, Geve
 from tentacle import run
 
 def dd(file_name):
-    return join(base_dir,"data_gem",file_name)
+    return join(base_dir,"data_gem_human_filter",file_name)
 
 #Add the built in dependencies to PATH
 bin_dir = os.path.join(base_dir,"dependencies","bin",platform.system())
@@ -34,6 +34,8 @@ argv = sys.argv + [
         "--splitCharAnnotations", "_",
         "--splitCharReads", "_",
         "--splitCharReferences", "_",
+        "--bowtie2FilterReads",
+        "--bowtie2FilterDB", "/home/boulund/workspace/tentacle_human_filter_support/data_gem_human_filter/hg19.tgz",
         #"--blast", 
         #"--pblat",
         #"--razers3",

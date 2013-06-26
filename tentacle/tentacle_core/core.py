@@ -95,7 +95,7 @@ class TentacleCore:
         object with gunzip stream output, otherwise cat into a pipe.
         """
         
-        if filename.endswith((".gz", ".GZ")):
+        if filename.lower().endswith((".gz")):
             self.logger.info("File %s seems gzipped, uncompressing.", filename)
             gunzip_call = [utils.resolve_executable("gunzip"), "-c", filename]
             uncompressed_data = Popen(gunzip_call, stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -180,7 +180,7 @@ class TentacleCore:
         # Make sure any .gz filename endings get removed from the destination
         # since some mapping tools rely on file endings to determine the
         # input format
-        if destination.endswith((".gz",".GZ")):
+        if destination.lower().endswith((".gz")):
             destination = destination[:-3]
     
         self.logger.info("Preparing %s for mapping.", reads)
@@ -259,8 +259,9 @@ class TentacleCore:
 
         output_filename = reads+".filtered.fq"
         if not options.bowtie2FilterDB:
-            self.log.error("--bowtie2FilterDB is empty!")
+            self.log.error("--bowtie2FilterDB is empty! Sorry for noticing so late! :(")
             exit(1)
+
         db_name = os.path.basename(options.bowtie2FilterDB.split(".")[0])
         mapper_call = [utils.resolve_executable("bowtie2"),
                        "-x", db_name,
@@ -411,7 +412,7 @@ class TentacleCore:
         mapper_call = [utils.resolve_executable("gem-mapper"),
                        "-I", str(options.gemDBName)+".gem",
                        "-i", local.reads, 
-                       "-o", local.reads, #output prefix; is appended with .map
+                       "-o", local.reads, #output prefix; gem appends with .map
                        "-T", str(options.gemThreads),
                        "-m", str(options.gemm),
                        "-e", str(options.geme),

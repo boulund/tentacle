@@ -36,7 +36,7 @@ def indexContigs(contigsFile, logger):
                         # Create a list of zeros for current contig ("header")
                         # It is one element longer than the number of bases 
                         # in the contig.
-                        contigCoverage[header] = [np.zeros(seqlength+1, dtype=np.int16), 0]
+                        contigCoverage[header] = [np.zeros(seqlength+1, dtype=np.int32), 0]
                         array_size += contigCoverage[header][0].nbytes
                         break
                     else:
@@ -47,7 +47,7 @@ def indexContigs(contigsFile, logger):
                         line = f.readline().strip()
                         if line == "":
                             # Finish the last contig
-                            contigCoverage[header] = [np.zeros(seqlength+1, dtype=np.int16), 0]
+                            contigCoverage[header] = [np.zeros(seqlength+1, dtype=np.int32), 0]
                             array_size += contigCoverage[header][0].nbytes
                             break
 
@@ -205,8 +205,8 @@ def parse_razers3(mappings, contigCoverage, logger):
             # 1 at the end so that we later can compute the cumulative sum
             # from left to right across the entire contig. Note that the end
             # position is non-inclusive and thus already +1:ed.
-            contigCoverage[contig][0][cstart] = contigCoverage[contig][cstart]+1
-            contigCoverage[contig][0][cend] = contigCoverage[contig][cend]-1
+            contigCoverage[contig][0][cstart] += 1
+            contigCoverage[contig][0][cend] += -1
             contigCoverage[contig][1] += 1
 
     return contigCoverage
@@ -252,8 +252,8 @@ def parse_blast8(mappings, contigCoverage, logger):
                 # Add 1 at the starting position of the mapped read and subtract
                 # 1 at the end so that we later can compute the cumulative sum
                 # from left to right across the entire contig.
-                contigCoverage[contig][0][sstart-1] = contigCoverage[contig][sstart-1]+1
-                contigCoverage[contig][0][send] = contigCoverage[contig][send]-1
+                contigCoverage[contig][0][sstart-1] += 1
+                contigCoverage[contig][0][send] += -1
                 contigCoverage[contig][1] += 1 # Number of mapped reads
                 
                 # DEBUG
@@ -286,7 +286,7 @@ def sumMapCounts(mappings, contigCoverage, options, logger):
         exit(1)
 
     for contig in contigCoverage.keys():
-        np.cumsum(contigCoverage[contig][0], dtype=np.int16, out=contigCoverage[contig][0])
+        np.cumsum(contigCoverage[contig][0], dtype=np.int32, out=contigCoverage[contig][0])
     return contigCoverage
 
 

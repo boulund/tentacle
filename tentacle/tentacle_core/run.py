@@ -9,11 +9,6 @@ def run(argv):
     # Instantiate a logger that writes to both stdout and logfile
     logger = create_file_logger(options.logdebug, files.log)
 
-    # Notify user if no mapper was selected!
-    if not options.pblat and not options.blast and not options.razers3:
-        logger.error("No mapper selected! Need one of pblat, blast or razers3.")
-        exit(1)
-            
     print_run_settings(options, logger)
     print_files_settings(files, logger)
 

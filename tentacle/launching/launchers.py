@@ -92,7 +92,7 @@ class SlurmLauncher(Launcher):
             default="glenn", #TODO: Remove this hardcoded default, move into config file for easy access
             help="The P option for sbatch. [default: %(default)s]")
         group.add_argument("--slurmAccount",
-            default="SNIC001-12-175", 
+            default="SNIC2013-1-191", 
             help="The A option for sbatch. [default: %(default)s]")
         group.add_argument("--slurmJobName",
             default="Tentacle",

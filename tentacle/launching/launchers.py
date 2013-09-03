@@ -104,7 +104,7 @@ class SlurmLauncher(Launcher):
             default="SMALLMEM",
             help="The C option for sbatch. Example SMALLMEM/BIGMEM/HUGEMEM [default: %(default)s]")
         group.add_argument("--slurmNodesPerJob",
-            default="1", metavar="N",
+            default="1", 
             help="Number of nodes in each slurm call [default: %(default)s]")
 #        group.add_argument("--slurmExtraOptions",
 #            default="",

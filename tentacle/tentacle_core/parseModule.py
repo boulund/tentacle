@@ -276,6 +276,8 @@ def sumMapCounts(mappings, contigCoverage, options, logger):
         contigCoverage = parse_blast8(mappings, contigCoverage, options, logger)
     elif options.blast:
         contigCoverage = parse_blast8(mappings, contigCoverage, options, logger)
+    elif options.usearch:
+        contigCoverage = parse_blast8(mappings, contigCoverage, options, logger)
     elif options.razers3:
         contigCoverage = parse_razers3(mappings, contigCoverage, logger)
     elif options.bowtie2:

@@ -371,6 +371,40 @@ class TentacleCore:
         return output_filename
 
 
+    def run_usearch(self, local, options):
+        """
+        Runs USEARCH
+        """
+
+        output_filename = local.reads+".results"
+        mapper_call = [utils.resolve_executable("usearch"),
+                       "-usearch_global", str(local.reads),
+                       "-db", options.usearchDBName.split(".", 1)[0],
+                       "-id", options.usearchID,
+                       "-blast6out", output_filename]
+
+        # Run the command in the result dir and give the file_name relative to that.
+        result_base = os.path.dirname(output_filename)
+        # Run USEARCH
+        self.logger.info("Running USEARCH...")
+        self.logger.debug("usearch call: {0}".format(' '.join(mapper_call)))
+        stdout.flush() # Force printout so users knows what's going on
+        usearch = Popen(mapper_call, stdout=PIPE, stderr=PIPE, cwd=result_base)
+        usearch_stream_data = usearch.communicate()
+        if usearch.returncode is not 0:
+            self.logger.error("usearch: return code {}".format(usearch.returncode))
+            self.logger.error("usearch: stdout: {}".format(usearch_stream_data[0])) 
+            self.logger.error("usearch: stderr: {}".format(usearch_stream_data[1])) 
+            exit(1)
+        else:
+            # TODO: assert mapping results?
+            pass
+        self.logger.debug("usearch: stdout: {}".format(usearch_stream_data[0])) 
+        self.logger.debug("usearch: stderr: {}".format(usearch_stream_data[1])) 
+
+        return output_filename
+
+
     def run_bowtie2(self, local, options):
         """
         Runs bowtie2
@@ -515,6 +549,9 @@ class TentacleCore:
         if options.blast: 
             self.copy_untar_ref_db(files.contigs, local.contigs)
             local = local._replace(contigs=rebase_to_local_tmp(options.blastDBName))
+        elif options.usearch:
+            self.copy_untar_ref_db(files.contigs, local.contigs)
+            local = local._replace(contigs=rebase_to_local_tmp(options.usearchDBName))
         elif options.bowtie2:
             self.copy_untar_ref_db(files.contigs, local.contigs)
             local = local._replace(contigs=rebase_to_local_tmp(options.bowtie2DBName))
@@ -545,6 +582,8 @@ class TentacleCore:
             mapped_reads_file_path = self.run_gem(local, options)
         elif options.razers3:
             mapped_reads_file_path = self.run_razers3(local, options)
+        elif options.usearch:
+            mapped_reads_file_path = self.run_usearch(local, options)
         else:
             self.logger.error("No mapper selected! (this should never happen!)")
             exit(1)
@@ -755,7 +794,7 @@ class TentacleCore:
             type=float, default=0.80, metavar="B", 
             help="GEM: min-matched-bases, percent [default: %(default)s]")
         mapping_group.add_argument("--gemGranularity", dest="gemGranularity",
-            type=float, default=2500000, metavar="G", 
+            type=int, default=2500000, metavar="G", 
             help="GEM: granularity when reading from file (in bytes) [default: %(default)s]")
         return parser
 
@@ -774,6 +813,26 @@ class TentacleCore:
         mapping_group.add_argument("--pblatThreads", dest="pblatThreads",
             type=int, default=psutil.NUM_CPUS, metavar="N",
             help="pblat: Set number of threads for parallel blat mapping [default: N=%(default)s [=the current number of CPUs]]")
+        return parser
+
+
+    @staticmethod
+    def create_usearch_argparser():
+        """
+        Creates parser for usearch options (used for mapping).
+        """
+    
+        parser = argparse.ArgumentParser(add_help=False)
+        mapping_group = parser.add_argument_group("Mapping options", "Options for usearch.")
+        mapping_group.add_argument("--usearch", dest="usearch",
+            default=False, action="store_true",
+            help="usearch: Perform mapping using usearch [default: %(default)s]")
+        mapping_group.add_argument("--usearchID", dest="usearchID",
+            type=float, default="0.9", metavar="I",
+            help="usearch: Sequence similarity for usearch_global [default: %(default)s]")
+        mapping_group.add_argument("--usearchDBName", dest="usearchDBName",
+            type=str, default="", metavar="DBNAME",
+            help="usearch: Name of the UDB file in the database tarball (including extension). It must have the same basename as the rest of the DB.")
         return parser
     
     

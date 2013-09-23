@@ -207,7 +207,7 @@ class TentacleCore:
                                    **{"-t":options.fastqThreshold,
                                       "-l":options.fastqMinLength,
                                       "-v":""})
-            if options.pblat or options.blast:
+            if options.pblat or options.blast or options.usearch:
                 self.logger.info("Converting FASTQ to FASTA...")
                 fasta_reads = self.filtered_call(source=trimmed_reads,
                                      program="fastq_to_fasta",

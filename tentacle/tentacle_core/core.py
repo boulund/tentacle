@@ -379,8 +379,8 @@ class TentacleCore:
         output_filename = local.reads+".results"
         mapper_call = [utils.resolve_executable("usearch"),
                        "-usearch_global", str(local.reads),
-                       "-db", options.usearchDBName.split(".", 1)[0],
-                       "-id", options.usearchID,
+                       "-db", options.usearchDBName.split(".", 1)[0]+".udb",
+                       "-id", str(options.usearchID),
                        "-blast6out", output_filename]
 
         # Run the command in the result dir and give the file_name relative to that.
@@ -849,6 +849,7 @@ class TentacleCore:
                                                   TentacleCore.create_pblat_argparser(),
                                                   TentacleCore.create_blast_argparser(),
                                                   TentacleCore.create_bowtie2_argparser(),
+                                                  TentacleCore.create_usearch_argparser(),
                                                   TentacleCore.create_gem_argparser()], add_help=False)
      
         debug_group = parser.add_argument_group("DEBUG developer options", "Use with caution!")

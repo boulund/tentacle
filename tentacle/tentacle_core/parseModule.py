@@ -242,13 +242,12 @@ def parse_blast8(mappings, contigCoverage, options, logger):
                 previous_readname.clear() 
                 previous_readname.add(read) 
 
-                if options.pblat:
-                    # pblat outputs reverse coordinates if mapped in the other direction,
-                    # The are reversed so we do not get negative counts
-                    sstart = int(sstart)
-                    send = int(send)
-                    if sstart > send:
-                        sstart, send = (send, sstart)
+                # pblat outputs reverse coordinates if mapped in the other direction,
+                # The are reversed so we do not get negative counts
+                sstart = int(sstart)
+                send = int(send)
+                if sstart > send:
+                    sstart, send = (send, sstart)
 
                 # Add 1 at the starting position of the mapped read and subtract
                 # 1 at the end so that we later can compute the cumulative sum
@@ -319,14 +318,14 @@ def computeAnnotationCounts(annotationFilename, contigCoverage, outFilename, log
 
                 try:
                     stats = computeStatistics(contigCoverage[contig][0][start:end])
+                    outFile.write(contig+"_"+annotation+":"+str(start)+":"+str(end)+":"+strand+"\t"+
+                                  str(contigCoverage[contig][1])+"\t"+
+                                  str(stats[0])+"\t"+
+                                  str(stats[1])+"\t"+
+                                  str(stats[2])+"\n")
                 except KeyError, contigHeader:
-                    logger.error("Could not find match for contig header '{0}' in annotation file {1}".format(contigHeader, annotationFilename))
-                    exit(1)
-                outFile.write(contig+"_"+annotation+":"+str(start)+":"+str(end)+":"+strand+"\t"+
-                              str(contigCoverage[contig][1])+"\t"+
-                              str(stats[0])+"\t"+
-                              str(stats[1])+"\t"+
-                              str(stats[2])+"\n")
+                    logger.error("Could not find match for contig header '{0}' in annotation file {1}. Skipping...".format(contigHeader, annotationFilename))
+                    #exit(1)
 
     # No need to return anything when writing to file directly
     #return annotationCounts

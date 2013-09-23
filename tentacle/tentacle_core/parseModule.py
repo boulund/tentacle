@@ -212,7 +212,7 @@ def parse_razers3(mappings, contigCoverage, logger):
     return contigCoverage
 
 
-def parse_blast8(mappings, contigCoverage, logger):
+def parse_blast8(mappings, contigCoverage, options, logger):
     """
     Parses mapped data in blast8 format (used for blast and pblat) and fills the
     contigCoverage dictionary
@@ -242,12 +242,13 @@ def parse_blast8(mappings, contigCoverage, logger):
                 previous_readname.clear() 
                 previous_readname.add(read) 
 
-                # pblat outputs reverse coordinates if mapped in the other direction,
-                # The are reversed so we do not get negative counts
-                sstart = int(sstart)
-                send = int(send)
-                if sstart > send:
-                    sstart, send = (send, sstart)
+                if options.pblat:
+                    # pblat outputs reverse coordinates if mapped in the other direction,
+                    # The are reversed so we do not get negative counts
+                    sstart = int(sstart)
+                    send = int(send)
+                    if sstart > send:
+                        sstart, send = (send, sstart)
 
                 # Add 1 at the starting position of the mapped read and subtract
                 # 1 at the end so that we later can compute the cumulative sum
@@ -272,9 +273,9 @@ def sumMapCounts(mappings, contigCoverage, options, logger):
     Uses NumPy.
     """
     if options.pblat:
-        contigCoverage = parse_blast8(mappings, contigCoverage, logger)
+        contigCoverage = parse_blast8(mappings, contigCoverage, options, logger)
     elif options.blast:
-        contigCoverage = parse_blast8(mappings, contigCoverage, logger)
+        contigCoverage = parse_blast8(mappings, contigCoverage, options, logger)
     elif options.razers3:
         contigCoverage = parse_razers3(mappings, contigCoverage, logger)
     elif options.bowtie2:

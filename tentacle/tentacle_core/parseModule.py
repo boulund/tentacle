@@ -17,39 +17,40 @@ def indexContigs(contigsFile, logger):
     contigCoverage = {} 
     # Parse contigsFile to fill out data structure
     with open(contigsFile) as f:
-        line = f.readline().strip()
         # Check that contigsFile seems to be in FASTA format
+        line = f.readline().strip()
         if not line.startswith(">"):
             logger.error("CONTIGS file %s not in FASTA format?", contigsFile)
             exit(1)
-        while line != "":
+
+        header = line.split()[0][1:]
+
+        # Start reading contig length
+        seqlength = 0
+        line = f.readline().strip()
+        while True:
             if line.startswith(">"):
-                header = line.split()[0][1:]
+                # Create a list of zeros for current contig ("header")
+                # It is one element longer than the number of bases 
+                # in the contig.
+                contigCoverage[header] = [np.zeros(seqlength+1, dtype=np.int32), 0]
+                array_size += contigCoverage[header][0].nbytes
 
-                # Read the next line to start counting sequence length
+                # Reinit for next sequence
                 seqlength = 0
-
-                # Start reading contig length
-                line = f.readline().strip()
-                while True:
-                    if line.startswith(">"):
-                        # Create a list of zeros for current contig ("header")
-                        # It is one element longer than the number of bases 
-                        # in the contig.
-                        contigCoverage[header] = [np.zeros(seqlength+1, dtype=np.int32), 0]
-                        array_size += contigCoverage[header][0].nbytes
-                        break
-                    else:
-                        # Prepared for contig sequences in multi-line FASTA.
-                        # This will sum the number of bases (characters) 
-                        # for each line 
-                        seqlength = seqlength + len(line)
-                        line = f.readline().strip()
-                        if line == "":
-                            # Finish the last contig
-                            contigCoverage[header] = [np.zeros(seqlength+1, dtype=np.int32), 0]
-                            array_size += contigCoverage[header][0].nbytes
-                            break
+                header = line.split()[0][1:]
+                line = f.readline()
+            else:
+                # Prepared for contig sequences in multi-line FASTA.
+                # This will sum the number of bases for each line 
+                seqlength = seqlength + len(line.strip())
+                line = f.readline()
+                if line == "":
+                    # Finish the last contig
+                    contigCoverage[header] = [np.zeros(seqlength+1, dtype=np.int32), 0]
+                    array_size += contigCoverage[header][0].nbytes
+                    print "LAST CONTIG ADDED", header
+                    break
 
     logger.debug("Sum of all numpy array sizes: {}".format(array_size))
     return contigCoverage
@@ -252,6 +253,7 @@ def parse_blast8(mappings, contigCoverage, options, logger):
                 # Add 1 at the starting position of the mapped read and subtract
                 # 1 at the end so that we later can compute the cumulative sum
                 # from left to right across the entire contig.
+                print contig
                 contigCoverage[contig][0][sstart-1] += 1
                 contigCoverage[contig][0][send] += -1
                 contigCoverage[contig][1] += 1 # Number of mapped reads

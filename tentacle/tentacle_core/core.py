@@ -33,7 +33,7 @@ class TentacleCore:
 
         workdir = os.path.dirname(destination)
 
-        if source_file.lower().endswith((".gz", ".tar", ".tgz")):
+        if source_file.lower().endswith((".tar.gz", ".tar", ".tgz")):
             self.logger.info("It appears reference DB '%s' is in tar/gz format", source_file)
             self.logger.info("Extracting (and if necessary gunzipping) database...")
             shutil.copy(source_file, destination)
@@ -47,7 +47,22 @@ class TentacleCore:
                 self.logger.error("tar stdout: {}\nstderr: {}".format(tar_stream_data))
                 exit(1)
             else:
-                self.logger.info("Untar of reference DB successful")
+                self.logger.info("Untar of reference DB successful.")
+        elif source_file.lower().endswith((".gz")):
+            self.logger.info("It appears reference DB '%s' is in gz format", source_file)
+            self.logger.info("Gunzipping databsae...")
+            shutil.copy(source_file, destination)
+            gunzip_call = [utils.resolve_executable("gunzip"), source_file]
+            gunzip = Popen(gunzip_call, stdout=PIPE, stderr=PIPE, cwd=workdir)
+            self.logger.debug("gunzip call:{}".format(tar_call))
+            gunzip_stream_data = gunzip.communicate()
+            if gunzip.returncode is not 0:
+                self.logger.error("{}".format(gunzip_stream_data))
+                self.logger.error("gunzip returncode {}".format(gunzip.returncode))
+                self.logger.error("gunzip stdout: {}\nstderr: {}".format(gunzip_stream_data))
+                exit(1)
+            else:
+                self.logger.info("Gunzip of reference DB successful.")
         else:
             self.logger.error("Don't know what to do with {}, it does not look like a (gzipped) tar file".format(source_file))
             exit(1)
@@ -832,7 +847,7 @@ class TentacleCore:
             help="usearch: Sequence similarity for usearch_global [default: %(default)s]")
         mapping_group.add_argument("--usearchDBName", dest="usearchDBName",
             type=str, default="", metavar="DBNAME",
-            help="usearch: Name of the UDB file in the database tarball (including extension). It must have the same basename as the rest of the DB.")
+            help="usearch: Name of the FASTA file in the database tarball (including extension). It must have the same basename as the rest of the DB.")
         return parser
     
     
@@ -849,8 +864,8 @@ class TentacleCore:
                                                   TentacleCore.create_pblat_argparser(),
                                                   TentacleCore.create_blast_argparser(),
                                                   TentacleCore.create_bowtie2_argparser(),
-                                                  TentacleCore.create_usearch_argparser(),
-                                                  TentacleCore.create_gem_argparser()], add_help=False)
+                                                  TentacleCore.create_gem_argparser(),
+                                                  TentacleCore.create_usearch_argparser()], add_help=False)
      
         debug_group = parser.add_argument_group("DEBUG developer options", "Use with caution!")
         debug_group.add_argument("--outputCoverage", dest="outputCoverage", action="store_true", default=False,

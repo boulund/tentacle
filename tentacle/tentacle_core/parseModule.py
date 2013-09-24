@@ -49,7 +49,6 @@ def indexContigs(contigsFile, logger):
                     # Finish the last contig
                     contigCoverage[header] = [np.zeros(seqlength+1, dtype=np.int32), 0]
                     array_size += contigCoverage[header][0].nbytes
-                    print "LAST CONTIG ADDED", header
                     break
 
     logger.debug("Sum of all numpy array sizes: {}".format(array_size))
@@ -326,8 +325,8 @@ def computeAnnotationCounts(annotationFilename, contigCoverage, outFilename, log
                                   str(stats[1])+"\t"+
                                   str(stats[2])+"\n")
                 except KeyError, contigHeader:
-                    logger.error("Could not find match for contig header '{0}' in annotation file {1}. Skipping...".format(contigHeader, annotationFilename))
-                    #exit(1)
+                    logger.error("Could not find match for contig header {0} in annotation file {1}.".format(contigHeader, annotationFilename))
+                    exit(1)
 
     # No need to return anything when writing to file directly
     #return annotationCounts

@@ -252,7 +252,6 @@ def parse_blast8(mappings, contigCoverage, options, logger):
                 # Add 1 at the starting position of the mapped read and subtract
                 # 1 at the end so that we later can compute the cumulative sum
                 # from left to right across the entire contig.
-                print contig
                 contigCoverage[contig][0][sstart-1] += 1
                 contigCoverage[contig][0][send] += -1
                 contigCoverage[contig][1] += 1 # Number of mapped reads

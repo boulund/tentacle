@@ -395,9 +395,12 @@ class TentacleCore:
         mapper_call = [utils.resolve_executable("usearch"),
                        "-usearch_global", str(local.reads),
                        "-db", options.usearchDBName.split(".", 1)[0]+".udb",
-                       "-id", str(options.usearchID),
+                       "-query_cov", str(options.usearchQueryCov),
                        "-blast6out", output_filename]
 
+        if options.usearchQueryCov:
+            mapper_call.append("-id")
+            mapper_call.append(str(options.usearchID))
         # Run the command in the result dir and give the file_name relative to that.
         result_base = os.path.dirname(output_filename)
         # Run USEARCH
@@ -845,6 +848,9 @@ class TentacleCore:
         mapping_group.add_argument("--usearchID", dest="usearchID",
             type=float, default="0.9", metavar="I",
             help="usearch: Sequence similarity for usearch_global [default: %(default)s]")
+        mapping_group.add_argument("--usearchQueryCov", dest="usearchQueryCov",
+            type=str, default="", metavar="COVERAGE",
+            help="usearch: Query coverage in range 0.0-1.0.")
         mapping_group.add_argument("--usearchDBName", dest="usearchDBName",
             type=str, default="", metavar="DBNAME",
             help="usearch: Name of the FASTA file in the database tarball (including extension). It must have the same basename as the rest of the DB.")

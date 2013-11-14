@@ -32,12 +32,12 @@ class TentacleCore:
         """
 
         workdir = os.path.dirname(destination)
+        tar_call = [utils.resolve_executable("tar"), "-xf", source_file]
 
         if source_file.lower().endswith((".tar.gz", ".tar", ".tgz")):
             self.logger.info("It appears reference DB '%s' is in tar/gz format", source_file)
             self.logger.info("Extracting (and if necessary gunzipping) database...")
             shutil.copy(source_file, destination)
-            tar_call = [utils.resolve_executable("tar"), "-xf", source_file]
             tar = Popen(tar_call, stdout=PIPE, stderr=PIPE, cwd=workdir)
             self.logger.debug("tar call:{}".format(tar_call))
             tar_stream_data = tar.communicate()
@@ -395,12 +395,15 @@ class TentacleCore:
         mapper_call = [utils.resolve_executable("usearch"),
                        "-usearch_global", str(local.reads),
                        "-db", options.usearchDBName.split(".", 1)[0]+".udb",
-                       "-query_cov", str(options.usearchQueryCov),
+                       "-id", str(options.usearchID),
                        "-blast6out", output_filename]
 
         if options.usearchQueryCov:
-            mapper_call.append("-id")
-            mapper_call.append(str(options.usearchID))
+            mapper_call.append("-query_cov")
+            mapper_call.append(str(options.usearchQueryCov))
+        if options.usearchStrand:
+            mapper_call.append("-strand")
+            mapper_call.append(str(options.usearchStrand))
         # Run the command in the result dir and give the file_name relative to that.
         result_base = os.path.dirname(output_filename)
         # Run USEARCH
@@ -854,6 +857,9 @@ class TentacleCore:
         mapping_group.add_argument("--usearchDBName", dest="usearchDBName",
             type=str, default="", metavar="DBNAME",
             help="usearch: Name of the FASTA file in the database tarball (including extension). It must have the same basename as the rest of the DB.")
+        mapping_group.add_argument("--usearchStrand", dest="usearchStrand",
+            type=str, default="", metavar="S", 
+            help="usearch: If searching nucleotide sequences, specify either 'both' or 'plus' [default: %(default)s]")
         return parser
     
     

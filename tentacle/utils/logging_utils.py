@@ -9,17 +9,32 @@ __all__ = list()
 
 unique_logger_id = 0
 __all__.append("create_file_logger")
-def create_file_logger(verbose, logfile):
+def create_file_logger(logLevel, logNoStdout, logfile):
     """
     Set logger basic config and start logging
     """
 
     configFormat = "%(asctime)s: %(levelname)s: %(message)s" 
     dateFormat = "%Y-%m-%d %H:%M:%S"
-    logging.basicConfig(configFormat=configFormat,
-                        dateFormat=dateFormat,
-                        level=logging.DEBUG if verbose else logging.INFO,
-                        stream=stdout)
+
+    logLevel = logLevel.lower()
+    if logLevel == "debug" or logLevel == "verbose":
+        logLevel = logging.DEBUG
+    elif logLevel == "info" or logLevel == "default":
+        logLevel = logging.INFO
+    elif logLevel == "critical":
+        logLevel = logging.CRITICAL
+
+    if logNoStdout:
+        logging.basicConfig(configFormat=configFormat,
+                            dateFormat=dateFormat,
+                            level=logLevel,
+                            stream=stdout)
+    else:
+        logging.basicConfig(configFormat=configFormat,
+                            dateFormat=dateFormat,
+                            level=logLevel,
+                            )
 
     #Get a new unique_logger_id to ask for, forcing a new logger to be returned
     #We really just want a new instance, not reuse an old one, since a new file is to be created.   
@@ -50,18 +65,21 @@ class LoggerProvider(object):
     def create_argparser(cls):
         parser = argparse.ArgumentParser(add_help=False)
         log_group = parser.add_argument_group("Logging options")
-        log_group.add_argument("-v", "--verbose", "--logdebug", dest="logdebug", action="store_true", default=False,
-            help="Set the logging level to DEBUG (i.e. verbose), default level is INFO. No other levels available")
+        log_group.add_argument("--logLevel", dest="logLevel", type=str, default="INFO", 
+            help="Specify logging level using either 'default', 'INFO', 'DEBUG', or 'CRITICAL'. [default %s(default)]")
+        log_group.add_argument("--logNoStdout", action="store_true", default=False,
+            help="Developer option used to supress log output to stdout during unittests. [default %s(default)]")
         parser.add_argument_group(log_group)
         return parser
         
     @classmethod 
     def create_from_parsed_args(cls, parsed_args, base_dir_path):
-        return cls(base_dir_path=base_dir_path, logdebug=parsed_args.logdebug)
+        return cls(base_dir_path=base_dir_path, logLevel=parsed_args.logLevel, logNoStdout=parsed_args.logNoStdout )
     
-    def __init__(self, base_dir_path, logdebug):
+    def __init__(self, base_dir_path, logLevel, logNoStdout):
         self.base_dir_path = base_dir_path
-        self.logdebug = logdebug
+        self.logLevel = logLevel
+        self.logNoStdout = logNoStdout
     
     def _setup_directory_structure(self, hierarchy):
         #create any dirs
@@ -80,7 +98,7 @@ class LoggerProvider(object):
     def get_logger(self, filename, hierarchy=None):
         d = self._setup_directory_structure(hierarchy or [])
         file_path = path.join(d, filename+"_"+str(random.randint(0, maxint))+".log") #TODO: fix uniqueness in a better way
-        return create_file_logger(self.logdebug, file_path)
+        return create_file_logger(self.logLevel, self.logNoStdout, file_path)
     
     
 __all__.append("get_std_logger")

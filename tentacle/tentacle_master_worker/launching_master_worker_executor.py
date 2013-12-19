@@ -64,8 +64,7 @@ class LaunchingMasterWorkerExecutor(object):
             #TODO: handle logging/exceptions
             with distributed_worker_pool_factory.create_from_parsed_args(parsed_args, launcher) as distributed_worker_pool:
                 distributed_worker_pool.map(
-                    lambda task: worker_factory.create_from_parsed_args(parsed_args, logger_provider).process(task), #pylint: disable=W0108
-                    tasks)
+                    lambda task: worker_factory.create_from_parsed_args(parsed_args, logger_provider).process(task), tasks)
                 #TODO, what to do with results?
         if parsed_args.localCoordinator:
             return gevent.spawn(create_distributed_worker_pool_and_process_tasks)

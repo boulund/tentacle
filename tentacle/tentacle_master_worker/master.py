@@ -16,9 +16,10 @@ class TentacleMaster(object):
     @staticmethod
     def create_get_tasks_argparser():
         parser = argparse.ArgumentParser(add_help=False)
-        parser.add_argument("contigsDirectory", help="path to directory containing contigs files (gzippped FASTQ)")
-        parser.add_argument("readsDirectory", help="path to directory containing read files (gzipped FASTQ)")
-        parser.add_argument("annotationsDirectory", help="path to directory containing annotation files (tab separated text)")
+        parser.add_argument("--mappingManifest", help="a tab delimited text file with mapping triplets on each row")
+        #parser.add_argument("contigsDirectory", help="path to directory containing contigs files (gzippped FASTQ)")
+        #parser.add_argument("readsDirectory", help="path to directory containing read files (gzipped FASTQ)")
+        #parser.add_argument("annotationsDirectory", help="path to directory containing annotation files (tab separated text)")
         return parser
     
     @staticmethod
@@ -30,11 +31,35 @@ class TentacleMaster(object):
     
     def get_tasks_from_parsed_args(self, parsed_args, output_dir_structure):
         utils.print_run_settings(parsed_args, self.master_logger)
-        return identify_linked_files({"annotations":(parsed_args.annotationsDirectory, parsed_args.splitCharAnnotations),
-                                      "contigs":(parsed_args.contigsDirectory, parsed_args.splitCharReferences), 
-                                      "reads":(parsed_args.readsDirectory, parsed_args.splitCharReads)},
-                                      output_dir_structure, self.master_logger)
-        
+        mapping_tuples = parse_linked_files(parsed_args.mappingManifest, output_dir_structure, self.master_logger)
+        return mapping_tuples
+
+
+
+def parse_linked_files(mapping_manifest, output_dir_structure, master_logger):
+    """
+    Parses mapping triplets from mapping manifest file
+    """
+    with open(mapping_manifest) as manifest_file:
+        # TODO: Test if possible to split row in 4, for paired end data
+        mapping_tuples = []
+        for line in manifest_file:
+            reads, reference, annotation = line.split()
+            current_tuple = (reads, reference, annotation)
+            for file_path in current_tuple:
+                if not path.isfile(file_path):
+                    master_logger.error("The path to {} appears incorrect".format(file_path))
+                    exit(1)
+            result_file = path.join(output_dir_structure.results, path.basename(reads)+".tab")
+            task_logs_dir = output_dir_structure.get_logs_subdir("task_logs")
+            log_file = path.join(task_logs_dir, path.basename(reads)+"_"+str(random.randint(0,sys.maxint))+".log")
+            mapping_tuples.append((core_name(reads, "."), tentacle_core.AllFiles(reference, reads, annotation, result_file, log_file)))
+            
+    return mapping_tuples
+
+
+
+
 # --- Private/Internal functions and classes ---
 def core_name(file_path, end_symbol):
     filename = path.basename(file_path)

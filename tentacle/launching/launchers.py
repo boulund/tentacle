@@ -152,6 +152,7 @@ class SlurmLauncher(Launcher):
     def launch_commands(self, commands):
         all_commands = commands #[self.parsed_args.slurmSetupCommands] + commands
         script = self.create_sbatch_script(all_commands, self.stdio_dir, self.parsed_args)
+        write_sbatch_workerscript_to_file(filename="launch_additional_workers.sh", text=script)
         call_pars = shlex.split(self.parsed_args.slurmBinary) #pylint: disable=E1103
         print("launching: " + " ".join(call_pars) + " with input " + script)
         #Make the sbatch call
@@ -164,6 +165,12 @@ class SlurmLauncher(Launcher):
         main_f = create_main_function_wrapper(f)
         commands = [create_python_function_command(main_f)]
         return self.launch_commands(commands)
+
+    @staticmethod
+    def write_sbatch_workerscript_to_file(filename, text):
+        """Writes sbatch script to file for use when starting more nodes"""
+        with open(filename, "w") as file:
+            file.write(text)
     
 
 class test(unittest.TestCase):

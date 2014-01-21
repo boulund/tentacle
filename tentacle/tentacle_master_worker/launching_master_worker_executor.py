@@ -69,4 +69,6 @@ class LaunchingMasterWorkerExecutor(object):
         if parsed_args.localCoordinator:
             return gevent.spawn(create_distributed_worker_pool_and_process_tasks)
         else:
-            return launcher.launch_python_function(create_distributed_worker_pool_and_process_tasks)
+            status = launcher.launch_python_function(create_distributed_worker_pool_and_process_tasks)
+            launcher.write_sbatch_workerscript_to_file(filename="launch_additional_worker.sh")
+            return status

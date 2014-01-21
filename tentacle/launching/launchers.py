@@ -152,8 +152,9 @@ class SlurmLauncher(Launcher):
     def launch_commands(self, commands):
         all_commands = commands #[self.parsed_args.slurmSetupCommands] + commands
         self.script = self.create_sbatch_script(all_commands, self.stdio_dir, self.parsed_args)
+        self.write_sbatch_workerscript_to_file("create_additional_workers_"+self.parsed_args.slurmJobName+".sh")
         call_pars = shlex.split(self.parsed_args.slurmBinary) #pylint: disable=E1103
-        print("launching: " + " ".join(call_pars) + " with input " + script)
+        print("launching: " + " ".join(call_pars) + " with input " + self.script)
         #Make the sbatch call
         (out, err) = Popen(call_pars, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate(self.script)
         print("launch result: " + str((out,err)))

@@ -66,9 +66,8 @@ class LaunchingMasterWorkerExecutor(object):
                 distributed_worker_pool.map(
                     lambda task: worker_factory.create_from_parsed_args(parsed_args, logger_provider).process(task), tasks)
                 #TODO, what to do with results?
+
         if parsed_args.localCoordinator:
             return gevent.spawn(create_distributed_worker_pool_and_process_tasks)
         else:
-            status = launcher.launch_python_function(create_distributed_worker_pool_and_process_tasks)
-            launcher.write_sbatch_workerscript_to_file(filename="launch_additional_worker.sh")
-            return status
+            return launcher.launch_python_function(create_distributed_worker_pool_and_process_tasks)

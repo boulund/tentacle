@@ -244,9 +244,29 @@ class TentacleCore:
             self.logger.info("Filtering statistics:\n%s", filtered_reads.stderr.read())
             self.logger.info("Trimming statistics:\n%s", trimmed_reads.stderr.read())
             if options.pblat: self.logger.info("FASTA conversion statistics:\n%s", fasta_reads.stderr.read())
+        elif fastq_format and options.noQualityControl:
+            if options.pblat or options.blast or options.usearch:
+                self.logger.info("Converting FASTQ to FASTA...")
+                fasta_reads = self.filtered_call(source=read_source,
+                                     program="fastq_to_fasta",
+                                     **{"-n":"", #discards low quality reads
+                                        "-v":""})
+                self.logger.info("Writing reads to local storage in FASTA format...")
+                # Append .fasta to filename since it is converted to that format
+                # and pblat requires that suffix
+                destination = destination+".fasta"
+                written_reads = self.write_reads(fasta_reads, destination)
+            else:
+                self.logger.info("Writing unfiltered and nontrimmed reads to local storage...")
+                written_reads = self.write_reads(read_source, destination)
+            # Calling .communicate() on the Popen object runs the
+            # entire pipeline that has been pending
+            written_reads.communicate() # Writes to disk
+            # TODO: Check returncodes of all parts of the pipeline
+            self.logger.info("Read transfer completed.")
         else:
             if options.noQualityControl:
-                self.logger.info("Skipping quality control and writing reads to local storage...")
+                self.logger.info("Skipping quality control and writing reads unmodified to local storage...")
             else:
                 self.logger.info("Writing reads to local storage...")
             written_reads = self.write_reads(read_source, destination)

@@ -300,11 +300,17 @@ def computeAnnotationCounts(annotationFilename, contigCoverage, outFilename, log
     """
     
     with open(annotationFilename) as annotationFile:
+        logger.debug("Parsing {}".format(annotationFilename))
         with open(outFilename, "w") as outFile:
             # Initialize dictionary for storage of annotation counts
             annotationCounts = {}
             for line in annotationFile:
-                contig, start, end, strand, annotation = line.split()
+                try:
+                    contig, start, end, strand, annotation = line.split()
+                except ValueError, e:
+                    logger.error("Could not parse annotation line\n{}\nfrom file {}".format(line, annotationFilename))
+                    exit(1)
+                    
                 start = int(start)-1
                 end = int(end)
 

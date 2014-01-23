@@ -679,6 +679,7 @@ class TentacleCore:
         # TODO: More logic to determine if delete was actually successful etc.
         self.logger.info("Deleting temporary files in folder '{}'...".format(temp_dir))
         shutil.rmtree(temp_dir)
+        self.logger.info("Successfully deleted temporary files in folder '{}'...".format(temp_dir))
 
 
     def analyse(self, files, options):

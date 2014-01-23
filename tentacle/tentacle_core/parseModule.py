@@ -21,6 +21,7 @@ def indexContigs(contigsFile, logger):
         line = f.readline().strip()
         if not line.startswith(">"):
             logger.error("CONTIGS file %s not in FASTA format?", contigsFile)
+            logger.error("First line is this:\n%s", line)
             exit(1)
 
         header = line.split()[0][1:]
@@ -93,7 +94,7 @@ def parse_sam(mappings, contigCoverage, logger):
         line = f.readline()
         if not line.startswith("@HD"):
             logger.error("Unable to parse results file %s\n%s", mappings, e)
-            logger.error("Could not find @HD header tag on first line of file")
+            logger.error("Could not find @HD header tag on first line of file:\n%s", line)
             exit(1)
         for line in f:
             if not line.startswith("@"):
@@ -197,6 +198,7 @@ def parse_razers3(mappings, contigCoverage, logger):
                 read, rstart, rend, direction, contig, cstart, cend, identity = line.split() #pylint: disable=W0612
             except ValueError, e:
                 logger.error("Unable to parse results file %s\n%s", mappings, e)
+                logger.error("The line that couldn't be parsed was this:\n%s", line)
                 exit(1)
             cstart = int(cstart)
             cend = int(cend) # End coordinate is non-inclusive
@@ -230,10 +232,15 @@ def parse_blast8(mappings, contigCoverage, options, logger):
             # could possible have a starting position of 1 and end at 75.
             try:
                 (read, contig, identity, length, mismatches, gaps,            #pylint: disable=W0612
-                 qstart, qend, sstart, send, evalue, bitscore) = line.split() #pylint: disable=W0612
+                 qstart, qend, sstart, send, evalue, bitscore) = line.split('\t') #pylint: disable=W0612
             except ValueError, e:
                 logger.error("Unable to parse results file %s\n%s", mappings, e)
+                logger.error("The line that couldn't be parsed was this:\n%s", line)
                 exit(1)
+
+            logger.debug("Read: {}".format(read))
+            read = read.split()[0]
+            logger.debug("Formatted to: {}".format(read))
 
             # Reads are ordered in the pblat output so we can safely assume no read will
             # occur twice in the file if it has been previously seen. We can thus conserve 

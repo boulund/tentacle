@@ -21,9 +21,6 @@ from tentacle import run
 bin_dir = os.path.join(base_dir,"dependencies","bin",platform.system())
 os.environ["PATH"]  = os.environ["PATH"]  + os.pathsep + bin_dir
 
-def dd(data_dir, resource_dir):
-    return join(base_dir, data_dir, resource_dir)
-
 
 class Test_complete_pipelines(unittest.TestCase):
 
@@ -52,20 +49,16 @@ class Test_complete_pipelines(unittest.TestCase):
     def test_razers3(self):
         ##### RAZERS3 ####
         razers3_argv = self.general_argv + [
-                dd("tests_data/razers3/", "contigs"), 
-                dd("tests_data/razers3/", "reads"), 
-                dd("tests_data/razers3/", "annotations"), 
-                "--razers3"
+                "--razers3",
+                "--mappingManifest", "tests_data/razers3/mappingManifest.tab",
                 ]
         run(razers3_argv, GeventLauncher, GeventWorkerPoolFactory())
 
     def test_pblat(self):
         ##### PBLAT #####
         pblat_argv = self.general_argv + [
-                dd("tests_data/pblat/", "contigs"), 
-                dd("tests_data/pblat/", "reads"),
-                dd("tests_data/pblat/", "annotations"), 
-                "--pblat"
+                "--pblat",
+                "--mappingManifest", "tests_data/pblat/mappingManifest.tab",
                 ]
         run(pblat_argv, GeventLauncher, GeventWorkerPoolFactory())
 
@@ -73,35 +66,29 @@ class Test_complete_pipelines(unittest.TestCase):
     def test_bowtie2(self):
         ##### Bowtie2 #####
         bowtie2_argv = self.general_argv + [
-                dd("tests_data/bowtie2/", "reference"), 
-                dd("tests_data/bowtie2/", "reads"),
-                dd("tests_data/bowtie2/", "annotations"), 
                 "--bowtie2",
                 "--bowtie2Threads", "8",
-                "--bowtie2DBName", "contigs.fasta"
+                "--bowtie2DBName", "contigs.fasta",
+                "--mappingManifest", "tests_data/bowtie2/mappingManifest.tab",
                 ]
         run(bowtie2_argv, GeventLauncher, GeventWorkerPoolFactory())
 
     def test_gem(self):
         ##### GEM #####
         gem_argv = self.general_argv + [
-                dd("tests_data/gem/", "reference"), 
-                dd("tests_data/gem/", "reads"),
-                dd("tests_data/gem/", "annotations"), 
                 "--gem",
-                "--gemDBName", "contigs.fasta"
+                "--gemDBName", "contigs.fasta",
+                "--mappingManifest", "tests_data/gem/mappingManifest.tab",
                 ]
         run(gem_argv, GeventLauncher, GeventWorkerPoolFactory())
 
     def test_usearch(self):
         ##### USEARCH #####
         usearch_argv = self.general_argv + [
-                dd("tests_data/usearch/", "reference"), 
-                dd("tests_data/usearch/", "reads"),
-                dd("tests_data/usearch/", "annotations"), 
                 "--usearch",
                 "--usearchDBName", "contigs.fasta",
                 "--usearchStrand", "both",
+                "--mappingManifest", "tests_data/usearch/mappingManifest.tab",
                 ]
         run(usearch_argv, GeventLauncher, GeventWorkerPoolFactory())
 

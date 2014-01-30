@@ -881,6 +881,9 @@ class TentacleCore:
         mapping_group.add_argument("--usearchStrand", dest="usearchStrand",
             type=str, default="", metavar="S", 
             help="usearch: If searching nucleotide sequences, specify either 'both' or 'plus' [default: %(default)s]")
+        mapping_group.add_argument("--usearchFilterSequencesShorterThan", dest="usearchFilterSequencesShorterThan",
+            type=int, default=0, metavar="L",
+            help="usearch: Remove mapped reads in the coverage calculations if they are shorter than L, [default: %(default)s]")
         return parser
     
     

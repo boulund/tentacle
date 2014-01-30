@@ -237,7 +237,11 @@ def parse_blast8(mappings, contigCoverage, options, logger):
                 logger.error("Unable to parse results file %s\n%s", mappings, e)
                 logger.error("The line that couldn't be parsed was this:\n%s", line)
                 exit(1)
-
+            
+            if options.usearchFilterSequencesShorterThan > 0 and (qend-qstart < options.usearchFilterSequencesShorterThan):
+                logger.debug("Removed read '{}' with length {}".format(read, str(qend-qstart)))
+                continue
+            
             logger.debug("Read: {}".format(read))
             read = read.split()[0]
             logger.debug("Formatted to: {}".format(read))

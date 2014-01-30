@@ -18,6 +18,7 @@ import psutil
 
 import parseModule
 from .. import utils
+from .. import mappers
 
 #InFiles = namedtuple("InFiles", ["contigs", "reads", "annotations"])
 AllFiles = namedtuple("AllFiles", ["contigs", "reads", "annotations", "annotationStats", "log"])
@@ -721,171 +722,168 @@ class TentacleCore:
         return parser
     
     
-    @staticmethod
-    def create_razerS3_argparser():
-        """
-        Creates parser for RazerS3 options (used for mapping).
-        """
-    
-        parser = argparse.ArgumentParser(add_help=False)
-        mapping_group = parser.add_argument_group("Mapping options", "Options for Razers3.")
-        mapping_group.add_argument("--razers3", dest="razers3",
-            default=False, action="store_true",
-            help="Perform mapping using RazerS3 [default %(default)s]")
-        mapping_group.add_argument("--r3Identity", dest="razers3Identity",
-            type=int, default=95,
-            help="RazerS3: Percent identity of matched reads [default: %(default)s]")
-        mapping_group.add_argument("--r3Recognition", dest="razers3Recognition",
-            type=int, default=100,
-            help="RazerS3: Recognition rate (sensitivity) [default: %(default)s]")
-        mapping_group.add_argument("--r3Max", dest="razers3Max",
-            type=int, default=1,
-            help="RazerS3: Max number of returned matches per read [default: %(default)s]")
-        mapping_group.add_argument("--r3Swift", dest="razers3Swift", action="store_true", 
-            default=False,
-            help="RazerS3: Change RazerS3 from pigeonhole to swift filter. [default: pigeonhole]")
-        # TODO: Remake the implementation of paired end data to make it mapper agnostic.
-        #mapping_group.add_argument("--r3Paired", dest="razers3Paired",
-        #    type=str, default=False,
-        #    help="RazerS3: Paired end reads file [default: not used]")
-        return parser
-    
+#    @staticmethod
+#    def create_razerS3_argparser():
+#        """
+#        Creates parser for RazerS3 options (used for mapping).
+#        """
+#    
+#        parser = argparse.ArgumentParser(add_help=False)
+#        mapping_group = parser.add_argument_group("Mapping options", "Options for Razers3.")
+#        mapping_group.add_argument("--razers3", dest="razers3",
+#            default=False, action="store_true",
+#            help="Perform mapping using RazerS3 [default %(default)s]")
+#        mapping_group.add_argument("--r3Identity", dest="razers3Identity",
+#            type=int, default=95,
+#            help="RazerS3: Percent identity of matched reads [default: %(default)s]")
+#        mapping_group.add_argument("--r3Recognition", dest="razers3Recognition",
+#            type=int, default=100,
+#            help="RazerS3: Recognition rate (sensitivity) [default: %(default)s]")
+#        mapping_group.add_argument("--r3Max", dest="razers3Max",
+#            type=int, default=1,
+#            help="RazerS3: Max number of returned matches per read [default: %(default)s]")
+#        mapping_group.add_argument("--r3Swift", dest="razers3Swift", action="store_true", 
+#            default=False,
+#            help="RazerS3: Change RazerS3 from pigeonhole to swift filter. [default: pigeonhole]")
+#        # TODO: Remake the implementation of paired end data to make it mapper agnostic.
+#        #mapping_group.add_argument("--r3Paired", dest="razers3Paired",
+#        #    type=str, default=False,
+#        #    help="RazerS3: Paired end reads file [default: not used]")
+#        return parser
+#    
+#
+#    @staticmethod
+#    def create_blast_argparser():
+#        """
+#        Creates parser for blast options (used for mapping).
+#        """
+#    
+#        parser = argparse.ArgumentParser(add_help=False)
+#        mapping_group = parser.add_argument_group("Mapping options", "Options for blast.")
+#        mapping_group.add_argument("--blast", dest="blast",
+#            default=False, action="store_true",
+#            help="blast: Perform mapping using blast [default: %(default)s]")
+#        mapping_group.add_argument("--blastProgram", dest="blastProgram",
+#            type=str, default="blastn", metavar="PROGNAME",
+#            help="blast: Set what blast program to use [default: %(default)s]")
+#        mapping_group.add_argument("--blastThreads", dest="blastThreads",
+#            default=psutil.NUM_CPUS, type=int, metavar="N",
+#            help="blast: number of threads allowed [default: %(default)s]")
+#        mapping_group.add_argument("--blastTask", dest="blastTask",
+#            default="", type=str,
+#            help="blast: What task to be run, refer to blast manual for available options [default: %(default)s]")
+#        mapping_group.add_argument("--blastDBName", dest="blastDBName",
+#            type=str, default="", metavar="DBNAME",
+#            help="blast: Name of the FASTA file in the database tarball (including extension). It must have the same basename as the rest of the DB.")
+#        return parser
+#    
+#
+#    @staticmethod
+#    def create_bowtie2_argparser():
+#        """
+#        Creates parser for bowtie2 options (used for mapping).
+#        """
+#    
+#        parser = argparse.ArgumentParser(add_help=False)
+#        mapping_group = parser.add_argument_group("Mapping options", "Options for bowtie2.")
+#        mapping_group.add_argument("--bowtie2", dest="bowtie2",
+#            default=False, action="store_true",
+#            help="bowtie2: Perform mapping using bowtie2 [default: %(default)s]")
+#        mapping_group.add_argument("--bowtie2Fasta", dest="bowtie2Fasta",
+#            default=False, action="store_true",
+#            help="bowtie2: Input files are FASTA format and not FASTQ [default %(default)s].")
+#        mapping_group.add_argument("--bowtie2Threads", dest="bowtie2Threads",
+#            default=psutil.NUM_CPUS, type=int, metavar="N",
+#            help="bowtie2: number of threads allowed [default: %(default)s]")
+#        mapping_group.add_argument("--bowtie2DBName", dest="bowtie2DBName",
+#            type=str, default="", metavar="DBNAME",
+#            help="bowtie2: Name of the reference file BASENAME in the database tarball (NO extension). It must have the same basename as the rest of the DB.")
+#        mapping_group.add_argument("--bowtie2FilterReads", dest="bowtie2FilterReads",
+#            action="store_true", 
+#            help="bowtie2: Use bowtie2 to filter out for example human reads in the read preprocessing step [default: %(default)s].")
+#        mapping_group.add_argument("--bowtie2FilterDB", dest="bowtie2FilterDB",
+#            type=str, default="", metavar="FilterDB", 
+#            help="bowtie2: Name of the filtering reference database tarball (including extension). It must have the same basename as the rest of the actual DB files.")
+#        return parser
+#
+#
+#    @staticmethod
+#    def create_gem_argparser():
+#        """
+#        Creates parser for GEM options (used for mapping).
+#        """
+#    
+#        parser = argparse.ArgumentParser(add_help=False)
+#        mapping_group = parser.add_argument_group("Mapping options", "Options for GEM.")
+#        mapping_group.add_argument("--gem", dest="gem",
+#            default=False, action="store_true",
+#            help="GEM: Perform mapping using GEM [default: %(default)s]")
+#        mapping_group.add_argument("--gemFasta", dest="gemFasta",
+#            default=False, action="store_true",
+#            help="GEM: Input files are FASTA format and not FASTQ [default %(default)s].")
+#        mapping_group.add_argument("--gemThreads", dest="gemThreads",
+#            default=psutil.NUM_CPUS, type=int, metavar="N",
+#            help="GEM: number of threads allowed [default: %(default)s (autodetected)]")
+#        mapping_group.add_argument("--gemDBName", dest="gemDBName",
+#            type=str, default="", metavar="DBNAME",
+#            help="GEM: Name of the reference file in the database tarball (i.e. entire name of FASTA file). It must have the same basename as the rest of the DB.")
+#        mapping_group.add_argument("--gemm", dest="gemm",
+#            type=float, default=0.04, metavar="m", 
+#            help="GEM: max_mismatches, percent mismatches [default: %(default)s]")
+#        mapping_group.add_argument("--geme", dest="geme",
+#            type=float, default=0.04, metavar="e", 
+#            help="GEM: max_exit_distance, percent differences [default: %(default)s]")
+#        mapping_group.add_argument("--gemMinMatchedBases", dest="gemMinMatchedBases",
+#            type=float, default=0.80, metavar="B", 
+#            help="GEM: min-matched-bases, percent [default: %(default)s]")
+#        mapping_group.add_argument("--gemGranularity", dest="gemGranularity",
+#            type=int, default=2500000, metavar="G", 
+#            help="GEM: granularity when reading from file (in bytes) [default: %(default)s]")
+#        return parser
+#
+#
+#    @staticmethod
+#    def create_pblat_argparser():
+#        """
+#        Creates parser for pblat options (used for mapping).
+#        """
+#    
+#        parser = argparse.ArgumentParser(add_help=False)
+#        mapping_group = parser.add_argument_group("Mapping options", "Options for pblat.")
+#        mapping_group.add_argument("--pblat", dest="pblat",
+#            default=False, action="store_true",
+#            help="pblat: Perform mapping using pblat [default: %(default)s]")
+#        mapping_group.add_argument("--pblatThreads", dest="pblatThreads",
+#            type=int, default=psutil.NUM_CPUS, metavar="N",
+#            help="pblat: Set number of threads for parallel blat mapping [default: N=%(default)s [=the current number of CPUs]]")
+#        return parser
+#
+#
+#    @staticmethod
+#    def create_usearch_argparser():
+#        """
+#        Creates parser for usearch options (used for mapping).
+#        """
+#    
+#        parser = argparse.ArgumentParser(add_help=False)
+#        mapping_group = parser.add_argument_group("Mapping options", "Options for usearch.")
+#        mapping_group.add_argument("--usearch", dest="usearch",
+#            default=False, action="store_true",
+#            help="usearch: Perform mapping using usearch [default: %(default)s]")
+#        mapping_group.add_argument("--usearchID", dest="usearchID",
+#            type=float, default="0.9", metavar="I",
+#            help="usearch: Sequence similarity for usearch_global [default: %(default)s]")
+#        mapping_group.add_argument("--usearchQueryCov", dest="usearchQueryCov",
+#            type=str, default="", metavar="COVERAGE",
+#            help="usearch: Query coverage in range 0.0-1.0.")
+#        mapping_group.add_argument("--usearchDBName", dest="usearchDBName",
+#            type=str, default="", metavar="DBNAME",
+#            help="usearch: Name of the FASTA file in the database tarball (including extension). It must have the same basename as the rest of the DB.")
+#        mapping_group.add_argument("--usearchStrand", dest="usearchStrand",
+#            type=str, default="", metavar="S", 
+#            help="usearch: If searching nucleotide sequences, specify either 'both' or 'plus' [default: %(default)s]")
+#        return parser
 
-    @staticmethod
-    def create_blast_argparser():
-        """
-        Creates parser for blast options (used for mapping).
-        """
-    
-        parser = argparse.ArgumentParser(add_help=False)
-        mapping_group = parser.add_argument_group("Mapping options", "Options for blast.")
-        mapping_group.add_argument("--blast", dest="blast",
-            default=False, action="store_true",
-            help="blast: Perform mapping using blast [default: %(default)s]")
-        mapping_group.add_argument("--blastProgram", dest="blastProgram",
-            type=str, default="blastn", metavar="PROGNAME",
-            help="blast: Set what blast program to use [default: %(default)s]")
-        mapping_group.add_argument("--blastThreads", dest="blastThreads",
-            default=psutil.NUM_CPUS, type=int, metavar="N",
-            help="blast: number of threads allowed [default: %(default)s]")
-        mapping_group.add_argument("--blastTask", dest="blastTask",
-            default="", type=str,
-            help="blast: What task to be run, refer to blast manual for available options [default: %(default)s]")
-        mapping_group.add_argument("--blastDBName", dest="blastDBName",
-            type=str, default="", metavar="DBNAME",
-            help="blast: Name of the FASTA file in the database tarball (including extension). It must have the same basename as the rest of the DB.")
-        return parser
-    
-
-    @staticmethod
-    def create_bowtie2_argparser():
-        """
-        Creates parser for bowtie2 options (used for mapping).
-        """
-    
-        parser = argparse.ArgumentParser(add_help=False)
-        mapping_group = parser.add_argument_group("Mapping options", "Options for bowtie2.")
-        mapping_group.add_argument("--bowtie2", dest="bowtie2",
-            default=False, action="store_true",
-            help="bowtie2: Perform mapping using bowtie2 [default: %(default)s]")
-        mapping_group.add_argument("--bowtie2Fasta", dest="bowtie2Fasta",
-            default=False, action="store_true",
-            help="bowtie2: Input files are FASTA format and not FASTQ [default %(default)s].")
-        mapping_group.add_argument("--bowtie2Threads", dest="bowtie2Threads",
-            default=psutil.NUM_CPUS, type=int, metavar="N",
-            help="bowtie2: number of threads allowed [default: %(default)s]")
-        mapping_group.add_argument("--bowtie2DBName", dest="bowtie2DBName",
-            type=str, default="", metavar="DBNAME",
-            help="bowtie2: Name of the reference file BASENAME in the database tarball (NO extension). It must have the same basename as the rest of the DB.")
-        mapping_group.add_argument("--bowtie2FilterReads", dest="bowtie2FilterReads",
-            action="store_true", 
-            help="bowtie2: Use bowtie2 to filter out for example human reads in the read preprocessing step [default: %(default)s].")
-        mapping_group.add_argument("--bowtie2FilterDB", dest="bowtie2FilterDB",
-            type=str, default="", metavar="FilterDB", 
-            help="bowtie2: Name of the filtering reference database tarball (including extension). It must have the same basename as the rest of the actual DB files.")
-        return parser
-
-
-    @staticmethod
-    def create_gem_argparser():
-        """
-        Creates parser for GEM options (used for mapping).
-        """
-    
-        parser = argparse.ArgumentParser(add_help=False)
-        mapping_group = parser.add_argument_group("Mapping options", "Options for GEM.")
-        mapping_group.add_argument("--gem", dest="gem",
-            default=False, action="store_true",
-            help="GEM: Perform mapping using GEM [default: %(default)s]")
-        mapping_group.add_argument("--gemFasta", dest="gemFasta",
-            default=False, action="store_true",
-            help="GEM: Input files are FASTA format and not FASTQ [default %(default)s].")
-        mapping_group.add_argument("--gemThreads", dest="gemThreads",
-            default=psutil.NUM_CPUS, type=int, metavar="N",
-            help="GEM: number of threads allowed [default: %(default)s (autodetected)]")
-        mapping_group.add_argument("--gemDBName", dest="gemDBName",
-            type=str, default="", metavar="DBNAME",
-            help="GEM: Name of the reference file in the database tarball (i.e. entire name of FASTA file). It must have the same basename as the rest of the DB.")
-        mapping_group.add_argument("--gemm", dest="gemm",
-            type=float, default=0.04, metavar="m", 
-            help="GEM: max_mismatches, percent mismatches [default: %(default)s]")
-        mapping_group.add_argument("--geme", dest="geme",
-            type=float, default=0.04, metavar="e", 
-            help="GEM: max_exit_distance, percent differences [default: %(default)s]")
-        mapping_group.add_argument("--gemMinMatchedBases", dest="gemMinMatchedBases",
-            type=float, default=0.80, metavar="B", 
-            help="GEM: min-matched-bases, percent [default: %(default)s]")
-        mapping_group.add_argument("--gemGranularity", dest="gemGranularity",
-            type=int, default=2500000, metavar="G", 
-            help="GEM: granularity when reading from file (in bytes) [default: %(default)s]")
-        return parser
-
-
-    @staticmethod
-    def create_pblat_argparser():
-        """
-        Creates parser for pblat options (used for mapping).
-        """
-    
-        parser = argparse.ArgumentParser(add_help=False)
-        mapping_group = parser.add_argument_group("Mapping options", "Options for pblat.")
-        mapping_group.add_argument("--pblat", dest="pblat",
-            default=False, action="store_true",
-            help="pblat: Perform mapping using pblat [default: %(default)s]")
-        mapping_group.add_argument("--pblatThreads", dest="pblatThreads",
-            type=int, default=psutil.NUM_CPUS, metavar="N",
-            help="pblat: Set number of threads for parallel blat mapping [default: N=%(default)s [=the current number of CPUs]]")
-        return parser
-
-
-    @staticmethod
-    def create_usearch_argparser():
-        """
-        Creates parser for usearch options (used for mapping).
-        """
-    
-        parser = argparse.ArgumentParser(add_help=False)
-        mapping_group = parser.add_argument_group("Mapping options", "Options for usearch.")
-        mapping_group.add_argument("--usearch", dest="usearch",
-            default=False, action="store_true",
-            help="usearch: Perform mapping using usearch [default: %(default)s]")
-        mapping_group.add_argument("--usearchID", dest="usearchID",
-            type=float, default="0.9", metavar="I",
-            help="usearch: Sequence similarity for usearch_global [default: %(default)s]")
-        mapping_group.add_argument("--usearchQueryCov", dest="usearchQueryCov",
-            type=str, default="", metavar="COVERAGE",
-            help="usearch: Query coverage in range 0.0-1.0.")
-        mapping_group.add_argument("--usearchDBName", dest="usearchDBName",
-            type=str, default="", metavar="DBNAME",
-            help="usearch: Name of the FASTA file in the database tarball (including extension). It must have the same basename as the rest of the DB.")
-        mapping_group.add_argument("--usearchStrand", dest="usearchStrand",
-            type=str, default="", metavar="S", 
-            help="usearch: If searching nucleotide sequences, specify either 'both' or 'plus' [default: %(default)s]")
-        mapping_group.add_argument("--usearchFilterSequencesShorterThan", dest="usearchFilterSequencesShorterThan",
-            type=int, default=0, metavar="L",
-            help="usearch: Remove mapped reads in the coverage calculations if they are shorter than L, [default: %(default)s]")
-        return parser
-    
     
     @staticmethod
     def create_processing_argarser():
@@ -895,20 +893,27 @@ class TentacleCore:
         Is used both for the single contig-file and many-contig-files cases.
         """
         
-        parser = argparse.ArgumentParser(parents=[TentacleCore.create_fastq_argparser(), 
-                                                  TentacleCore.create_razerS3_argparser(),
-                                                  TentacleCore.create_pblat_argparser(),
-                                                  TentacleCore.create_blast_argparser(),
-                                                  TentacleCore.create_bowtie2_argparser(),
-                                                  TentacleCore.create_gem_argparser(),
-                                                  TentacleCore.create_usearch_argparser()], add_help=False)
-     
+        parser = argparse.ArgumentParser(parents=[TentacleCore.create_fastq_argparser()], 
+                                                  #TentacleCore.create_razerS3_argparser(),
+                                                  #TentacleCore.create_pblat_argparser(),
+                                                  #TentacleCore.create_blast_argparser(),
+                                                  #TentacleCore.create_bowtie2_argparser(),
+                                                  #TentacleCore.create_gem_argparser(),
+                                                  #TentacleCore.create_usearch_argparser()], 
+                                                  add_help=False)
+
+        mapping_group = parser.add_argument_group("Mapping options", "Pick a suitable mapper")
+        available_mappers = [m for m in dir(mappers) if (not m.startswith("_") and m.istitle() and m!="Mapper")]
+        for mapper in available_mappers:
+            mapping_group.add_argument("--{}".format(mapper), dest="mapperString", action='store_const', const=mapper,
+                metavar="MAPPER_NAME", default="Usearch", help="A string that defines what mapper to use, e.g. 'Usearch' or 'Blast'")          
+        
         debug_group = parser.add_argument_group("DEBUG developer options", "Use with caution!")
         debug_group.add_argument("--outputCoverage", dest="outputCoverage", action="store_true", default=False,
             help="Outputs complete coverage information into contigCoverage.txt")
             
         return parser
-    
+        
         
     @staticmethod
     def extract_file_options(options):
@@ -930,7 +935,8 @@ class TentacleCore:
         Performs some rudimental file existance assertions
         """
     
-        parser = argparse.ArgumentParser(description="Maps reads to annotations in contigs and produces corresponding stats.", parents=[TentacleCore.create_processing_argarser()], add_help=True)
+        parser = argparse.ArgumentParser(description="Maps reads to annotations in contigs and produces corresponding stats.", 
+            parents=[TentacleCore.create_processing_argarser()], add_help=True)
         
         parser.add_argument("contigs", help="path to contigs file (gzippped FASTQ)")
         parser.add_argument("reads", help="path to read file (gzipped FASTQ)")

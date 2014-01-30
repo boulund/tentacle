@@ -33,6 +33,13 @@ class ZeroRpcWorkerPool(RegisteringWorkerPool):
         _debugPrint("ZeroRpcWorkerPool registering worker with endpoints: " + " ".join(worker_endpoints))
         worker = self.WorkerProxy(worker_endpoints)
         self.register_worker(worker)
+
+    def list_remaining_tasks(self, worker_endpoints):
+        """ Returns a list of remaining tasks """
+        _debugPrint("ZeroRpcWorkerPool answering tasks query")
+        return 
+
+
                 
     class WorkerProxy(ScopedObject):
         def __init__(self, worker_endpoints):

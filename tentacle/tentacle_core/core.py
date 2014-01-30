@@ -893,20 +893,24 @@ class TentacleCore:
         Is used both for the single contig-file and many-contig-files cases.
         """
         
-        parser = argparse.ArgumentParser(parents=[TentacleCore.create_fastq_argparser()], 
-                                                  #TentacleCore.create_razerS3_argparser(),
-                                                  #TentacleCore.create_pblat_argparser(),
-                                                  #TentacleCore.create_blast_argparser(),
-                                                  #TentacleCore.create_bowtie2_argparser(),
-                                                  #TentacleCore.create_gem_argparser(),
-                                                  #TentacleCore.create_usearch_argparser()], 
-                                                  add_help=False)
-
         mapping_group = parser.add_argument_group("Mapping options", "Pick a suitable mapper")
         available_mappers = [m for m in dir(mappers) if (not m.startswith("_") and m.istitle() and m!="Mapper")]
         for mapper in available_mappers:
             mapping_group.add_argument("--{}".format(mapper), dest="mapperString", action='store_const', const=mapper,
                 metavar="MAPPER_NAME", default="Usearch", help="A string that defines what mapper to use, e.g. 'Usearch' or 'Blast'")          
+        
+        # Since the argparser for the mapping module isn't yet loaded we first need
+        # to parse what mapper is requested before loading all other argparsers.
+        worker_factory_argparser = worker_factory.create_argparser()
+        options = worker_factory_argparser.parse_args(argv)
+        print options, options.mapper
+        import importlib
+        mapper = importlib.import_module(options.mapper)
+
+        parser = argparse.ArgumentParser(parents=[TentacleCore.create_fastq_argparser(),
+                                                  mapper.create_argparser(),
+                                                  ], add_help=False)
+
         
         debug_group = parser.add_argument_group("DEBUG developer options", "Use with caution!")
         debug_group.add_argument("--outputCoverage", dest="outputCoverage", action="store_true", default=False,

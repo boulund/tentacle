@@ -42,10 +42,10 @@ class Test_complete_pipelines(unittest.TestCase):
                 "--logLevel", "CRITICAL"
                 ]
 
-    def tearDown(self):
-        import shutil
-        shutil.rmtree(self.out_dir)
-
+##    def tearDown(self):
+##        import shutil
+##        shutil.rmtree(self.out_dir)
+##
     def test_razers3(self):
         ##### RAZERS3 ####
         razers3_argv = self.general_argv + [

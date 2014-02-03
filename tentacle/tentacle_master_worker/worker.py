@@ -14,8 +14,8 @@ class TentacleWorker():
         return cls(parsed_args, logger_provider)
     
     @classmethod
-    def create_argparser(cls):
-        return TentacleCore.create_processing_argarser()
+    def create_argparser(cls, argv):
+        return TentacleCore.create_processing_argarser(argv)
 
     def process(self, task):  
         (core_name, files) = task

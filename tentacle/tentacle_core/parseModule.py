@@ -238,9 +238,10 @@ def parse_blast8(mappings, contigCoverage, options, logger):
                 logger.error("The line that couldn't be parsed was this:\n%s", line)
                 exit(1)
             
-            if options.usearchFilterSequencesShorterThan > 0 and (qend-qstart < options.usearchFilterSequencesShorterThan):
-                logger.debug("Removed read '{}' with length {}".format(read, str(qend-qstart)))
-                continue
+            if options.mapperName == "usearch":
+                if options.usearchFilterSequencesShorterThan > 0 and (qend-qstart < options.usearchFilterSequencesShorterThan):
+                    logger.debug("Removed read '{}' with length {}".format(read, str(qend-qstart)))
+                    continue
             
             logger.debug("Read: {}".format(read))
             read = read.split()[0]
@@ -282,20 +283,16 @@ def sumMapCounts(mappings, contigCoverage, options, logger):
     a contigCoverage dictionary.
     Uses NumPy.
     """
-    if options.pblat:
+    if options.mapperName in ("pblat", "blast", "usearch"):
         contigCoverage = parse_blast8(mappings, contigCoverage, options, logger)
-    elif options.blast:
-        contigCoverage = parse_blast8(mappings, contigCoverage, options, logger)
-    elif options.usearch:
-        contigCoverage = parse_blast8(mappings, contigCoverage, options, logger)
-    elif options.razers3:
+    elif options.mapperName == "razers3":
         contigCoverage = parse_razers3(mappings, contigCoverage, logger)
-    elif options.bowtie2:
+    elif options.mapperName == "bowtie2":
         contigCoverage = parse_sam(mappings, contigCoverage, logger)
-    elif options.gem:
+    elif options.mapperName == "gem":
         contigCoverage = parse_gem(mappings, contigCoverage, logger)
     else:
-        logger.error("No mapper selected! This should never happen?!")
+        logger.error("Couldn't figure out what mapper was used! This should never happen?!")
         exit(1)
 
     for contig in contigCoverage.keys():

@@ -17,9 +17,6 @@ class TentacleMaster(object):
     def create_get_tasks_argparser():
         parser = argparse.ArgumentParser(add_help=False)
         parser.add_argument("--mappingManifest", help="a tab delimited text file with mapping triplets on each row")
-        #parser.add_argument("contigsDirectory", help="path to directory containing contigs files (gzippped FASTQ)")
-        #parser.add_argument("readsDirectory", help="path to directory containing read files (gzipped FASTQ)")
-        #parser.add_argument("annotationsDirectory", help="path to directory containing annotation files (tab separated text)")
         return parser
     
     @staticmethod
@@ -40,20 +37,24 @@ def parse_linked_files(mapping_manifest, output_dir_structure, master_logger):
     """
     Parses mapping triplets from mapping manifest file
     """
-    with open(mapping_manifest) as manifest_file:
-        # TODO: Test if possible to split row in 4, for paired end data
-        mapping_tuples = []
-        for line in manifest_file:
-            reads, reference, annotation = line.split()
-            current_tuple = (reads, reference, annotation)
-            for file_path in current_tuple:
-                if not path.isfile(file_path):
-                    master_logger.error("The path to {} appears incorrect".format(file_path))
-                    exit(1)
-            result_file = path.join(output_dir_structure.results, path.basename(reads)+".tab")
-            task_logs_dir = output_dir_structure.get_logs_subdir("task_logs")
-            log_file = path.join(task_logs_dir, path.basename(reads)+"_"+str(random.randint(0,sys.maxint))+".log")
-            mapping_tuples.append((core_name(reads, "."), tentacle_core.AllFiles(reference, reads, annotation, result_file, log_file)))
+    try:
+        with open(mapping_manifest) as manifest_file:
+            # TODO: Test if possible to split row in 4, for paired end data
+            mapping_tuples = []
+            for line in manifest_file:
+                reads, reference, annotation = line.split()
+                current_tuple = (reads, reference, annotation)
+                for file_path in current_tuple:
+                    if not path.isfile(file_path):
+                        master_logger.error("The path to {} appears incorrect".format(file_path))
+                        exit(1)
+                result_file = path.join(output_dir_structure.results, path.basename(reads)+".tab")
+                task_logs_dir = output_dir_structure.get_logs_subdir("task_logs")
+                log_file = path.join(task_logs_dir, path.basename(reads)+"_"+str(random.randint(0,sys.maxint))+".log")
+                mapping_tuples.append((core_name(reads, "."), tentacle_core.AllFiles(reference, reads, annotation, result_file, log_file)))
+    except TypeError, e:
+        master_logger.error("Cannot open mapping manifest file '{}'".format(mapping_manifest))
+        exit(1)
             
     return mapping_tuples
 

@@ -27,18 +27,22 @@ class LaunchingMasterWorkerExecutor(object):
     @classmethod
     def parse_options(cls, argv, master_factory, worker_factory, launcher_factory, distributed_worker_pool_factory, logger_provider_factory, output_dir_structure_factory):
         """create parsers for the different submodules, and return along with a joint parser containing them all, along with help"""
+
+        worker_argparser, mapper_namespace, argv = worker_factory.create_argparser(argv)
+
         parsers = [cls.create_argparser(),
                    master_factory.create_get_tasks_argparser(),
-                   worker_factory.create_argparser(),
+                   worker_argparser,  
                    output_dir_structure_factory.create_argparser(),
                    distributed_worker_pool_factory.create_argparser(),
                    launcher_factory.create_argparser(),
                    logger_provider_factory.create_argparser()]
         
-        joint_parser = argparse.ArgumentParser(description="Run the distributed Tentacle metagenomics workflow", parents=parsers, add_help=True)
+        joint_parser = argparse.ArgumentParser(description="Run the distributed Tentacle metagenomics workflow",
+            parents=parsers, add_help=True)
         
-        #Parse the args and make the help section appear if asked for
-        return joint_parser.parse_args(argv[1:])
+        #Parse the remaining args and make the help section appear if asked for
+        return joint_parser.parse_args(argv[1:], namespace=mapper_namespace)
     
     @classmethod
     def launch_master_worker(cls, argv, master_factory, worker_factory, launcher_factory=SubprocessLauncher, distributed_worker_pool_factory=ZeroRpcDistributedWorkerPoolFactory(), logger_provider_factory=LoggerProvider, output_dir_structure_factory = OutputDirStructure):

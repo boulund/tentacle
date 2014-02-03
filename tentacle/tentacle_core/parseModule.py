@@ -239,8 +239,8 @@ def parse_blast8(mappings, contigCoverage, options, logger):
                 exit(1)
             
             if options.mapperName == "usearch":
-                if options.usearchFilterSequencesShorterThan > 0 and (qend-qstart < options.usearchFilterSequencesShorterThan):
-                    logger.debug("Removed read '{}' with length {}".format(read, str(qend-qstart)))
+                if int(options.usearchFilterSequencesShorterThan) > 0 and (int(qend)-int(qstart) < int(options.usearchFilterSequencesShorterThan)):
+                    logger.debug("Removed read '{}' with length {}".format(read, str(int(qend)-int(qstart))))
                     continue
             
             logger.debug("Read: {}".format(read))

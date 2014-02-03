@@ -152,7 +152,7 @@ class Mapper(object):
                 self.logger.info("Skipping quality control and writing reads unmodified to local storage...")
             else:
                 self.logger.info("Writing reads to local storage...")
-            written_reads = self.write_reads(read_source, destination)
+            written_reads = mapping_utils.write_reads(read_source, destination, self.logger)
             # Calling .communicate() on the Popen object runs the
             # entire pipeline that has been pending
             written_reads.communicate() # Writes to disk

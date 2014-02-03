@@ -30,7 +30,7 @@ class Test_complete_pipelines(unittest.TestCase):
         self.general_argv = sys.argv + [
                 "-o", self.out_dir,
                 "--makeUniqueOutputDirectoryNameIfNeeded", 
-                "--deleteTempFiles",
+                #"--deleteTempFiles",
                 "--splitCharAnnotations", "_",
                 "--splitCharReads", "_",
                 "--splitCharReferences", "_",

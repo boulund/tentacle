@@ -11,9 +11,10 @@ class OutputDirStructure(object):
     @classmethod
     def create_argparser(cls):
         parser = argparse.ArgumentParser(add_help=False)
-        parser.add_argument("-o", "--outputDirectory", default="tentacle_output", dest='output_dir_path', help="path to directory being created and holding the logfiles and annotations [default =  %(default)s]")
-        parser.add_argument("--makeUniqueOutputDirectoryNameIfNeeded", action="store_true", default="False", help="If the stated outputDirectory exists, should a new unique directory name be created instead of the program failing? [default =  %(default)s]")
-        parser.add_argument("--deleteTempFiles", dest="deleteTempFiles", default=False, action="store_true", 
+        general_group = parser.add_argument_group("General options", "Some options are required")
+        general_group.add_argument("-o", "--outputDirectory", default="tentacle_output", dest='output_dir_path', help="path to directory being created and holding the logfiles and annotations [default =  %(default)s]")
+        general_group.add_argument("--makeUniqueOutputDirectoryNameIfNeeded", action="store_true", default="False", help="If the stated outputDirectory exists, should a new unique directory name be created instead of the program failing? [default =  %(default)s]")
+        general_group.add_argument("--deleteTempFiles", dest="deleteTempFiles", default=False, action="store_true", 
             help="Remove temporary files on nodes after successful completion [default: %(default)s]")
         return parser
         

@@ -16,7 +16,11 @@ class TentacleMaster(object):
     @staticmethod
     def create_get_tasks_argparser():
         parser = argparse.ArgumentParser(add_help=False)
-        parser.add_argument("--mappingManifest", help="a tab delimited text file with mapping triplets on each row")
+        general_group = parser.add_argument_group("General options")
+        general_group.add_argument("--mappingManifest", required=True,
+            help="a tab delimited text file with mapping triplets on each row")
+        general_group.add_argument("--saveMappingResultsFile", action="store_true",
+            help="Retrieve the mapping results file from the node after mapping completion")
         return parser
     
     @staticmethod

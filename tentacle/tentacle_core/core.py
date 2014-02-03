@@ -135,8 +135,28 @@ class TentacleCore:
         self.logger.info("Successfully deleted temporary files in folder '{}'...".format(temp_dir))
 
 
+    def save_mapping_results(self, mapped_reads, target_filename):
+        """
+        Create a compressed copy of the raw mapping results in the output directory
+        """
+        import gzip
+        self.logger.debug("Opening mapping results file '{}' for copying to results".format(mapped_reads.mapped_reads))
+        f_in = open(mapped_reads.mapped_reads, 'rb')
+        self.logger.debug("Opening mapping results file destination '{}' for writing".format(target_filename))
+        f_out = gzip.open(target_filename, 'wb')
+        self.logger.debug("Writing compressed results to '{}' ...".format(target_filename))
+        f_out.writelines(f_in)
+        f_out.close()
+        f_in.close()
+        self.logger.debug("Successfully created a compressed copy of the mapping results in '{}'".format(target_filename))
+
+
     def analyse(self, files, options):
         mapped_reads, temp_dir = self.preprocess_data_and_map_reads(files, options)
+        if options.saveMappingResultsFile:
+            target_filename = os.path.dirname(files.annotationStats)+"/"+\
+                              os.path.basename(mapped_reads.mapped_reads)+".gz"
+            self.save_mapping_results(mapped_reads, target_filename)
         coveragetime = time()
         self.analyse_coverage(mapped_reads, files.annotationStats, options)
         self.logger.info("Time to analyse coverage: %s", time()-coveragetime)

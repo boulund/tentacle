@@ -66,9 +66,9 @@ class LoggerProvider(object):
         parser = argparse.ArgumentParser(add_help=False)
         log_group = parser.add_argument_group("Logging options")
         log_group.add_argument("--logLevel", dest="logLevel", type=str, default="INFO", 
-            help="Specify logging level using either 'default', 'INFO', 'DEBUG', or 'CRITICAL'. [default %s(default)]")
+            help="Specify logging level using either 'default', 'INFO', 'DEBUG', or 'CRITICAL'. [default: %(default)s]")
         log_group.add_argument("--logNoStdout", action="store_true", default=False,
-            help="Developer option used to supress log output to stdout during unittests. [default %s(default)]")
+            help="Developer option used to supress log output to stdout during unittests. [default: %(default)s]")
         parser.add_argument_group(log_group)
         return parser
         

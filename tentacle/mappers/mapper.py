@@ -131,7 +131,8 @@ class Mapper(object):
         elif fastq_format and options.noQualityControl:
             if self.input_reads_format == "FASTA":
                 self.logger.info("Converting FASTQ to FASTA...")
-                fasta_reads = self.filtered_call(source=read_source,
+                fasta_reads = mapping_utils.filtered_call(self.logger,
+                                     source=read_source,
                                      program="fastq_to_fasta",
                                      **{"-n":"", #discards low quality reads
                                         "-v":""})

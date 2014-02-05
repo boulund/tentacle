@@ -19,13 +19,20 @@ from tentacle import run
 bin_dir = os.path.join(base_dir,"dependencies","bin",platform.system())
 os.environ["PATH"]  = os.environ["PATH"]  + os.pathsep + bin_dir
 
-out_dir = join(base_dir,"workdir","testtentacle")
+out_dir = join(base_dir,"workdir","plasmidfixes")
 
 argv = sys.argv + [
-        #"--mappingManifest", "/home/boulund/workspace/tentacle/tests_data/usearch/mappingManifest.tab",
+        "--mappingManifest", "data/manifest.tab",
         "--makeUniqueOutputDirectoryNameIfNeeded",
         "--localCoordinator",
-        "-N", "2",
+        "--usearch",
+        "--usearchID", "0.9",
+        "--usearchDBName", "bacmet.fasta",
+        "--usearchFilterSequencesShorterThan", "75",
+        "--usearchStrand", "both",
+        "--logLevel", "DEBUG",
+        "--saveMappingResultsFile",
+        "-N", "1",
         "-o", out_dir,
         ]
 

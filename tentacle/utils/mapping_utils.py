@@ -144,7 +144,7 @@ def determine_format(source, logger):
     return (new_source, fastq)
 
 
-def filtered_call(logger, source, program, **options):
+def filtered_call(logger, source, program, arguments):
     """
     Generic filter call.
     Calls PROGRAM with OPTIONS given as keyword arguments to this function
@@ -154,7 +154,7 @@ def filtered_call(logger, source, program, **options):
     """
 
     filter_call = [utils.resolve_executable(program)]
-    args = [str(key)+str(option) for key, option in options.iteritems()]
+    args = [str(key)+str(option) for key, option in arguments.iteritems()]
     filter_call.extend(args)
 
     logger.debug("{} call: {}".format(program, ' '.join(filter_call)))

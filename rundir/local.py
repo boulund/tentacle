@@ -24,6 +24,7 @@ out_dir = join(base_dir,"workdir","plasmidfixes")
 argv = sys.argv + [
         "--mappingManifest", "data/manifest.tab",
         "--makeUniqueOutputDirectoryNameIfNeeded",
+        "--noQualityControl",
         "--localCoordinator",
         "--usearch",
         "--usearchID", "0.9",

@@ -6,6 +6,7 @@
 from subprocess import PIPE#, Popen
 from gevent.subprocess import Popen
 from sys import stdout
+from collections import OrderedDict
 import os
 
 from ..utils import resolve_executable
@@ -110,25 +111,27 @@ class Mapper(object):
             filtered_reads = mapping_utils.filtered_call(self.logger,
                                     source=read_source,
                                     program=program_filter,
-                                    **{"-q":options.fastqMinQ,
-                                       "-p":options.fastqProportion,
-                                       "-v":""})
+                                    arguments= {"-q":options.fastqMinQ,
+                                                "-p":options.fastqProportion,
+                                                "-v":""})
             pipeline_components.append((filtered_reads, program_filter))
             self.logger.info("Trimming reads using {}...".format(program_filter))
             trimmed_reads = mapping_utils.filtered_call(self.logger,
                                    source=filtered_reads,
                                    program=program_trim,
-                                   **{"-t":options.fastqThreshold,
-                                      "-l":options.fastqMinLength,
-                                      "-v":""})
+                                   arguments={"-t":options.fastqThreshold,
+                                              "-l":options.fastqMinLength,
+                                              "-v":""})
             pipeline_components.append((trimmed_reads, program_trim))
             if self.input_reads_format == "FASTA":
                 self.logger.info("Converting FASTQ to FASTA using {}...".format(program_convert))
+                arguments = OrderedDict([("seq", ""), 
+                                         ("-A", ""), 
+                                         ("-", "")])
                 fasta_reads = mapping_utils.filtered_call(self.logger,
                                      source=trimmed_reads,
                                      program=program_convert,
-                                     **{"-A":"", 
-                                        "-":""})
+                                     arguments=arguments)
                 pipeline_components.append((fasta_reads, program_convert))
                 # Some mappers require a .fasta file ending so we append that just in case
                 destination = destination+".fasta"
@@ -136,24 +139,14 @@ class Mapper(object):
             else:
                 written_reads = mapping_utils.write_reads(trimmed_reads, destination, self.logger)
             pipeline_components.append((written_reads, "cat"))
-            # Calling .communicate() on the Popen object runs the
-            # entire pipeline that has been pending
-            written_reads.communicate() # Writes to disk
-            for component in pipeline_components:
-                check_return_code(component)
-            self.logger.info("Read quality control and FASTA conversion completed.")
-            self.logger.info("Filtering statistics:\n%s", filtered_reads.stderr.read())
-            self.logger.info("Trimming statistics:\n%s", trimmed_reads.stderr.read())
-            if self.input_reads_format == "FASTA":
-                self.logger.info("FASTA conversion statistics:\n%s", fasta_reads.stderr.read())
         elif fastq_format and options.noQualityControl:
             if self.input_reads_format == "FASTA":
                 self.logger.info("Converting FASTQ to FASTA...")
+                arguments = OrderedDict([("seq", ""), ("-A", ""), ("-", "")])
                 fasta_reads = mapping_utils.filtered_call(self.logger,
                                      source=read_source,
-                                     program="seqtk",
-                                     **{"-A":"", 
-                                        "-":""})
+                                     program=program_convert,
+                                     arguments=arguments)
                 pipeline_components.append((fasta_reads, program_convert))
                 # Some mappers require a .fasta file ending so we append that
                 destination = destination+".fasta"
@@ -161,12 +154,6 @@ class Mapper(object):
             else:
                 written_reads = mapping_utils.write_reads(read_source, destination, self.logger)
             pipeline_components.append((written_reads, "cat"))
-            # Calling .communicate() on the Popen object runs the
-            # entire pipeline that has been pending
-            written_reads.communicate() # Writes to disk
-            for component in pipeline_components:
-                check_return_code(component)
-            self.logger.info("Read transfer completed.")
         else:
             if options.noQualityControl:
                 self.logger.info("Skipping quality control and writing reads unmodified to local storage...")
@@ -174,12 +161,17 @@ class Mapper(object):
                 self.logger.info("Writing reads to local storage...")
             written_reads = mapping_utils.write_reads(read_source, destination, self.logger)
             pipeline_components.append((written_reads, "cat"))
-            # Calling .communicate() on the Popen object runs the
-            # entire pipeline that has been pending
-            written_reads.communicate() # Writes to disk
-            for program in pipeline_components:
-                check_return_code(program)
-            self.logger.info("Successfully wrote reads to local disk.")
+
+        # Calling .communicate() on the Popen object runs 
+        # the entire pipeline that has been pending
+        written_reads.communicate() 
+        for component in pipeline_components:
+            check_return_code(component)
+        self.logger.info("Read transfer completed.")
+        if fastq_format and not options.noQualityControl:
+            self.logger.info("Read quality control and FASTA conversion completed.")
+            self.logger.info("Filtering statistics:\n%s", filtered_reads.stderr.read())
+            self.logger.info("Trimming statistics:\n%s", trimmed_reads.stderr.read())
 
         if options.bowtie2FilterReads:
             # Transfer genome index for bowtie2 and perform read filtering

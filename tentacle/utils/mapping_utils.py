@@ -167,8 +167,8 @@ def write_reads(source, destination, logger):
     Takes a Popen object and writes its content to file.
     """
 
-    # TODO: Create a thread that writes the source.stdout to a file instead.
-    logger.info("Writing reads to local file {}...".format(destination))
+    # TODO: Create a thread that writes the source.stdout to a file
+    # instead.
     destination_file = open(destination, "w")
     write = Popen([utils.resolve_executable("cat")], stdin=source.stdout, stdout=destination_file)
     return write

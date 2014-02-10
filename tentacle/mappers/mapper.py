@@ -79,7 +79,7 @@ class Mapper(object):
                 self.logger.error("{0} return code {1}".format(program_name, Popen_object.returncode))
                 self.logger.error("{0} stdout: {1}".format(program_name, Popen_object.stdout.read()))
                 self.logger.error("{0} stderr: {1}".format(program_name, Popen_object.stderr.read()))
-                raise PipelineError("\n".join([program_name, Popen_object.returncode, Popen_object.stdout.read(), Popen_object.stderr.read()]))
+                raise PipelineError(program_name+" Error code: "+str(Popen_object.returncode)+" "+Popen_object.stdout.read()+"\n"+Popen_object.stderr.read())
             else:
                 return
 
@@ -206,7 +206,7 @@ class Mapper(object):
             self.logger.error("{0}: return code {1}".format(self.mapper, mapper_process.returncode))
             self.logger.error("{0}: stdout: {1}".format(self.mapper, mapper_stream_data[0]))
             self.logger.error("{0}: stderr: {1}".format(self.mapper, mapper_stream_data[1]))
-            raise MapperError("\n".join([self.mapper, mapper_process.returncode, mapper_stream.data]))
+            raise MapperError("\n".join([self.mapper, str(mapper_process.returncode), mapper_stream.data]))
         else:
             self.assert_mapping_results(output_filename)
         self.logger.debug("{0}: stdout: {1}".format(self.mapper, mapper_stream_data[0]))

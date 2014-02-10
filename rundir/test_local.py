@@ -30,6 +30,7 @@ class Test_complete_pipelines(unittest.TestCase):
         self.general_argv = sys.argv + [
                 "-o", self.out_dir,
                 "--makeUniqueOutputDirectoryNameIfNeeded", 
+                "--noQualityControl",
                 #"--deleteTempFiles",
                 "--splitCharAnnotations", "_",
                 "--splitCharReads", "_",
@@ -39,7 +40,7 @@ class Test_complete_pipelines(unittest.TestCase):
                 #"--distributionUseDedicatedCoordinatorNode",
                 #"--distributedNodeIdleTimeout", "30",
                 #"--slurmTimeLimit", "8:00:00"
-                "--logLevel", "CRITICAL"
+                #"--logLevel", "CRITICAL"
                 ]
 
 ##    def tearDown(self):

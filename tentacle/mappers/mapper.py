@@ -71,13 +71,12 @@ class Mapper(object):
         Transfer and prepare reads.
         """
 
-        def check_return_code(Popen_tuple):
+        def check_return_code(Popen_object):
             """ Checks the return code of a finished Popen object."""
-            Popen_object, program_name = Popen_tuple
             if Popen_object.returncode is not 0:
-                self.logger.error("{0} return code {1}".format(program_name, Popen_object.returncode))
-                self.logger.error("{0} stdout: {1}".format(program_name, Popen_object.stdout.read()))
-                self.logger.error("{0} stderr: {1}".format(program_name, Popen_object.stderr.read()))
+                self.logger.error("{0}: return code {1}".format(self.mapper, Popen_object.returncode))
+                self.logger.error("{0}: stdout: {1}".format(self.mapper, Popen_object.stdout.read()))
+                self.logger.error("{0}: stderr: {1}".format(self.mapper, Popen_object.stderr.read()))
                 exit(1)
             else:
                 return
@@ -101,41 +100,40 @@ class Mapper(object):
 
         # Perform filtering and trimming if FASTQ,
         # otherwise just write to disk
-        program_filter = "fastq_quality_filter"
-        program_trim = "fastq_quality_trimmer"
-        program_convert = "seqtk"
         if fastq_format and not options.noQualityControl:
             self.logger.info("Performing quality control on reads...")
-            self.logger.info("Filtering reads using {}...".format(program_filter))
+            self.logger.info("Filtering reads...")
             filtered_reads = mapping_utils.filtered_call(self.logger,
                                     source=read_source,
-                                    program=program_filter,
+                                    program="fastq_quality_filter",
                                     **{"-q":options.fastqMinQ,
                                        "-p":options.fastqProportion,
                                        "-v":""})
-            pipeline_components.append((filtered_reads, program_filter))
-            self.logger.info("Trimming reads using {}...".format(program_filter))
+            pipeline_components.append(filtered_reads)
+            self.logger.info("Trimming reads...")
             trimmed_reads = mapping_utils.filtered_call(self.logger,
                                    source=filtered_reads,
-                                   program=program_trim,
+                                   program="fastq_quality_trimmer",
                                    **{"-t":options.fastqThreshold,
                                       "-l":options.fastqMinLength,
                                       "-v":""})
-            pipeline_components.append((trimmed_reads, program_trim))
+            pipeline_components.append(trimmed_reads)
             if self.input_reads_format == "FASTA":
-                self.logger.info("Converting FASTQ to FASTA using {}...".format(program_convert))
+                self.logger.info("Converting FASTQ to FASTA...")
                 fasta_reads = mapping_utils.filtered_call(self.logger,
                                      source=trimmed_reads,
-                                     program=program_convert,
-                                     **{"-A":"", 
-                                        "-":""})
-                pipeline_components.append((fasta_reads, program_convert))
+                                     program="fastq_to_fasta",
+                                     **{"-n":"", #discards low quality reads
+                                        "-v":""})
+                pipeline_components.append(fasta_reads)
+                self.logger.info("Writing filtered and trimmed reads to local storage...")
                 # Some mappers require a .fasta file ending so we append that just in case
                 destination = destination+".fasta"
                 written_reads = mapping_utils.write_reads(fasta_reads, destination, self.logger)
             else:
+                self.logger.info("Writing filtered and trimmed reads to local storage...")
                 written_reads = mapping_utils.write_reads(trimmed_reads, destination, self.logger)
-            pipeline_components.append((written_reads, "cat"))
+            pipeline_components.append(written_reads)
             # Calling .communicate() on the Popen object runs the
             # entire pipeline that has been pending
             written_reads.communicate() # Writes to disk
@@ -151,16 +149,18 @@ class Mapper(object):
                 self.logger.info("Converting FASTQ to FASTA...")
                 fasta_reads = mapping_utils.filtered_call(self.logger,
                                      source=read_source,
-                                     program="seqtk",
-                                     **{"-A":"", 
-                                        "-":""})
-                pipeline_components.append((fasta_reads, program_convert))
+                                     program="fastq_to_fasta",
+                                     **{"-n":"", #discards low quality reads
+                                        "-v":""})
+                pipeline_components.append(fasta_reads)
+                self.logger.info("Writing reads to local storage in FASTA format...")
                 # Some mappers require a .fasta file ending so we append that
                 destination = destination+".fasta"
                 written_reads = mapping_utils.write_reads(fasta_reads, destination, self.logger)
             else:
+                self.logger.info("Writing unfiltered and nontrimmed reads to local storage...")
                 written_reads = mapping_utils.write_reads(read_source, destination, self.logger)
-            pipeline_components.append((written_reads, "cat"))
+            pipeline_components.append(written_reads)
             # Calling .communicate() on the Popen object runs the
             # entire pipeline that has been pending
             written_reads.communicate() # Writes to disk
@@ -173,12 +173,12 @@ class Mapper(object):
             else:
                 self.logger.info("Writing reads to local storage...")
             written_reads = mapping_utils.write_reads(read_source, destination, self.logger)
-            pipeline_components.append((written_reads, "cat"))
+            pipeline_components.append(written_reads)
             # Calling .communicate() on the Popen object runs the
             # entire pipeline that has been pending
             written_reads.communicate() # Writes to disk
-            for program in pipeline_components:
-                check_return_code(program)
+            for component in pipeline_components:
+                check_return_code(component)
             self.logger.info("Successfully wrote reads to local disk.")
 
         if options.bowtie2FilterReads:

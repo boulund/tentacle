@@ -17,7 +17,7 @@ from tentacle import run
 
 #Add the built in dependencies to PATH
 bin_dir = os.path.join(base_dir,"dependencies","bin",platform.system())
-os.environ["PATH"]  = os.environ["PATH"]  + os.pathsep + bin_dir
+os.environ["PATH"]  = bin_dir + os.pathsep + os.environ["PATH"]
 
 out_dir = join(base_dir,"workdir","plasmidfixes")
 

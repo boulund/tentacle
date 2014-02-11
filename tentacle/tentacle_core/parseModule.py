@@ -313,7 +313,6 @@ def parse_blast8(mappings, contigCoverage, options, logger):
             #    exit(1)
         
         # Add the last read to contigCoverage
-        print previous_readname, read
         check_new_read(read, identity, aligned_length, contig, sstart, send, previous_readname, previous_information)
 
     return contigCoverage

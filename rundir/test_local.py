@@ -19,7 +19,7 @@ from tentacle import run
 
 #Add the dependencies directory to PATH
 bin_dir = os.path.join(base_dir,"dependencies","bin",platform.system())
-os.environ["PATH"]  = os.environ["PATH"]  + os.pathsep + bin_dir
+os.environ["PATH"]  = bin_dir + os.pathsep + os.environ["PATH"]
 
 
 class Test_complete_pipelines(unittest.TestCase):
@@ -30,7 +30,7 @@ class Test_complete_pipelines(unittest.TestCase):
         self.general_argv = sys.argv + [
                 "-o", self.out_dir,
                 "--makeUniqueOutputDirectoryNameIfNeeded", 
-                "--noQualityControl",
+                #"--noQualityControl",
                 #"--deleteTempFiles",
                 "--splitCharAnnotations", "_",
                 "--splitCharReads", "_",
@@ -40,7 +40,7 @@ class Test_complete_pipelines(unittest.TestCase):
                 #"--distributionUseDedicatedCoordinatorNode",
                 #"--distributedNodeIdleTimeout", "30",
                 #"--slurmTimeLimit", "8:00:00"
-                #"--logLevel", "CRITICAL"
+                "--logLevel", "DEBUG"
                 ]
 
 ##    def tearDown(self):

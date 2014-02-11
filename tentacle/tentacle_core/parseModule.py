@@ -22,7 +22,7 @@ def indexContigs(contigsFile, logger):
         if not line.startswith(">"):
             logger.error("CONTIGS file %s not in FASTA format?", contigsFile)
             logger.error("First line is this:\n%s", line)
-            raise FileFormatError
+            raise FileFormatError("{} not in FASTA format?".format(contigsFile))
 
         header = line.split()[0][1:]
 

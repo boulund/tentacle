@@ -40,48 +40,48 @@ class Test_complete_pipelines(unittest.TestCase):
                 #"--distributionUseDedicatedCoordinatorNode",
                 #"--distributedNodeIdleTimeout", "30",
                 #"--slurmTimeLimit", "8:00:00"
-                "--logLevel", "DEBUG"
+                "--logLevel", "CRITICAL"
                 ]
 
-##    def tearDown(self):
-##        import shutil
-##        shutil.rmtree(self.out_dir)
-##
-#    def test_razers3(self):
-#        ##### RAZERS3 ####
-#        razers3_argv = self.general_argv + [
-#                "--razers3",
-#                "--mappingManifest", "tests_data/razers3/mappingManifest.tab",
-#                ]
-#        run(razers3_argv, GeventLauncher, GeventWorkerPoolFactory())
+#    def tearDown(self):
+#        import shutil
+#        shutil.rmtree(self.out_dir)
 #
-#    def test_pblat(self):
-#        ##### PBLAT #####
-#        pblat_argv = self.general_argv + [
-#                "--pblat",
-#                "--mappingManifest", "tests_data/pblat/mappingManifest.tab",
-#                ]
-#        run(pblat_argv, GeventLauncher, GeventWorkerPoolFactory())
-#
-#
-#    def test_bowtie2(self):
-#        ##### Bowtie2 #####
-#        bowtie2_argv = self.general_argv + [
-#                "--bowtie2",
-#                "--bowtie2Threads", "8",
-#                "--bowtie2DBName", "contigs.fasta",
-#                "--mappingManifest", "tests_data/bowtie2/mappingManifest.tab",
-#                ]
-#        run(bowtie2_argv, GeventLauncher, GeventWorkerPoolFactory())
-#
-#    def test_gem(self):
-#        ##### GEM #####
-#        gem_argv = self.general_argv + [
-#                "--gem",
-#                "--gemDBName", "contigs.fasta",
-#                "--mappingManifest", "tests_data/gem/mappingManifest.tab",
-#                ]
-#        run(gem_argv, GeventLauncher, GeventWorkerPoolFactory())
+    def test_razers3(self):
+        ##### RAZERS3 ####
+        razers3_argv = self.general_argv + [
+                "--razers3",
+                "--mappingManifest", "tests_data/mappingManifest.tab",
+                ]
+        run(razers3_argv, GeventLauncher, GeventWorkerPoolFactory())
+
+    def test_pblat(self):
+        ##### PBLAT #####
+        pblat_argv = self.general_argv + [
+                "--pblat",
+                "--mappingManifest", "tests_data/mappingManifest.tab",
+                ]
+        run(pblat_argv, GeventLauncher, GeventWorkerPoolFactory())
+
+
+    def test_bowtie2(self):
+        ##### Bowtie2 #####
+        bowtie2_argv = self.general_argv + [
+                "--bowtie2",
+                "--bowtie2Threads", "8",
+                "--bowtie2DBName", "contigs.fasta",
+                "--mappingManifest", "tests_data/mappingManifest.tab",
+                ]
+        run(bowtie2_argv, GeventLauncher, GeventWorkerPoolFactory())
+
+    def test_gem(self):
+        ##### GEM #####
+        gem_argv = self.general_argv + [
+                "--gem",
+                "--gemDBName", "contigs.fasta",
+                "--mappingManifest", "tests_data/mappingManifest.tab",
+                ]
+        run(gem_argv, GeventLauncher, GeventWorkerPoolFactory())
 
     def test_usearch(self):
         ##### USEARCH #####
@@ -95,4 +95,4 @@ class Test_complete_pipelines(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main(buffer=False)
+    unittest.main(buffer=True)

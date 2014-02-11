@@ -24,36 +24,34 @@ def copy_untar_ref_db(source_file, destination, logger):
 
     if source_file.lower().endswith((".tar.gz", ".tar", ".tgz")):
         logger.info("It appears reference DB '%s' is in tar/gz format", source_file)
-        logger.info("Extracting (and if necessary gunzipping) database...")
+        logger.info("Extracting database tarball...")
         shutil.copy(source_file, destination)
         tar = Popen(tar_call, stdout=PIPE, stderr=PIPE, cwd=workdir)
         logger.debug("tar call:{}".format(tar_call))
         tar_stream_data = tar.communicate()
         if tar.returncode is not 0:
-            logger.error("{}".format(tar_stream_data))
             logger.error("tar returncode {}".format(tar.returncode))
-            logger.error("tar stdout: {}\nstderr: {}".format(tar_stream_data))
-            exit(1)
+            logger.error("tar stdout: {}\ntar stderr: {}".format(tar_stream_data))
+            raise PipelineError("tar exited with return code {}".format(tar.returncode))
         else:
             logger.info("Untar of reference DB successful.")
     elif source_file.lower().endswith((".gz")):
         logger.info("It appears reference DB '%s' is in gz format", source_file)
-        logger.info("Gunzipping databsae...")
+        logger.info("Gunzipping database file...")
         shutil.copy(source_file, destination)
         gunzip_call = [utils.resolve_executable("gunzip"), source_file]
         gunzip = Popen(gunzip_call, stdout=PIPE, stderr=PIPE, cwd=workdir)
         logger.debug("gunzip call:{}".format(tar_call))
         gunzip_stream_data = gunzip.communicate()
         if gunzip.returncode is not 0:
-            logger.error("{}".format(gunzip_stream_data))
             logger.error("gunzip returncode {}".format(gunzip.returncode))
-            logger.error("gunzip stdout: {}\nstderr: {}".format(gunzip_stream_data))
-            exit(1)
+            logger.error("gunzip stdout: {}\ngunzip stderr: {}".format(gunzip_stream_data))
+            raise PipelineError("gunzip exited with return code {}".format(gunzip.returncode))
         else:
             logger.info("Gunzip of reference DB successful.")
     else:
         logger.error("Don't know what to do with {}, it does not look like a (gzipped) tar file".format(source_file))
-        exit(1)
+        raise FileFormatError(source_file)
 
     return destination
 
@@ -72,13 +70,13 @@ def gunzip_copy(source_file, destination, logger):
         outfile = open(destination, "w")
 
         gunzip_call = [utils.resolve_executable("gunzip"), source_file, "-c"]
-        gunzip = Popen(gunzip_call, stdout=outfile, stderr=PIPE).communicate()
-
+        gunzip = Popen(gunzip_call, stdout=outfile, stderr=PIPE)
+        gunzip_stream_data = gunzip.communicate()
         outfile.close()
-        if gunzip[1] != "":
-            logger.error("Could not gunzip %s to node", source_file)
-            logger.error("Gunzip stderr: %s", gunzip[1])
-            exit(1)
+        if gunzip.returncode is not 0: 
+            logger.error("Could not gunzip {} to node".format(source_file))
+            logger.error("gunzip stdout: {}\ngunzip stderr: {}".format(gunzip_stream_data))
+            raise PipelineError("gunzip exited with return code {}".format(gunzip.returncode))
         else:
             logger.info("Successfully gunzipped %s to node.", source_file)
     else: # It is probably not compressed (at least not with gzip)
@@ -99,11 +97,11 @@ def uncompress_into_Popen(filename, logger):
     """
     
     if filename.lower().endswith((".gz")):
-        logger.info("File %s seems gzipped, uncompressing.", filename)
+        logger.debug("File %s seems gzipped, uncompressing.", filename)
         gunzip_call = [utils.resolve_executable("gunzip"), "-c", filename]
         uncompressed_data = Popen(gunzip_call, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     else:
-        logger.info("File %s does not seem gzipped.", filename)
+        logger.debug("File %s does not seem gzipped.", filename)
         cat_call = [utils.resolve_executable("cat"), filename]
         uncompressed_data = Popen(cat_call, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     return uncompressed_data
@@ -139,7 +137,7 @@ def determine_format(source, logger):
         new_source = create_new_pipe(firstchar, source, logger)
     else:
         logger.error("Reads file not in FASTQ or FASTA format")
-        exit(1)
+        raise FileFormatError("Reads file not in FASTQ or FASTA format")
 
     return (new_source, fastq)
 
@@ -184,7 +182,7 @@ def filter_human_reads_bowtie2(reads, options, logger):
     output_filename = reads+".filtered.fq"
     if not options.bowtie2FilterDB:
         log.error("--bowtie2FilterDB is empty! Sorry for noticing so late! :(")
-        exit(1)
+        raise MapperError("bowtie2 requires a DB name (--bowtie2FilterDB)")
 
     db_name = os.path.basename(options.bowtie2FilterDB.split(".")[0])
     mapper_call = [utils.resolve_executable("bowtie2"),
@@ -206,7 +204,7 @@ def filter_human_reads_bowtie2(reads, options, logger):
         logger.error("bowtie2: return code {}".format(bowtie2.returncode))
         logger.error("bowtie2: stdout: {}".format(bowtie2_stream_data[0])) 
         logger.error("bowtie2: stderr: {}".format(bowtie2_stream_data[1])) 
-        exit(1)
+        raise MapperError("bowtie2 exited with status {}".format(bowtie2.returncode))
     else:
         # TODO: assert mapping results?
         pass
@@ -217,3 +215,12 @@ def filter_human_reads_bowtie2(reads, options, logger):
 
 
 
+###########################################
+#    Exceptions
+###########################################
+class FileFormatError(Exception): pass
+class PipelineError(Exception): pass
+
+class MapperError(Exception):
+    """ Exception raised for generic mapper errors. """
+    pass

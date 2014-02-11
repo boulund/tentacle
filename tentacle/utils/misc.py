@@ -35,10 +35,11 @@ def resolve_executable(program, fallback=None):
 
 
 __all__.append("assert_file_exists")
+class FileNotFound(Exception): pass
 def assert_file_exists(fileDesc, fileName):
     if not os.path.isfile(fileName):
         print "ERROR: " + fileDesc.capitalize() + " file not supplied correctly ("+ fileName +")."
-        exit(1) 
+        raise FileNotFound(fileName)
 
 
 #def call(o, arguments):

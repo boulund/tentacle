@@ -22,7 +22,7 @@ def indexContigs(contigsFile, logger):
         if not line.startswith(">"):
             logger.error("CONTIGS file %s not in FASTA format?", contigsFile)
             logger.error("First line is this:\n%s", line)
-            exit(1)
+            raise FileFormatError
 
         header = line.split()[0][1:]
 
@@ -95,7 +95,7 @@ def parse_sam(mappings, contigCoverage, logger):
         if not line.startswith("@HD"):
             logger.error("Unable to parse results file %s\n%s", mappings, e)
             logger.error("Could not find @HD header tag on first line of file:\n%s", line)
-            exit(1)
+            raise ParseError("Mapping results file {} does not start with @HD".format(mappings))
         for line in f:
             if not line.startswith("@"):
                 contigCoverage = update_contig_coverage(line, contigCoverage)
@@ -142,7 +142,7 @@ def parse_gem(mappings, contigCoverage, logger):
                             endpos += int(h.group(0))
                     else:
                         logger.error("Cannot parse GIGAR string: {}".format(gigar))
-                        exit(1)
+                        raise ParseError("Cannot parse GIGAR string: {}".format(gigar))
                 elif entity.startswith("("):
                     pass
         return endpos
@@ -166,8 +166,8 @@ def parse_gem(mappings, contigCoverage, logger):
                 else:
                     plus_strand = False
             except ValueError:
-                logger.error("Unable to split alignment information: '{}'".format(alignments))
-                exit(1)
+                logger.error("Cannot split alignment information: '{}'".format(alignments))
+                raise ParseError("Cannot split alignment information: {}".format(alignments))
             startpos = int(startpos)
             end = startpos + find_end_pos_from_gigar(gigar, plus_strand) - 1
 
@@ -199,7 +199,7 @@ def parse_razers3(mappings, contigCoverage, logger):
             except ValueError, e:
                 logger.error("Unable to parse results file %s\n%s", mappings, e)
                 logger.error("The line that couldn't be parsed was this:\n%s", line)
-                exit(1)
+                raise ParseError("Cannot parse line\n{}\n in file {}".format(line, mappings))
             cstart = int(cstart)
             cend = int(cend) # End coordinate is non-inclusive
 
@@ -278,7 +278,7 @@ def parse_blast8(mappings, contigCoverage, options, logger):
             except ValueError, e:
                 logger.error("Unable to parse results file %s\n%s", mappings, e)
                 logger.error("The line that couldn't be parsed was this:\n%s", line)
-                exit(1)
+                raise ParseError("Cannot parse line\n{}\n in file {}".format(line, mappings))
             
             identity = float(identity)
             qend = int(qend)
@@ -306,6 +306,7 @@ def parse_blast8(mappings, contigCoverage, options, logger):
                 previous_readname, previous_information = check_new_read(read, identity, aligned_length, contig, sstart, send, previous_readname, previous_information)
             else:
                 update_contigCoverage(contig, sstart, send)
+
             # DEBUG
             #if np.min(np.cumsum(contigCoverage[contig])) < 0:
             #    print read, contig, qstart, qend, sstart, send
@@ -358,7 +359,7 @@ def computeAnnotationCounts(annotationFilename, contigCoverage, outFilename, log
                     contig, start, end, strand, annotation = line.split()
                 except ValueError, e:
                     logger.error("Could not parse annotation line\n{}\nfrom file {}".format(line, annotationFilename))
-                    exit(1)
+                    raise ParseError("Could not parse line {} in file {}".format(line, annotationFilename))
                     
                 start = int(start)-1
                 end = int(end)
@@ -380,7 +381,7 @@ def computeAnnotationCounts(annotationFilename, contigCoverage, outFilename, log
                                   str(stats[2])+"\n")
                 except KeyError, contigHeader:
                     logger.error("Could not find match for contig header {0} in annotation file {1}.".format(contigHeader, annotationFilename))
-                    exit(1)
+                    raise ParseError("Header {} not found in annotation file {}".format(contigHeader, annotationFilename))
 
     # No need to return anything when writing to file directly
     #return annotationCounts
@@ -404,7 +405,32 @@ def computeStatistics(region):
 
 
 
-def printAnnotationCounts(annotationCounts, outputFile=""):
+
+###############################################
+#    Exceptions
+###############################################
+
+class Error(Exception):
+    """ Base class for exceptions in this module.
+
+    Attributes: 
+        msg     error message
+    """
+
+    def __init__(self, msg):
+        self.msg = msg
+
+class ParseError(Error):
+    """ Raised for parsing errors. """
+
+class FileFormatError(Error):
+    """ Raised when file is not in expected format. """
+
+
+###############################################
+#    DEBUG
+###############################################
+def _printAnnotationCounts(annotationCounts, outputFile=""):
     """
     Debug function that prints annotationCounts to stdout or file.
     WARNING EXTREMELY SLOW

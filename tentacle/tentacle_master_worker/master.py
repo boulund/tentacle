@@ -52,7 +52,7 @@ def parse_linked_files(mapping_manifest, output_dir_structure, master_logger):
                 current_tuple = (reads, reference, annotation)
                 for file_path in current_tuple:
                     if not path.isfile(file_path):
-                        master_logger.error("The path to {} appears incorrect".format(file_path))
+                        master_logger.error("The path to '{}' appears incorrect".format(file_path))
                         exit(1)
                 result_file = path.join(output_dir_structure.results, path.basename(reads)+".tab")
                 task_logs_dir = output_dir_structure.get_logs_subdir("task_logs")

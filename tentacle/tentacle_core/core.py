@@ -224,7 +224,7 @@ class TentacleCore:
         options, argv = parser.parse_known_args(argv)
         if not options.mapperName:
             parser.print_help()
-            exit()
+            exit(0)
         #self.logger.debug("Found mapperName '{}' on command line, trying to load module '{}'.".format(options.mapperString))
         mappers = importlib.import_module(".."+options.mapperName, "tentacle.mappers.subpkg")
         mapperClass = getattr(mappers, options.mapperName.title())

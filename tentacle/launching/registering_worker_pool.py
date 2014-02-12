@@ -2,9 +2,11 @@ from __future__ import print_function
 import argparse
 import unittest
 import gevent
+import datetime
 from .launchers import GeventLauncher
 from ..utils.gevent_utils import IterableQueue
 from ..utils import ScopedObject
+
 
 __all__ = []
 
@@ -22,6 +24,7 @@ class RegisteringWorkerPool(ScopedObject):
         super(RegisteringWorkerPool, self).__init__()
         self.tasks_with_result_slots_queue = IterableQueue()
         self.working_greenlets = IterableQueue()
+        self.map_jobs = []
         self._scope.on_exit(lambda: self.working_greenlets.close(), #close for adding more entries
                             lambda: self.tasks_with_result_slots_queue.close(), #close for adding more entries
                             lambda: [g.join() for g in self.working_greenlets])
@@ -34,10 +37,13 @@ class RegisteringWorkerPool(ScopedObject):
         
     def _run_tasks_from_queue(self, worker):
         try:
-            for (task,async_result) in self.tasks_with_result_slots_queue:
+            for d in self.tasks_with_result_slots_queue:
                 try:
-                    result = worker.run(task)
-                    async_result.set(result)
+                    d["worker_name"] = str(worker)
+                    d["start_time"] = datetime.datetime.now()
+                    result = worker.run(d["task"])
+                    d["result"].set(result)
+                    d["end_time"] = datetime.datetime.now()
                 except Exception as e:
                     #self.logger.error("Error when trying to execute task {} by worker {}\n{}".format(task, worker, traceback.format_exc()))
                     async_result.set_exception(e)
@@ -48,13 +54,24 @@ class RegisteringWorkerPool(ScopedObject):
     def map(self, f, items):
         def make_call(f, item): 
             return (lambda: f(item))
-        tasks_and_results = [(make_call(f,item), gevent.event.AsyncResult()) for item in items]
+        tasks_and_results = [{"description":str(item),
+                              "worker_name":"", 
+                              "task":make_call(f,item), 
+                              "result":gevent.event.AsyncResult(), 
+                              "start_time":"", 
+                              "end_time":""} for item in items]
+        self.map_jobs.append(task_and_results)
         self.tasks_with_result_slots_queue.put_many(tasks_and_results)
-        for (item,async_result) in tasks_and_results:
+        for (item, async_result) in tasks_and_results:
             async_result.wait()
         results = [result for (task,result) in tasks_and_results] #pylint: disable=W0601
         return results
 
+    def get_mapped_jobs_description(self):
+        return [[self.describe_task(item) for item in map_job] for map_job in self.map_jobs]
+
+    def describe_task(self, item_entry):
+        return {key:str(value) for key, value in item_entry}
 
 __all__.append("GeventWorkerPoolFactory")
 class GeventWorkerPoolFactory(object):

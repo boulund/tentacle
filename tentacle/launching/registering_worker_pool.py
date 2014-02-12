@@ -46,7 +46,7 @@ class RegisteringWorkerPool(ScopedObject):
                     d["end_time"] = datetime.datetime.now()
                 except Exception as e:
                     #self.logger.error("Error when trying to execute task {} by worker {}\n{}".format(task, worker, traceback.format_exc()))
-                    async_result.set_exception(e)
+                    d["result"].set_exception(e)
                 #print "Done   " + workerEndpoint + " to run " + str(task)
         finally:
             worker.close()
@@ -60,11 +60,11 @@ class RegisteringWorkerPool(ScopedObject):
                               "result":gevent.event.AsyncResult(), 
                               "start_time":"", 
                               "end_time":""} for item in items]
-        self.map_jobs.append(task_and_results)
+        self.map_jobs.append(tasks_and_results)
         self.tasks_with_result_slots_queue.put_many(tasks_and_results)
-        for (item, async_result) in tasks_and_results:
-            async_result.wait()
-        results = [result for (task,result) in tasks_and_results] #pylint: disable=W0601
+        for job in tasks_and_results:
+            job["result"].wait()
+        results = [job["result"] for job in tasks_and_results] #pylint: disable=W0601
         return results
 
     def get_mapped_jobs_description(self):

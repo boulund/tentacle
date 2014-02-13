@@ -314,7 +314,10 @@ def parse_blast8(mappings, contigCoverage, options, logger):
             #    exit(1)
         
         # Add the last read to contigCoverage
-        check_new_read(read, identity, aligned_length, contig, sstart, send, previous_readname, previous_information)
+        try:
+            check_new_read(read, identity, aligned_length, contig, sstart, send, previous_readname, previous_information)
+        except UnboundLocalError:
+            logger.info("Mappings file {} appears to be empty".format(mappings))
 
     return contigCoverage
 

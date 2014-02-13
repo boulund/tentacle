@@ -30,7 +30,7 @@ class RegisteringWorkerPool(ScopedObject):
                             lambda: [g.join() for g in self.working_greenlets])
 
     def register_worker(self, worker):
-        #Start a greenlet that puts the worker to work, runing tasks from the queue
+        #Start a greenlet that puts the worker to work, running tasks from the queue
         g = gevent.Greenlet(self._run_tasks_from_queue, worker)
         self.working_greenlets.put(g)
         g.start()
@@ -52,6 +52,7 @@ class RegisteringWorkerPool(ScopedObject):
             worker.close()
     
     def map(self, f, items):
+        """ Creates a list of tasks and results. """
         def make_call(f, item): 
             return (lambda: f(item))
         tasks_and_results = [{"description":str(item),
@@ -71,7 +72,7 @@ class RegisteringWorkerPool(ScopedObject):
         return [[self.describe_task(item) for item in map_job] for map_job in self.map_jobs]
 
     def describe_task(self, item_entry):
-        return {key:str(value) for key, value in item_entry}
+        return {key:str(value) for key, value in item_entry.iteritems()}
 
 __all__.append("GeventWorkerPoolFactory")
 class GeventWorkerPoolFactory(object):

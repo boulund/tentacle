@@ -206,7 +206,10 @@ class Mapper(object):
             self.logger.error("{0}: return code {1}".format(self.mapper, mapper_process.returncode))
             self.logger.error("{0}: stdout: {1}".format(self.mapper, mapper_stream_data[0]))
             self.logger.error("{0}: stderr: {1}".format(self.mapper, mapper_stream_data[1]))
-            raise MapperError("\n".join([self.mapper, str(mapper_process.returncode), mapper_stream.data]))
+            raise MapperError("\n".join([self.mapper, 
+                                         str(mapper_process.returncode), 
+                                         mapper_stream_data[0],
+                                         mapper_stream_data[1]]))
         else:
             self.assert_mapping_results(output_filename)
         self.logger.debug("{0}: stdout: {1}".format(self.mapper, mapper_stream_data[0]))

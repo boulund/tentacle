@@ -14,7 +14,8 @@ class LaunchingMasterWorkerExecutor(object):
         group = parser.add_argument_group("Launching options")
         group.add_argument("--localCoordinator", action="store_true",
             default=False,
-            help="Run the processing coordinator locally, synchronously in the current process, instead of launching it in a remote process. [default =  %(default)s]")
+            help="Run the processing coordinator locally, synchronously in the current process,\
+                  instead of launching it in a remote process. [default =  %(default)s]")
         group.add_argument("--splitCharReads", type=str, default=".", metavar="C",
             help="Character used to split filenames of reads [default=%(default)s]")
         group.add_argument("--splitCharAnnotations", type=str, default=".", metavar="C",
@@ -25,8 +26,16 @@ class LaunchingMasterWorkerExecutor(object):
         return parser     
     
     @classmethod
-    def parse_options(cls, argv, master_factory, worker_factory, launcher_factory, distributed_worker_pool_factory, logger_provider_factory, output_dir_structure_factory):
-        """create parsers for the different submodules, and return along with a joint parser containing them all, along with help"""
+    def parse_options(cls, 
+                      argv, 
+                      master_factory, 
+                      worker_factory, 
+                      launcher_factory, 
+                      distributed_worker_pool_factory, 
+                      logger_provider_factory, 
+                      output_dir_structure_factory):
+        """create parsers for the different submodules, and return along 
+        with a joint parser containing them all, along with help"""
 
         worker_argparser, mapper_namespace, argv = worker_factory.create_argparser(argv)
 
@@ -45,13 +54,17 @@ class LaunchingMasterWorkerExecutor(object):
         return joint_parser.parse_args(argv[1:], namespace=mapper_namespace)
     
     @classmethod
-    def launch_master_worker(cls, argv, master_factory, worker_factory, 
+    def launch_master_worker(cls, argv, 
+                             master_factory, 
+                             worker_factory, 
                              launcher_factory=SubprocessLauncher, 
                              distributed_worker_pool_factory=ZeroRpcDistributedWorkerPoolFactory(), 
                              logger_provider_factory=LoggerProvider, 
                              output_dir_structure_factory=OutputDirStructure):
 
-        parsed_args = cls.parse_options(argv, master_factory, worker_factory, 
+        parsed_args = cls.parse_options(argv, 
+                                        master_factory, 
+                                        worker_factory, 
                                         launcher_factory, 
                                         distributed_worker_pool_factory, 
                                         logger_provider_factory,

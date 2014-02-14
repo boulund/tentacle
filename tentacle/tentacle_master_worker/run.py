@@ -9,7 +9,7 @@ __all__ = ["run"]
 
 def run(argv, 
         launcher_factory=SubprocessLauncher, 
-        distributed_worker_pool_factory=None):
+        distributed_worker_pool_factory=ZeroRpcDistributedWorkerPoolFactory()):
     master_factory = TentacleMaster
     worker_factory = TentacleWorker
     g = LaunchingMasterWorkerExecutor.launch_master_worker(argv, 

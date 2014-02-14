@@ -170,14 +170,23 @@ class ZeroRpcDistributedWorkerPoolFactory(object):
                            logger=logger)
     
     
-    def create(self, remote_launcher, worker_count, use_dedicated_coordinator, idle_timeout, local_launcher=GeventLauncher(), logger=None):
+    def create(self,
+               remote_launcher, 
+               worker_count, 
+               use_dedicated_coordinator, 
+               idle_timeout, 
+               local_launcher=GeventLauncher(), 
+               logger=None):
+
         #Create the pool
         pool = ZeroRpcWorkerPool(logger)
         try:
             #Launch the workers
             if worker_count==0:
                 return
-            worker_runner = ZeroRpcWorkerPoolWorker.create_worker_runner(pool_endpoints=pool.endpoints, idle_timeout=idle_timeout, logger=self.logger)
+            worker_runner = ZeroRpcWorkerPoolWorker.create_worker_runner(pool_endpoints=pool.endpoints, 
+                                                                         idle_timeout=idle_timeout, 
+                                                                         logger=logger)
             
             if use_dedicated_coordinator:
                 remote_worker_count = worker_count

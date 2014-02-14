@@ -46,7 +46,11 @@ class RegisteringWorkerPool(ScopedObject):
                     d["end_time"] = datetime.datetime.now()
                 except Exception as e:
                     #self.logger.error("Error when trying to execute task {} by worker {}\n{}".format(task, worker, traceback.format_exc()))
-                    d["result"].set_exception(e)
+                    d["attempts"].append((str(worker), d["start_time"], e))
+                    if len(d["attempts"]) < 2: #options.maxAttempts:
+                        self.tasks_with_results_slots_queue.put(d)
+                    else:
+                        d["result"].set_exception(e)
                 #print "Done   " + workerEndpoint + " to run " + str(task)
         finally:
             worker.close()
@@ -60,7 +64,8 @@ class RegisteringWorkerPool(ScopedObject):
                               "task":make_call(f,item), 
                               "result":gevent.event.AsyncResult(), 
                               "start_time":"", 
-                              "end_time":""} for item in items]
+                              "end_time":"",
+                              "attempts":[]} for item in items]
         self.map_jobs.append(tasks_and_results)
         self.tasks_with_result_slots_queue.put_many(tasks_and_results)
         for job in tasks_and_results:
@@ -103,6 +108,11 @@ class GeventWorkerPoolFactory(object):
             raise
         return pool
 
+
+
+############################################
+#       UNIT TESTS
+############################################
 
 class RegisteringWorkerPoolTests(unittest.TestCase):
     @staticmethod

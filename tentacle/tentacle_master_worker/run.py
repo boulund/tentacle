@@ -7,10 +7,16 @@ from tentacle.launching.launchers import SubprocessLauncher, SlurmLauncher, Geve
 
 __all__ = ["run"]
 
-def run(argv, launcher_factory=SubprocessLauncher, distributed_worker_pool_factory = ZeroRpcDistributedWorkerPoolFactory()):
+def run(argv, 
+        launcher_factory=SubprocessLauncher, 
+        distributed_worker_pool_factory=None):
     master_factory = TentacleMaster
     worker_factory = TentacleWorker
-    g = LaunchingMasterWorkerExecutor.launch_master_worker(argv, master_factory, worker_factory, launcher_factory, distributed_worker_pool_factory)
+    g = LaunchingMasterWorkerExecutor.launch_master_worker(argv, 
+                                                           master_factory, 
+                                                           worker_factory, 
+                                                           launcher_factory, 
+                                                           distributed_worker_pool_factory)
     if hasattr(g, 'get'):
         print("Waiting for processing to complete")
         g.get()

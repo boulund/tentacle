@@ -18,9 +18,8 @@ __all__ = []
 
 __all__.append("ZeroRpcWorkerPool")
 class ZeroRpcWorkerPool(RegisteringWorkerPool):
-    def __init__(self, logger):
+    def __init__(self):
         super(ZeroRpcWorkerPool, self).__init__()
-        self.logger = logger
         self._endpoints = None #Is needed since zerorpc invokes endpoints property for some reason when starting server
         s, self._endpoints = spawn_server(self)
         _debugPrint("Started ZeroRpcWorkerPool server with endpoints: " + " ".join(self._endpoints))
@@ -32,36 +31,30 @@ class ZeroRpcWorkerPool(RegisteringWorkerPool):
     
     def register_remote_worker(self, worker_endpoints):
         _debugPrint("ZeroRpcWorkerPool registering worker with endpoints: " + " ".join(worker_endpoints))
-        worker = self.WorkerProxy(worker_endpoints, self.logger)
+        worker = self.WorkerProxy(worker_endpoints)
         self.register_worker(worker)
-
-    def list_remaining_tasks(self, worker_endpoints):
-        """ Returns a list of remaining tasks """
-        _debugPrint("ZeroRpcWorkerPool answering tasks query")
-        return 
 
 
                 
     class WorkerProxy(ScopedObject):
-        def __init__(self, worker_endpoints, logger):
-            self.logger = logger
+        def __init__(self, worker_endpoints):
             self._worker_endpoints = worker_endpoints
-            self.logger.debug("Creating worker proxy for " + " ".join(worker_endpoints))
+            _debugPrint("Creating worker proxy for " + " ".join(worker_endpoints))
             super(ZeroRpcWorkerPool.WorkerProxy, self).__init__()
 
-            self.logger.debug("Creating zerorpc.Client")
+            _debugPrint("Creating zerorpc.Client")
             self._zerorpc_client = zerorpc.Client(timeout=None, heartbeat=None)
-            self._scope.on_exit(lambda: self.logger.debug("Closing zerorpc.Client for " + " ".join(worker_endpoints)),
+            self._scope.on_exit(lambda: _debugPrint("Closing zerorpc.Client for " + " ".join(worker_endpoints)),
                                 self._zerorpc_client.close)
             
-            self.logger.debug("Connecting zerorpc.Client to " + " ".join(worker_endpoints))
+            _debugPrint("Connecting zerorpc.Client to " + " ".join(worker_endpoints))
             self._zerorpc_client.connect(worker_endpoints[0])
-            self._scope.on_exit(lambda: self.logger.debug("Sending close call to worker at " + " ".join(worker_endpoints)),
+            self._scope.on_exit(lambda: _debugPrint("Sending close call to worker at " + " ".join(worker_endpoints)),
                                 self.close_client, #Send a close call to the worker side, note that this will be done _before_ self.zerorpc_client.close above
-                                lambda: self.logger.debug("Returned from close call to worker at " + " ".join(worker_endpoints))) 
+                                lambda: _debugPrint("Returned from close call to worker at " + " ".join(worker_endpoints))) 
 
         def run(self, task):
-            self.logger.debug("running task at "  + " ".join(self._worker_endpoints))
+            _debugPrint("running task at "  + " ".join(self._worker_endpoints))
             res = self._zerorpc_client.run_serialized(CloudSerializer().serialize_to_string(task),async=True)
             res.get()
             return res
@@ -70,15 +63,13 @@ class ZeroRpcWorkerPool(RegisteringWorkerPool):
             try:
                 self._zerorpc_client.close_, #Send a close call to the worker side, note that this will be done _before_ self.zerorpc_client.close above
             except Exception as e:
-                self.logger.warning("Failed closing remote side ({},{}). No problem - will auto-close with timeout.".format(e.message,type(e)))
+                print("Failed closing remote side ({},{}). No problem - will auto-close with timeout.".format(e.message,type(e)))
 
 
 __all__.append("ZeroRpcWorkerPoolWorker")
 class ZeroRpcWorkerPoolWorker(Worker):
-    def __init__(self, idle_timeout, logger=None):
+    def __init__(self, idle_timeout):
         super(ZeroRpcWorkerPoolWorker, self).__init__()
-        self.logger = logger
-        
         self._endpoints = None
         self._worker_server = None
         self.start_worker_server()
@@ -90,28 +81,28 @@ class ZeroRpcWorkerPoolWorker(Worker):
         
     def start_worker_server(self):
         self._worker_server, self._endpoints = spawn_server(self)
-        self.logger.debug("Started ZeroRpcWorkerPoolWorker server with endpoints: " + " ".join(self._endpoints))
+        _debugPrint("Started ZeroRpcWorkerPoolWorker server with endpoints: " + " ".join(self._endpoints))
         
     def stop_worker_server(self):
-        self.logger.debug("Wating for stopping ZeroRpcWorkerPoolWorker server with endpoints: " + " ".join(self._endpoints))
+        _debugPrint("Wating for stopping ZeroRpcWorkerPoolWorker server with endpoints: " + " ".join(self._endpoints))
         gevent.sleep(10)
-        self.logger.debug("Stopping ZeroRpcWorkerPoolWorker server with endpoints: " + " ".join(self._endpoints))
+        _debugPrint("Stopping ZeroRpcWorkerPoolWorker server with endpoints: " + " ".join(self._endpoints))
         self._endpoints = None
         self._worker_server.stop()
         self._worker_server = None
 
     def close_(self):
-        self.logger.debug("close_ received, closing")
+        _debugPrint("close_ received, closing")
         self.close()
         
     def close_on_idle(self, idle_timeout):
         while (self.is_running or self.has_run_since_last_check) and (not self.closed.is_set()):
-            self.logger.debug("Checking idle status. Is running:" + str(self.is_running) + ". Has run since last check:" + str(self.has_run_since_last_check) + ".")
+            _debugPrint("Checking idle status. Is running:" + str(self.is_running) + ". Has run since last check:" + str(self.has_run_since_last_check) + ".")
             self.has_run_since_last_check = False
             self.closed.wait(timeout=idle_timeout)
             
         if not self.closed.is_set():
-            self.logger.warning("Idle timed out")
+            #self.logger.warning("Idle timed out")
             self.close()
     
     @property
@@ -119,7 +110,7 @@ class ZeroRpcWorkerPoolWorker(Worker):
         return self._endpoints
     
     def run_serialized(self, serialized_task):
-        self.logger.debug("ZeroRpcWorkerPoolWorker: run_serialized called")
+        _debugPrint("ZeroRpcWorkerPoolWorker: run_serialized called")
         task = CloudSerializer().deserialize_from_string(serialized_task)
         self.is_running = True
         try:
@@ -129,9 +120,9 @@ class ZeroRpcWorkerPoolWorker(Worker):
             self.is_running = False
     
     @staticmethod
-    def create_worker_runner(pool_endpoints, idle_timeout, logger):
+    def create_worker_runner(pool_endpoints, idle_timeout):
         def run_remote_worker():
-            w = ZeroRpcWorkerPoolWorker(idle_timeout=idle_timeout, logger=logger)
+            w = ZeroRpcWorkerPoolWorker(idle_timeout=idle_timeout)
             register_zero_rpc_pool_worker_at_remote_pool(w, pool_endpoints)
             w.closed.wait()
         return run_remote_worker
@@ -161,13 +152,12 @@ class ZeroRpcDistributedWorkerPoolFactory(object):
         return parser
     
         
-    def create_from_parsed_args(self, parsed_args, remote_launcher, logger=None, local_launcher=GeventLauncher()):
+    def create_from_parsed_args(self, parsed_args, remote_launcher, local_launcher=GeventLauncher()):
         return self.create(worker_count=parsed_args.node_count, 
                            use_dedicated_coordinator=parsed_args.use_dedicated_coordinator, 
                            idle_timeout=parsed_args.distributedNodeIdleTimeout,
                            remote_launcher=remote_launcher, 
-                           local_launcher=local_launcher, 
-                           logger=logger)
+                           local_launcher=local_launcher)
     
     
     def create(self,
@@ -175,18 +165,16 @@ class ZeroRpcDistributedWorkerPoolFactory(object):
                worker_count, 
                use_dedicated_coordinator, 
                idle_timeout, 
-               local_launcher=GeventLauncher(), 
-               logger=None):
+               local_launcher=GeventLauncher()):
 
         #Create the pool
-        pool = ZeroRpcWorkerPool(logger)
+        pool = ZeroRpcWorkerPool()
         try:
             #Launch the workers
             if worker_count==0:
                 return
             worker_runner = ZeroRpcWorkerPoolWorker.create_worker_runner(pool_endpoints=pool.endpoints, 
-                                                                         idle_timeout=idle_timeout, 
-                                                                         logger=logger)
+                                                                         idle_timeout=idle_timeout) 
             
             if use_dedicated_coordinator:
                 remote_worker_count = worker_count
@@ -294,7 +282,7 @@ class ZeroRpcDistributedWorkerPoolFactoryTests(_TestCaseWithGreenlets):
                 print()
                 launcher = launcherCreator()
                 print("Testing with (launcher, worker_count, do_launch_local_worker) = " + str((type(launcher), worker_count, do_launch_local_worker)))
-                pool = ZeroRpcDistributedWorkerPoolFactory(logger="").create(launcher, worker_count=worker_count, use_dedicated_coordinator=True, idle_timeout=10, local_launcher=GeventLauncher())
+                pool = ZeroRpcDistributedWorkerPoolFactory().create(launcher, worker_count=worker_count, use_dedicated_coordinator=True, idle_timeout=10, local_launcher=GeventLauncher())
                 with pool:        
                     _test_map(pool, self)
                 self.assert_(pool.closed.is_set())

@@ -2,7 +2,7 @@ from __future__ import print_function
 import argparse
 import unittest
 import gevent
-import datetime
+from datetime import datetime
 from .launchers import GeventLauncher
 from ..utils.gevent_utils import IterableQueue
 from ..utils import ScopedObject
@@ -39,16 +39,17 @@ class RegisteringWorkerPool(ScopedObject):
         try:
             for d in self.tasks_with_result_slots_queue:
                 try:
-                    d["worker_name"] = str(worker)
-                    d["start_time"] = datetime.datetime.now()
+                    d["worker_name"] = str(worker._worker_endpoints[0])
+                    d["start_time"] = datetime.now()
                     result = worker.run(d["task"])
                     d["result"].set(result)
-                    d["end_time"] = datetime.datetime.now()
+                    d["end_time"] = datetime.now()
                 except Exception as e:
                     #self.logger.error("Error when trying to execute task {} by worker {}\n{}".format(task, worker, traceback.format_exc()))
-                    d["attempts"].append((str(worker), d["start_time"], e))
+                    # Everything in this tuple has to be strings, since most objects wont serialize.
+                    d["attempts"].append((d["worker_name"], str(d["start_time"]), str(e)))
                     if len(d["attempts"]) < 2: #options.maxAttempts:
-                        self.tasks_with_results_slots_queue.put(d)
+                        self.tasks_with_result_slots_queue.put(d)
                     else:
                         d["result"].set_exception(e)
                 #print "Done   " + workerEndpoint + " to run " + str(task)
@@ -59,7 +60,7 @@ class RegisteringWorkerPool(ScopedObject):
         """ Creates a list of tasks and results. """
         def make_call(f, item): 
             return (lambda: f(item))
-        tasks_and_results = [{"description":str(item),
+        tasks_and_results = [{"description":item,
                               "worker_name":"", 
                               "task":make_call(f,item), 
                               "result":gevent.event.AsyncResult(), 
@@ -77,7 +78,14 @@ class RegisteringWorkerPool(ScopedObject):
         return [[self.describe_task(item) for item in map_job] for map_job in self.map_jobs]
 
     def describe_task(self, item_entry):
-        return {key:str(value) for key, value in item_entry.iteritems()}
+        serializable_types = set([str, list, tuple, dict])
+        task_description = {}
+        for key, value in item_entry.iteritems():
+            if type(value) in serializable_types:
+                task_description[key] = value
+            else:
+                task_description[key] = str(value)
+        return task_description
 
 __all__.append("GeventWorkerPoolFactory")
 class GeventWorkerPoolFactory(object):

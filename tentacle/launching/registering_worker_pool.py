@@ -2,6 +2,7 @@ from __future__ import print_function
 import argparse
 import unittest
 import gevent
+import socket
 from datetime import datetime
 from .launchers import GeventLauncher
 from ..utils.gevent_utils import IterableQueue
@@ -39,7 +40,7 @@ class RegisteringWorkerPool(ScopedObject):
         try:
             for d in self.tasks_with_result_slots_queue:
                 try:
-                    d["worker_name"] = str(worker._worker_endpoints[0])
+                    d["worker_name"] = str(worker._worker_endpoints[0]) #socket.gethostname()
                     d["start_time"] = datetime.now()
                     result = worker.run(d["task"])
                     d["result"].set(result)

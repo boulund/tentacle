@@ -37,9 +37,6 @@ class Bowtie2(Mapper):
         mapping_group.add_argument("--bowtie2Fasta", dest="bowtie2Fasta",
             default=False, action="store_true",
             help="bowtie2: Input files are FASTA format and not FASTQ [default %(default)s].")
-        mapping_group.add_argument("--bowtie2Threads", dest="bowtie2Threads",
-            default=psutil.NUM_CPUS, type=int, metavar="N",
-            help="bowtie2: number of threads allowed [default: %(default)s]")
         mapping_group.add_argument("--bowtie2DBName", dest="bowtie2DBName",
             type=str, default="", metavar="DBNAME", required=True,
             help="bowtie2: Name of the reference file BASENAME in the database tarball (NO extension). It must have the same basename as the rest of the DB.")

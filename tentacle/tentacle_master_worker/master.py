@@ -47,8 +47,12 @@ def parse_linked_files(mapping_manifest, output_dir_structure, master_logger):
         with open(mapping_manifest) as manifest_file:
             # TODO: Test if possible to split row in 4, for paired end data
             mapping_tuples = []
-            for line in manifest_file:
-                reads, reference, annotation = line.split()
+            for line_number, line in enumerate(manifest_file):
+                try:
+                    reads, reference, annotation = line.split()
+                except ValueError:
+                    master_logger.error("Unable to split line {} of file {} into reads, reference, annotation".format(line_number, mapping_manifest))
+                    exit(1)
                 current_tuple = (reads, reference, annotation)
                 for file_path in current_tuple:
                     if not path.isfile(file_path):

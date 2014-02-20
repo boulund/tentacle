@@ -197,6 +197,10 @@ class TentacleCore:
         quality_filtering_group.add_argument("--bowtie2FilterDB", dest="bowtie2FilterDB",
             type=str, default="", metavar="FilterDB", 
             help="bowtie2: Name of the filtering reference database tarball (including extension). It must have the same basename as the rest of the actual DB files.")
+        quality_filtering_group.add_argument("--bowtie2Threads", dest="bowtie2Threads",
+            type=int, default=psutil.NUM_CPUS, metavar="N", 
+            help="bowtie2: Number of threads to run bowtie2 on [default %(default)s].")
+
         return parser
     
     

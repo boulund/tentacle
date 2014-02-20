@@ -20,6 +20,8 @@ in parenthesis).
  * zerorpc (0.4.4)
 
 
+.. _virtualenv:
+
 Python virtualenv
 *****************
 The recommended way to use Tentacle is to setup a Python virtualenv (virtual 
@@ -59,6 +61,7 @@ Sequence alignment/mapping software
   tools. The section :ref:`adding mappers` contains instructions for how to
   extend the functionality of Tentacle with support for other CLI-based mappers.
 
+
 To use Tentacle a sequence alignment software is required. In this documentation
 they will be referred to as 'mapper' or 'sequence alignment software' interchangeably.
 Tentacle comes with out-of-the-box support for the following mappers:
@@ -96,4 +99,5 @@ working as intended. From within `$TENTACLE_ROOT`, initiate the tests::
   (tentacle_env)[$TENTACLE_ROOT]$ rundir/tests_local.py
 
 This will fire off a tests for each mapper to verify that the pipeline 
-runs as intended locally on your computer. 
+runs as intended locally on your computer. Note that these tests will 
+fail if the mappers are not installed.

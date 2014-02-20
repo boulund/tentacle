@@ -1,6 +1,7 @@
 import argparse
 import os
 import random
+import uuid
 from os import path
 from sys import stdout, maxint
 import logging
@@ -97,7 +98,8 @@ class LoggerProvider(object):
     
     def get_logger(self, filename, hierarchy=None):
         d = self._setup_directory_structure(hierarchy or [])
-        file_path = path.join(d, filename+"_"+str(random.randint(0, maxint))+".log") #TODO: fix uniqueness in a better way
+        random_UUID_suffix = str(uuid.uuid4())
+        file_path = path.join(d, filename+"_"+random_UUID_suffix+".log") 
         return create_file_logger(self.logLevel, self.logNoStdout, file_path)
     
     
@@ -113,7 +115,7 @@ def get_std_logger():
 def format_dict(d):
     s = ""
     for k, v in d.iteritems():
-        s = "".join([s, "{:>25}: {}\n".format(k.upper(), v)]) 
+        s = "".join([s, "{:>25}: {}\n".format(k, v)]) 
     return s   
 
 

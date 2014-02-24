@@ -182,13 +182,13 @@ def filter_human_reads_bowtie2(reads, options, logger):
     output_filename = reads+".filtered.fq"
     if not options.bowtie2FilterDB:
         log.error("--bowtie2FilterDB is empty! Sorry for noticing so late! :(")
-        raise MapperError("bowtie2 requires a DB name (--bowtie2FilterDB)")
+        raise MapperError("bowtie2 requires a DB name to filter reads (--bowtie2FilterDB)")
 
     db_name = os.path.basename(options.bowtie2FilterDB.split(".")[0])
     mapper_call = [utils.resolve_executable("bowtie2"),
                    "-x", db_name,
                    "-U", reads, 
-                   "-S", "/dev/null", #output_filename,
+                   "-S", "/dev/null", 
                    "--un", output_filename,
                    "-p", str(options.bowtie2Threads)]
 

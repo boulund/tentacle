@@ -22,6 +22,7 @@ class ZeroRpcWorkerPool(RegisteringWorkerPool):
         super(ZeroRpcWorkerPool, self).__init__()
         self._endpoints = None #Is needed since zerorpc invokes endpoints property for some reason when starting server
         s, self._endpoints = spawn_server(self)
+        #print("ZeroRpcWorkerPool server started with endpoint(s): {}".format(self_endpoints))
         _debugPrint("Started ZeroRpcWorkerPool server with endpoints: " + " ".join(self._endpoints))
         self._scope.on_exit(lambda: _debugPrint("Stopping ZeroRpcWorkerPool server"),
                             lambda: s.stop())

@@ -80,12 +80,7 @@ class LaunchingMasterWorkerExecutor(object):
         #Get the tasks
         master = master_factory.create(logger)
         tasks = master.get_tasks_from_parsed_args(parsed_args, output_dir_structure)
-        return cls.launch_worker_pool_and_process_tasks(parsed_args, 
-                                                        worker_factory, 
-                                                        distributed_worker_pool_factory,
-                                                        logger, 
-                                                        launcher, 
-                                                        tasks)
+        return cls.launch_worker_pool_and_process_tasks(parsed_args, worker_factory, distributed_worker_pool_factory, logger, launcher, tasks)
 
     @classmethod
     def launch_worker_pool_and_process_tasks(cls, parsed_args, worker_factory, distributed_worker_pool_factory, logger_provider, launcher, tasks):

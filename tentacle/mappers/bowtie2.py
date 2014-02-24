@@ -40,6 +40,8 @@ class Bowtie2(Mapper):
         mapping_group.add_argument("--bowtie2DBName", dest="bowtie2DBName",
             type=str, default="", metavar="DBNAME", required=True,
             help="bowtie2: Name of the reference file BASENAME in the database tarball (NO extension). It must have the same basename as the rest of the DB.")
+        mapping_group.add_argument("--bowtie2Other", type=str, default="",
+            help="bowtie2: additional command line options for bowtie2 [default: not used]")
         
         return parser
     
@@ -63,6 +65,12 @@ class Bowtie2(Mapper):
                        "-S", output_filename,
                        "-U", local_files.reads,
                        "-p", str(options.bowtie2Threads)]
+
+        if options.bowtie2Other:
+            import shlex
+            otherOptions = shlex.split(options.bowtie2Other)
+            for token in otherOptions:
+                mapper_call.append(token)
 
         return mapper_call
     

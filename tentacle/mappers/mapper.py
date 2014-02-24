@@ -179,7 +179,7 @@ class Mapper(object):
             mapping_utils.copy_untar_ref_db(options.bowtie2FilterDB, db_destination, self.logger)
             filtered_reads = mapping_utils.filter_human_reads_bowtie2(destination, options, self.logger)
             self.logger.info("Finished preparing %s for mapping.", reads)
-            return filtered_reads
+            return local_files._replace(reads=filtered_reads)
 
         self.logger.info("Finished preparing %s for mapping.", reads)
         return local_files._replace(reads=destination)

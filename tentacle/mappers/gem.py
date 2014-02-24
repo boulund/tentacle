@@ -55,15 +55,19 @@ class Gem(Mapper):
         mapping_group.add_argument("--gemGranularity", dest="gemGranularity",
             type=int, default=2500000, metavar="G", 
             help="GEM: granularity when reading from file (in bytes) [default: %(default)s]")
+        mapping_group.add_argument("--gemOther", type=str, default="",
+            help="GEM: additional command line arguments to GEM [default: %(default)s]")
         
         return parser
     
 
-    def prepare_references(self, remote_files, local_files, options, rebase_to_local_tmp=None):
+    def prepare_references(self, remote_files, local_files, options, rebase_to_local_tmp):
         """
         Transfers and prepares reference DB for GEM.
         """
-        mapping_utils.copy_untar_ref_db(remote_files.contigs, local_files.contigs, self.logger)
+        mapping_utils.copy_untar_ref_db(remote_files.contigs, 
+                                        local_files.contigs, 
+                                        self.logger)
         return local_files._replace(contigs=rebase_to_local_tmp(options.gemDBName))
 
 
@@ -81,12 +85,17 @@ class Gem(Mapper):
                        "-m", str(options.gemm),
                        "-e", str(options.geme),
                        "--min-matched-bases", str(options.gemMinMatchedBases),
-                       "--granularity", str(options.gemGranularity)
+                       "--granularity", str(options.gemGranularity),
                        ]
 
         if not options.gemFasta:
             mapper_call.append("-q")
             mapper_call.append('ignore')
+        if options.gemOther:
+            import shlex
+            otherOptions = shlex.plit(options.gemOther)
+            for token in otherOptions:
+                mapper_call.append(token)
 
         return mapper_call
     

@@ -28,7 +28,7 @@ class Pblat(Mapper):
     @staticmethod
     def create_argparser():
         """
-        Creates a parser for mapping options.
+        Creates and returns a parser for mapping options.
         """
         import argparse
 
@@ -36,7 +36,11 @@ class Pblat(Mapper):
         mapping_group = parser.add_argument_group("Mapping options for pblat")
         mapping_group.add_argument("--pblatThreads", dest="pblatThreads",                 
             type=int, default=psutil.NUM_CPUS, metavar="N",                               
-            help="pblat: Set number of threads for parallel blat mapping [default: N=%(default)s [=autodetected]")
+            help="pblat: Set number of threads for parallel blat mapping [default: N=%(default)s (autodetected)]")
+        mapping_group.add_argument("--pblatMinIdentity", type=int, default=90,
+            help="pblat: minIdentity in percent [default: %(default)s]")
+        mapping_group.add_argument("--pblatOther", type=str, default="",
+            help="pblat: Additional commandline arguments to pblat within a quoted string [default: not used]")
         return parser
     
 
@@ -47,8 +51,15 @@ class Pblat(Mapper):
         """
 
         mapper_call = [self.mapper,
-                       "-threads=" + str(options.pblatThreads),
+                       "-threads={}".format(options.pblatThreads),
+                       "-minIdentity={}".format(options.pblatMinIdentity),
                        "-out=blast8" ]
+
+        if options.pblatOther:
+            import shlex
+            otherOptions = shlex.split(options.pblatOther)
+            for token in otherOptions:
+                mapper_call.append(token)
 
         # Base the command in the result dir and give the file_name relative to that.
         result_base = os.path.dirname(output_filename)

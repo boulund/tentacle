@@ -2,6 +2,12 @@
 Installation instructions
 #########################
 Here follows instructions on how to setup the environment required for Tentacle.
+A note on pathnames: The directory in which Tentacle is installed will be 
+referred to as `$TENTACLE_ROOT` for convenience. Also, aside from the section on
+how to install, prepare, and activate virtualenv, the `(tentacle_env)` 
+prefix to the command line will be omitted for brevity. Note however, that
+all commands that utilize the Tentacle framework will require the virtualenv
+to be activated.
 
 Dependencies
 ************
@@ -19,6 +25,8 @@ in parenthesis).
  * pyzmq (13.1.0)
  * zerorpc (0.4.4)
 
+
+.. _virtualenv:
 
 Python virtualenv
 *****************
@@ -48,8 +56,32 @@ is activated, then use `pip` from the virtualenv to install the packages::
   (tentacle_env)$ pip install zerorpc
   (tentacle_env)$ pip install psutil
 
+You can copy-paste the following line to install all of them in one command::
+
+  pip install cython greenlet gevent pyzmq cloud numpy msgpack-python zerorpc psutil
+
 Make sure all packages install correctly into the virtulenv. Note that some
 of the listed packages might in turn have further dependencies. 
+
+
+.. _installation:
+
+Tentacle Python package and scripts
+***********************************
+
+The Tentacle software is distributed as a downloadable compressed archive.
+Unpack the archive and add the files in `$TENTACLE/rundir` to your $PATH variable.
+This could be done for your current user with the following commands::
+  
+  $ ln -s tentacle-0.1.0/rundir/tentacle* ~/bin
+
+For a system-wide installation of Tentacle, put `$TENTACLE_ROOT` at a location
+were all users can access it and either put `$TENTACLE/rundir` in all users'
+$PATH variable or add symlinks to a directory which is in their $PATH. For
+information on how to best do this for your specific system, ask your 
+system administrator.
+
+
 
 Sequence alignment/mapping software
 ***********************************
@@ -58,6 +90,7 @@ Sequence alignment/mapping software
   Tentacle is designed to make it simple to add support for additional mapping
   tools. The section :ref:`adding mappers` contains instructions for how to
   extend the functionality of Tentacle with support for other CLI-based mappers.
+
 
 To use Tentacle a sequence alignment software is required. In this documentation
 they will be referred to as 'mapper' or 'sequence alignment software' interchangeably.
@@ -96,4 +129,5 @@ working as intended. From within `$TENTACLE_ROOT`, initiate the tests::
   (tentacle_env)[$TENTACLE_ROOT]$ rundir/tests_local.py
 
 This will fire off a tests for each mapper to verify that the pipeline 
-runs as intended locally on your computer. 
+runs as intended locally on your computer. Note that these tests will 
+fail if the mappers are not installed.

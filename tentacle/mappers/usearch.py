@@ -40,10 +40,10 @@ class Usearch(Mapper):
             help="usearch: Query coverage in range 0.0-1.0.")
         mapping_group.add_argument("--usearchDBName", dest="usearchDBName",
             type=str, default="", metavar="DBNAME", required=True,
-            help="usearch: Filename of .udb file and of the FASTA file in the database tarball (including .fasta extension).")
+            help="usearch: Common basename of .udb file and FASTA file in the database tarball (i.e. excluding extensions).")
         mapping_group.add_argument("--usearchStrand", dest="usearchStrand",
             type=str, default="both", metavar="S",
-            help="usearch: If searching nucleotide sequences, specify either 'both' or 'plus'")
+            help="usearch: If searching nucleotide sequences, specify either 'both' or 'plus' [default: %(default)s]")
         mapping_group.add_argument("--usearchFilterSequencesShorterThan", dest="usearchFilterSequencesShorterThan",
             type=int, default=0, metavar="L",
             help="usearch: Remove sequences that align with less than L nucleotides to a reference")
@@ -71,7 +71,7 @@ class Usearch(Mapper):
 
         mapper_call = [self.mapper,
                        "-usearch_global", str(local_files.reads),
-                       "-db", options.usearchDBName.split(".", 1)[0]+".udb",
+                       "-db", options.usearchDBName+".udb",
                        "-id", str(options.usearchID),
                        "-blast6out", output_filename]
 

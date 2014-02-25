@@ -176,9 +176,9 @@ class TentacleCore:
         parser = argparse.ArgumentParser(add_help=False)
         quality_filtering_group = parser.add_argument_group("Quality filtering options", "Options for FASTQ")
         #TODO: Change dest to be the same as argument, e.g. fastqMinQ=>fqMinQuality. Will be useful when writing out config file with all options for future use with @saved-opts as argument.
-        quality_filtering_group.add_argument("--noQualityControl", dest="noQualityControl",
+        quality_filtering_group.add_argument("--qualityControl", dest="qualityControl",
             action="store_true", default=False,
-            help="FASTQ quality control: Do not perform quality filtering or trimming [default: %(default)s]")
+            help="FASTQ quality control: perform quality filtering or trimming [default: %(default)s]")
         quality_filtering_group.add_argument("--fqMinQuality", dest="fastqMinQ", 
             type=int, default=10, 
             help="FASTQ filter: minimum base quality score, [default: %(default)s]")

@@ -1,5 +1,15 @@
 #!/usr/bin/env python
 # coding: UTF-8
+"""Generic mapping module for Tentacle.
+
+.. moduleauthor:: Fredrik Boulund <fredrik.boulund@chalmers.se>
+
+.. module:: mapper
+   :platform: Unix, Linux, OSX
+   :synopsis: Generic mapping module for Tentacle.
+
+
+"""
 # Fredrik Boulund 2013
 # Anders Sjögren 2013
 
@@ -16,10 +26,22 @@ __all__ = ["Mapper"]
 
 class Mapper(object):
     """
-    A mapper object.
+    A generic mapper class.
+
+    .. note:: 
+    
+       This needs to be subclassed to produce a functional mapping module.
     """
 
     def __init__(self, logger, mapper="mapper"):
+        """Initalizes a mapper object.
+
+        Args:
+            logger: A logging.logger object.
+        
+        Kwargs:
+            mapper (str): The executable name of the mapper.
+        """
         self.logger = logger
         self.mapper_string = mapper
         self.mapper = resolve_executable(mapper)
@@ -31,10 +53,12 @@ class Mapper(object):
     def create_argparser():
         """
         Initializes an argparser for arguments relevant for the mapper.
+
         To be expanded in a subclass.
         It is recommended to only utilize long options and prepend
         option names with the mapper to minimize risk of overloading other
-        options from other argument parsers.
+        options from other argument parsers (e.g. write --blastOption
+        instead of just --option if you are adding a module for BLAST).
         """
         pass
 
@@ -62,6 +86,8 @@ class Mapper(object):
     def prepare_references(self, remote_files, local_files, options, rebase_to_local_tmp=None):
         """
         Transfers and prepares reference DB for the mapper.
+
+        Normally does not require modification.
         """
         new_contigs = mapping_utils.gunzip_copy(remote_files.contigs, local_files.contigs, self.logger)
         return local_files._replace(contigs=new_contigs)
@@ -70,6 +96,8 @@ class Mapper(object):
     def prepare_reads(self, remote_files, local_files, options):
         """
         Transfer and prepare reads.
+
+        Normally does not require modification.
         """
 
         def check_return_code(Popen_tuple):
@@ -105,7 +133,7 @@ class Mapper(object):
         program_filter = "fastq_quality_filter"
         program_trim = "fastq_quality_trimmer"
         program_convert = "seqtk"
-        if fastq_format and not options.noQualityControl:
+        if fastq_format and options.qualityControl:
             self.logger.info("Performing quality control on reads...")
             self.logger.info("Filtering reads using {}...".format(program_filter))
             filtered_reads = mapping_utils.filtered_call(self.logger,
@@ -139,7 +167,7 @@ class Mapper(object):
             else:
                 written_reads = mapping_utils.write_reads(trimmed_reads, destination, self.logger)
             pipeline_components.append((written_reads, "cat"))
-        elif fastq_format and options.noQualityControl:
+        elif fastq_format and not options.qualityControl:
             if self.input_reads_format == "FASTA":
                 self.logger.info("Converting FASTQ to FASTA...")
                 arguments = OrderedDict([("seq", ""), ("-A", ""), ("-", "")])
@@ -155,7 +183,7 @@ class Mapper(object):
                 written_reads = mapping_utils.write_reads(read_source, destination, self.logger)
             pipeline_components.append((written_reads, "cat"))
         else:
-            if options.noQualityControl:
+            if not options.qualityControl:
                 self.logger.info("Skipping quality control and writing reads unmodified to local storage...")
             else:
                 self.logger.info("Writing reads to local storage...")
@@ -168,7 +196,7 @@ class Mapper(object):
         for component in pipeline_components:
             check_return_code(component)
         self.logger.info("Read transfer completed.")
-        if fastq_format and not options.noQualityControl:
+        if fastq_format and options.qualityControl:
             self.logger.info("Read quality control and FASTA conversion completed.")
             self.logger.info("Filtering statistics:\n%s", filtered_reads.stderr.read())
             self.logger.info("Trimming statistics:\n%s", trimmed_reads.stderr.read())

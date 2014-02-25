@@ -64,8 +64,8 @@ class Razers3(Mapper):
             mapper_call.append("swift")
 
         # Append positional arguments
-        mapper_call.append(local.contigs)
-        mapper_call.append(local.reads)
+        mapper_call.append(local_files.contigs)
+        mapper_call.append(local_files.reads)
 
         return mapper_call
     

@@ -1,3 +1,8 @@
+"""Tentacle mapping modules.
+
+.. moduleauthor:: Fredrik Boulund <fredrik.boulund@chalmers.se>
+
+"""
 #from mapper import Mapper
 from usearch import Usearch
 from pblat import Pblat

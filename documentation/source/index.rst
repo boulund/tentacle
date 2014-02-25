@@ -22,6 +22,7 @@ Documentation:
    download
    installation
    tutorial
+   mappers
    modules
    
 

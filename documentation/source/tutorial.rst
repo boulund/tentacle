@@ -41,6 +41,11 @@ Tentacle expects reference sequences to be available in FASTA
 format, as this is the format used when indexing the reference sequences
 for coverage calculations. 
 
+.. note::
+   It is important that the reference filename ends in '.fasta', as Tentacle
+   expects this filename ending and using reference files not ending in 
+   '.fasta' will result in an error. 
+
 Certain mappers require that the reference sequences are available in
 a custom database format (e.g. USEARCH uses `*.udb` and bowtie2 has several
 indexes in `*.bt2.*` files). It is important to note that you must prepare 

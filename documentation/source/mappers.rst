@@ -13,6 +13,8 @@ Within the Tentacle folder structure, the mapper modules are
 located in `$TENTACLE_ROOT/tentacle/mappers`. Mapper modules
 inherit from the base mapper class
 
+Generic mapper class for Tentacle
+=================================
 .. automodule:: tentacle.mappers.mapper
     :members:
     :undoc-members:

@@ -44,7 +44,7 @@ class Pblat(Mapper):
         return parser
     
 
-    def construct_mapper_call(self, local_files, output_filename, options):
+    def construct_mapper_call(self, local_files, options):
         """
         Parses options and creates a mapper call (python list) that can be used
         with Popen.
@@ -63,12 +63,14 @@ class Pblat(Mapper):
 
         # Base the command in the result dir and give the file_name relative to that.
         result_base = os.path.dirname(output_filename)
+
+        output_filename = local_files.reads+".mapped"
         # Append arguments to mapper_call                                
         mapper_call.append(os.path.relpath(local_files.contigs, result_base))  
         mapper_call.append(os.path.relpath(local_files.reads, result_base))    
         mapper_call.append(os.path.relpath(output_filename, result_base))
 
-        return mapper_call
+        return mapper_call, output_filename
     
 
     def assert_mapping_results(self, output_filename):

@@ -54,12 +54,13 @@ class Blastn(Mapper):
         return local_files._replace(contigs=rebase_to_local_tmp(options.blastDBName))
 
 
-    def construct_mapper_call(self, local_files, output_filename, options):
+    def construct_mapper_call(self, local_files, options):
         """
         Parses options and creates a mapper call (python list) that can be used
         with Popen.
         """
 
+        output_filename = local_files.reads+".mapped"
         mapper_call = [self.mapper,
                        "-outfmt", "6", #blast8 tabular output
                        "-query", str(local_files.reads),
@@ -71,7 +72,7 @@ class Blastn(Mapper):
             mapper_call.append("-task")
             mapper_call.append(str(options.blastTask))
 
-        return mapper_call
+        return mapper_call, output_filename
     
 
     def assert_mapping_results(self, output_filename):

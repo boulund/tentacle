@@ -71,7 +71,7 @@ class Gem(Mapper):
         return local_files._replace(contigs=rebase_to_local_tmp(options.gemDBName))
 
 
-    def construct_mapper_call(self, local_files, output_filename, options):
+    def construct_mapper_call(self, local_files, options):
         """
         Parses options and creates a mapper call (python list) that can be used
         with Popen.
@@ -97,7 +97,9 @@ class Gem(Mapper):
             for token in otherOptions:
                 mapper_call.append(token)
 
-        return mapper_call
+        output_filename = local_files.reads+".map"
+
+        return mapper_call, output_filename
     
 
     def assert_mapping_results(self, output_filename):

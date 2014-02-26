@@ -5,13 +5,9 @@
 .. moduleauthor:: Fredrik Boulund <fredrik.boulund@chalmers.se>
 
 .. module:: mapper
-   :platform: Unix, Linux, OSX
    :synopsis: Generic mapping module for Tentacle.
 
-
 """
-# Fredrik Boulund 2013
-# Anders Sjögren 2013
 
 from subprocess import PIPE#, Popen
 from gevent.subprocess import Popen
@@ -28,19 +24,26 @@ class Mapper(object):
     """
     A generic mapper class.
 
+    The mapper class has several methods that require custom implementations
+    for each specific mapper. See examples of other mapper modules that 
+    subclass this class on how this can be done.
+
     .. note:: 
-    
-       This needs to be subclassed to produce a functional mapping module.
+       This class must be subclassed and customized to produce a functional mapping module.
     """
 
-    def __init__(self, logger, mapper="mapper"):
+    def __init__(self, logger, mapper):
         """Initalizes a mapper object.
 
         Args:
             logger: A logging.logger object.
-        
-        Kwargs:
             mapper (str): The executable name of the mapper.
+
+        Returns:
+            None
+        
+        Raises:
+            ExecutableNotFound: If mapper executable is not found in sys.path.
         """
         self.logger = logger
         self.mapper_string = mapper
@@ -51,30 +54,57 @@ class Mapper(object):
 
     @staticmethod
     def create_argparser():
-        """
-        Initializes an argparser for arguments relevant for the mapper.
+        """Initializes an argparser for arguments relevant for the mapper.
 
-        To be expanded in a subclass.
+        Args: 
+            None
+
+        Returns:
+            parser: an initalized argparse.ArgumentParser with an argument_group
+                    with options for this specific mapper.
+
         It is recommended to only utilize long options and prepend
         option names with the mapper to minimize risk of overloading other
         options from other argument parsers (e.g. write --blastOption
         instead of just --option if you are adding a module for BLAST).
+
+        .. note:
+           This method must be customized in a subclass.
+
         """
         pass
 
 
-    def construct_mapper_call(self, local_files, output_filename, options):
-        """
-        Parses options and creates a mapper call (python list) that can be used 
+    def construct_mapper_call(self, local_files, options):
+        """Parses options and creates a mapper call (python list) that can be used 
         with Popen. 
-        To be expanded in a subclass.
+
+        Args:
+            local_files (namedtuple): A tuple with three fields containing
+                node-local filenames. Fields: 'reads', 'contigs', 'annotations'.
+            options (Namespace): A Namespace from ArgpumentParser.parse_args with
+                all arguments parsed from the command line (incl. non-mapper-related).
+
+        Returns:
+            mapper_call (list): A shlex.split()-style list of the mapper call.
+            output_filename (str): A string with the output filename.
+
+        .. note::
+            This method must be customized in a subclass.
+
+        For examples on how to customize this method, please refer to one 
+        of the other modules available in :mod:`tentacle.mappers`.
         """
         pass
 
     def assert_mapping_results(self, output_filename):
-        """
-        Makes a quick check that the mapping appears successful.
-        To be expanded in subclass.
+        """Makes a quick check that the mapping appears successful.
+
+        Can be used to perform a quick sanity check of the output file
+        before continuing with the rest of the pipeline.
+
+        .. note::
+            This method must be customized in a subclass.
         """
         pass
         # TODO: Assert mapping results
@@ -84,20 +114,49 @@ class Mapper(object):
 ############## NORMALLY THE FOLLOWING METHODS DO NOT NEED MODIFICATION
 
     def prepare_references(self, remote_files, local_files, options, rebase_to_local_tmp=None):
-        """
-        Transfers and prepares reference DB for the mapper.
+        """Transfers and prepares reference DB for the mapper.
 
-        Normally does not require modification.
+        Calls :func:`tentacle.mapping_utils.gunzip_copy` to transfer the references to the 
+        compute node. 
+
+        Args:
+            remote_files (namedtuple): Contains fields; 'contigs', 'reads', 'annotations'.
+            local_files (namedtuple): Contains fields; 'contigs', 'reads', 'annotations'.
+            options (Namespace): Parsed arguments from the Tentacle command line.
+
+        Kwargs:
+            rebase_to_local_tmp (function): An optional function, used only in special cases,
+                see e.g. :mod:`tentacle.mappers.gem`. 
+
+        Returns:
+            local_files (namedtuple): Updated with new filename of transferred references.
+
+        .. note::
+            This method normally does NOT require modification.
         """
         new_contigs = mapping_utils.gunzip_copy(remote_files.contigs, local_files.contigs, self.logger)
         return local_files._replace(contigs=new_contigs)
 
 
     def prepare_reads(self, remote_files, local_files, options):
-        """
-        Transfer and prepare reads.
+        """Transfer and prepare reads.
 
-        Normally does not require modification.
+        Contains all logic for preparing reads, including; determining format (FASTA/FASTQ),
+        detects compression (gzip), performs quality filtering (FASTX), and FASTQ-to-FASTA
+        conversion (seqtk).
+
+        Args:
+            remote_files (namedtuple): Contains fields; 'contigs', 'reads', 'annotations'.
+            local_files (namedtuple): Contains fields; 'contigs', 'reads', 'annotations'.
+            options (Namespace): Parsed arguments from the Tentacle command line.
+        Returns:
+            local_files (namedtuple): Updated with new filename of the prepared reads. 
+        Raises:
+            PipelineError: If any part of the quality control/conversion pipeline
+                malfunctions.
+
+        .. note::
+            This method normally does NOT require modification.
         """
 
         def check_return_code(Popen_tuple):
@@ -215,12 +274,22 @@ class Mapper(object):
 
 
     def run_mapper(self, local_files, options):
-        """
-        Calls mapper with input, references, options.
+        """Runs mapper.
+
+        Args:
+            remote_files (namedtuple): Contains fields; 'contigs', 'reads', 'annotations'.
+            options (Namespace): A Namespace from ArgpumentParser.parse_args with
+                all arguments parsed from the command line (incl. non-mapper-related).
+        Returns:
+            output_filename (str): Filename of mapping results.
+        Raises:
+            MapperError: If the mapper does not return with returncode 0.
+
+        .. note::
+            This method normally does NOT require modification.
         """
 
-        output_filename = local_files.reads+".results"
-        mapper_call = self.construct_mapper_call(local_files, output_filename, options)
+        mapper_call, output_filename = self.construct_mapper_call(local_files, options)
 
         self.logger.info("Running {0}...".format(self.mapper))
         self.logger.debug("Mapper call: {0}".format(' '.join(mapper_call)))

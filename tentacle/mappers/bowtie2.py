@@ -39,7 +39,7 @@ class Bowtie2(Mapper):
             help="bowtie2: Input files are FASTA format and not FASTQ [default %(default)s].")
         mapping_group.add_argument("--bowtie2DBName", dest="bowtie2DBName",
             type=str, default="", metavar="DBNAME", required=True,
-            help="bowtie2: Name of the reference file BASENAME in the database tarball (NO extension). It must have the same basename as the rest of the DB.")
+            help="bowtie2: Name of the FASTA file in the database tarball (including extension). It must share basename with the rest of the DB.")
         mapping_group.add_argument("--bowtie2Other", type=str, default="",
             help="bowtie2: additional command line options for bowtie2 [default: not used]")
         
@@ -54,14 +54,15 @@ class Bowtie2(Mapper):
         return local_files._replace(contigs=rebase_to_local_tmp(options.bowtie2DBName))
 
 
-    def construct_mapper_call(self, local_files, output_filename, options):
+    def construct_mapper_call(self, local_files, options):
         """
         Parses options and creates a mapper call (python list) that can be used
         with Popen.
         """
 
+        output_filename = local_files.reads+".mapped"
         mapper_call = [self.mapper,
-                       "-x", str(options.bowtie2DBName),
+                       "-x", options.bowtie2DBName.split(".",1)[0],
                        "-S", output_filename,
                        "-U", local_files.reads,
                        "-p", str(options.bowtie2Threads)]
@@ -72,7 +73,7 @@ class Bowtie2(Mapper):
             for token in otherOptions:
                 mapper_call.append(token)
 
-        return mapper_call
+        return mapper_call, output_filename
     
 
     def assert_mapping_results(self, output_filename):

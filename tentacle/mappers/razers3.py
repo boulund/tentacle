@@ -48,7 +48,7 @@ class Razers3(Mapper):
         return parser
     
 
-    def construct_mapper_call(self, local_files, output_filename, options):
+    def construct_mapper_call(self, local_files, options):
         """
         Parses options and creates a mapper call (python list) that can be used
         with Popen.
@@ -67,7 +67,10 @@ class Razers3(Mapper):
         mapper_call.append(local_files.contigs)
         mapper_call.append(local_files.reads)
 
-        return mapper_call
+        # RazerS3 automatically appends .razers to the output filename
+        output_filename = local_files.reads+".razers"
+
+        return mapper_call, output_filename
     
 
     def assert_mapping_results(self, output_filename):

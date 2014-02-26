@@ -42,7 +42,7 @@ class Gem(Mapper):
             help="GEM: number of threads allowed [default: %(default)s (autodetected)]")
         mapping_group.add_argument("--gemDBName", dest="gemDBName",
             type=str, default="", metavar="DBNAME", required=True, 
-            help="GEM: Name of the reference file in the database tarball (i.e. entire name of FASTA file). It must have the same basename as the rest of the DB.")
+            help="GEM: Name of the reference file in the database tarball (i.e. including .fasta extension). It must share basename with the rest of the DB.")
         mapping_group.add_argument("--gemm", dest="gemm",
             type=float, default=0.04, metavar="m", 
             help="GEM: max_mismatches, percent mismatches [default: %(default)s]")
@@ -78,7 +78,7 @@ class Gem(Mapper):
         """
 
         mapper_call = [self.mapper,
-                       "-I", str(options.gemDBName)+".gem",
+                       "-I", options.gemDBName.split(".",1)[0]+".gem",
                        "-i", local_files.reads, 
                        "-o", local_files.reads, #output prefix; gem appends with .map
                        "-T", str(options.gemThreads),

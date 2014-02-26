@@ -41,7 +41,7 @@ class Blastn(Mapper):
             help="blast: What task to be run, refer to blast manual for available options [default: %(default)s]")
         mapping_group.add_argument("--blastDBName", dest="blastDBName",
             type=str, default="", metavar="DBNAME", required=True,
-            help="blast: Name of the FASTA file in the database tarball (including extension). It must have the same basename as the rest of the DB.")
+            help="blast: Name of the FASTA file in the database tarball (including extension). It must share basename with the rest of the DB.")
 
         return parser
     

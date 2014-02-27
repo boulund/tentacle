@@ -9,30 +9,26 @@
 # 
 # Copyright (c) 2014
 # 
+from os.path import join, abspath, dirname
+import os
+import sys
+import platform
 
+# Add TENTACLE_ROOT to PATH to be able to import Tentacle
+run_dir = dirname(os.path.realpath(__file__))
+base_dir = abspath(join(run_dir,".."))
+os.environ["PATH"] += os.pathsep + base_dir
+
+# Import Tentacle
+from tentacle.launching.launchers import SlurmLauncher
+from tentacle import run
+
+# Add the built in dependencies to PATH 
+dependencies_bin = os.path.join(base_dir,"dependencies","bin",platform.system())
+os.environ["PATH"] += os.pathsep + dependencies_bin
+
+print os.environ["PATH"]
 if __name__ == "__main__":
-    from os.path import join, abspath, dirname
-    import os
-    import sys
-    import platform
-    import tempfile
-
-    #Add the folder of tentacle to path, to be able to import it
-    run_dir = abspath(dirname(__file__))
-    base_dir = abspath(join(run_dir,".."))
-    sys.path.append(base_dir)
-    from tentacle.tentacle_master_worker import TentacleMaster, TentacleWorker, LaunchingMasterWorkerExecutor
-    from tentacle.launching.zero_rpc_worker_pool import ZeroRpcDistributedWorkerPoolFactory
-    from tentacle.launching.registering_worker_pool import GeventWorkerPoolFactory
-    from tentacle.launching.launchers import SubprocessLauncher, SlurmLauncher, GeventLauncher
-    from tentacle import run
-
-    #Add the built in dependencies to PATH
-    dependencies_bin = os.path.join(base_dir,"dependencies","bin",platform.system())
-    os.environ["PATH"]  = dependencies_bin + os.pathsep + os.environ["PATH"] 
-
-
-
     ############################################################
     # 
     #   COPY THIS FILE AND ADD OPTIONS BELOW TO HAVE PERSISTENT 

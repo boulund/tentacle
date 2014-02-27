@@ -205,7 +205,7 @@ class TentacleCore:
     
     
     @staticmethod
-    def create_processing_argarser(argv):
+    def create_processing_argparser(argv):
         """
         Creates parser for options that describes HOW to process the files (not WHAT files are to be processed).
         
@@ -265,7 +265,7 @@ class TentacleCore:
         """
     
         parser = argparse.ArgumentParser(description="Maps reads to annotations in contigs and produces corresponding stats.", 
-            parents=[TentacleCore.create_processing_argarser()], add_help=True)
+            parents=[TentacleCore.create_processing_argparser()], add_help=True)
         
         parser.add_argument("contigs", help="path to contigs file (gzippped FASTQ)")
         parser.add_argument("reads", help="path to read file (gzipped FASTQ)")

@@ -37,6 +37,9 @@ class LaunchingMasterWorkerExecutor(object):
         """create parsers for the different submodules, and return along 
         with a joint parser containing them all, along with help"""
 
+        # The worker argparser must be run before all others
+        # to present the available mappers so that the
+        # user can choose what mapping module should be loaded.
         worker_argparser, mapper_namespace, argv = worker_factory.create_argparser(argv)
 
         parsers = [cls.create_argparser(),

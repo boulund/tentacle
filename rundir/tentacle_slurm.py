@@ -23,8 +23,8 @@ os.environ["PATH"] += os.pathsep + base_dir
 from tentacle.launching.launchers import SlurmLauncher
 from tentacle import run
 
-# Add the built in dependencies to PATH 
-dependencies_bin = os.path.join(base_dir,"dependencies","bin",platform.system())
+# Add the Tentacle dependencies directory to PATH 
+dependencies_bin = join(base_dir,"dependencies","bin",platform.system())
 os.environ["PATH"] += os.pathsep + dependencies_bin
 
 print os.environ["PATH"]

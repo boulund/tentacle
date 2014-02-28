@@ -216,7 +216,8 @@ class TentacleCore:
         mapping_group = parser.add_argument_group("Mapping options", 
             "Select a mapper. After specifying a mapper option, combine with --help to show all available options.")
 
-        available_mappers = [name for _, name, _, in pkgutil.iter_modules(['./tentacle/mappers'])]
+        tentacle_pkg_path = os.path.normpath(os.path.join(__file__, "..", "..")+"/mappers")
+        available_mappers = [name for _, name, _, in pkgutil.iter_modules([tentacle_pkg_path])]
         available_mappers = [m for m in available_mappers if m!="mapper"]
         for mapper_name in available_mappers:
             mapping_group.add_argument("--{}".format(mapper_name), dest="mapperName", action='store_const', 

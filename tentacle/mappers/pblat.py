@@ -62,9 +62,9 @@ class Pblat(Mapper):
                 mapper_call.append(token)
 
         # Base the command in the result dir and give the file_name relative to that.
+        output_filename = local_files.reads+".mapped"
         result_base = os.path.dirname(output_filename)
 
-        output_filename = local_files.reads+".mapped"
         # Append arguments to mapper_call                                
         mapper_call.append(os.path.relpath(local_files.contigs, result_base))  
         mapper_call.append(os.path.relpath(local_files.reads, result_base))    

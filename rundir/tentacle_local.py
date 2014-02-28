@@ -18,16 +18,16 @@ import tempfile
 # Add TENTACLE_ROOT to sys.path to be able to import Tentacle
 run_dir = dirname(os.path.realpath(__file__))
 base_dir = abspath(join(run_dir,".."))
-os.chdir(base_dir)
+os.environ["PATH"] += os.pathsep + base_dir
 
 # Import Tentacle
 from tentacle.launching.registering_worker_pool import GeventWorkerPoolFactory
 from tentacle.launching.launchers import GeventLauncher, SubprocessLauncher
 from tentacle import run
 
-# Add the built in dependencies to sys.path
-dependencies_bin = os.path.join(base_dir,"dependencies","bin",platform.system())
-sys.path.append(dependencies_bin) 
+# Add the Tentacle dependencies directory to PATH 
+dependencies_bin = join(base_dir,"dependencies","bin",platform.system())
+os.environ["PATH"] += os.pathsep + dependencies_bin
 
 if __name__ == "__main__":
     ############################################################

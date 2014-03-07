@@ -101,8 +101,8 @@ class SlurmLauncher(Launcher):
             default="1:00:00",
             help="The t option for sbatch. [default: %(default)s]")
         group.add_argument("--slurmMem",
-            default="SMALLMEM",
-            help="The C option for sbatch. Example SMALLMEM/BIGMEM/HUGEMEM [default: %(default)s]")
+            default="", choices=['SMALLMEM', 'BIGMEM', 'HUGEMEM'],
+            help="The C option for sbatch. [default: let Slurm decide]")
         group.add_argument("--slurmNodesPerJob",
             default="1", 
             help="Number of nodes in each slurm call [default: %(default)s]")
@@ -141,8 +141,9 @@ class SlurmLauncher(Launcher):
                                "#SBATCH -o {stdout_file_path}",
                                "#SBATCH -e {stderr_file_path}",
                                "#SBATCH -t {slurmTimeLimit}",
-                               "#SBATCH -C {slurmMem}",
                                ""]))
+        if parsed_args.slurmMem:
+            setupTemplate = setupTemplate+"#SBATCH -C {slurmMem}\n" 
         setupStr = setupTemplate.format(stdout_file_path=stdout_file_path, 
             stderr_file_path=stderr_file_path, **parsed_args_dict)
         jobsStr = "\n".join(commands)

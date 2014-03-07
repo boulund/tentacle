@@ -78,7 +78,7 @@ class RegisteringWorkerPool(ScopedObject):
                     break
                 except Exception as e:
                     #self.logger.error("Error when trying to execute task {} by worker {}\n{}".format(task, worker, traceback.format_exc())) # TODO
-                    print("Error when trying to execute task {} by Worker {}.\nException: {}.".format(task, d["worker_name"], str(e)))
+                    print("Error when trying to execute task {} by Worker {}.\nException: {}.".format(d["task"], d["worker_name"], str(e)))
                     self, d = put_failed_job_back_into_queue(self, d, e)
 
                 #self.logger.info("Finished {task} at worker with endpoint(s): {ep}".format(task=task, ep=worker._worker_endpoints))

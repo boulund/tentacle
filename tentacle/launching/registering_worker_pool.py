@@ -17,6 +17,13 @@ class Worker(ScopedObject):
         result = apply(task,[])
         return result
 
+__all__.append("WorkerDisabledException")
+class WorkerDisabledException(Exception):
+    """ Raised when master process loses connection to worker node. 
+    (e.g. zerorpc.TimeoutExpired or zerorpc.LostRemote) """
+    def __init__(self, message):
+        self.message = message
+
 
 __all__.append("RegisteringWorkerPool")
 class RegisteringWorkerPool(ScopedObject):
@@ -31,29 +38,50 @@ class RegisteringWorkerPool(ScopedObject):
                             lambda: [g.join() for g in self.working_greenlets])
 
     def register_worker(self, worker):
-        #Start a greenlet that puts the worker to work, running tasks from the queue
+        """ Starts a greenlet that puts the worker to work, running tasks from the queue.
+        """
         g = gevent.Greenlet(self._run_tasks_from_queue, worker)
         self.working_greenlets.put(g)
         g.start()
         
     def _run_tasks_from_queue(self, worker):
+        """ Run tasks from the queue on the worker.
+        """
+        def put_failed_job_back_into_queue(self, d, e):
+            """ Helper function to put a failed job back into the queue.
+            """
+            # Everything in this tuple has to be strings, since most objects wont serialize.
+            d["attempts"].append((d["worker_name"], str(d["start_time"]), str(e)))
+            d["start_time"] = ""
+            d["worker_name"] = ""
+            if len(d["attempts"]) < 2: #options.maxAttempts:
+                self.tasks_with_result_slots_queue.put(d)
+            else:
+                d["result"].set_exception(e)
+            return (self, d)
+            
+        # Here is where the jobs are run
+        worker_ip = worker._worker_endpoints[0].split("//")[1].split(":")[0]
         try:
             for d in self.tasks_with_result_slots_queue:
                 try:
-                    d["worker_name"] = str(worker._worker_endpoints[0]) #socket.gethostname()
+                    d["worker_name"] = str(socket.gethostbyaddr(worker_ip)[1][0])
                     d["start_time"] = datetime.now()
                     result = worker.run(d["task"])
                     d["result"].set(result)
                     d["end_time"] = datetime.now()
+                except WorkerDisabledException as e:
+                    #self.logger.error("Lost connection to Worker with endpoint(s): {}".format(worker._worker_endpoints)) # TODO
+                    print("Lost connetion to Worker {} with endpoint(s): {}".format(d["worker_name"], worker._worker_endpoints))
+                    self, d = put_failed_job_back_into_queue(self, d, 
+                        "Lost connection to Worker {} with endpoint(s) {}".format(d["worker_name"], worker._worker_endpoints))
+                    break
                 except Exception as e:
-                    #self.logger.error("Error when trying to execute task {} by worker {}\n{}".format(task, worker, traceback.format_exc()))
-                    # Everything in this tuple has to be strings, since most objects wont serialize.
-                    d["attempts"].append((d["worker_name"], str(d["start_time"]), str(e)))
-                    if len(d["attempts"]) < 2: #options.maxAttempts:
-                        self.tasks_with_result_slots_queue.put(d)
-                    else:
-                        d["result"].set_exception(e)
-                #print "Done   " + workerEndpoint + " to run " + str(task)
+                    #self.logger.error("Error when trying to execute task {} by worker {}\n{}".format(task, worker, traceback.format_exc())) # TODO
+                    print("Error when trying to execute task {} by Worker {}.\nException: {}.".format(task, d["worker_name"], str(e)))
+                    self, d = put_failed_job_back_into_queue(self, d, e)
+
+                #self.logger.info("Finished {task} at worker with endpoint(s): {ep}".format(task=task, ep=worker._worker_endpoints))
         finally:
             worker.close()
     
@@ -96,9 +124,6 @@ class GeventWorkerPoolFactory(object):
         group.add_argument("-N", "--distributionNodeCount", dest="node_count", type=int,
             default=1,
             help="The number of distributed nodes to run on. [default =  %(default)s]")
-#        group.add_argument("--distributionUseDedicatedCoordinatorNode", dest="use_dedicated_coordinator",
-#            action="store_true", default=False,
-#            help="Should a dedicated coordinator node be launched (instead of also processing jobs on that node). [default =  %(default)s]")
         parser.add_argument_group(group)
         return parser
     

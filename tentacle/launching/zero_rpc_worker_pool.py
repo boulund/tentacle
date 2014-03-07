@@ -7,7 +7,7 @@ from ..utils.zerorpc_utils import join_all_greenlets
 from ..utils import ScopedObject
 from ..utils.zerorpc_utils import run_single_rpc, spawn_server
 from ..serialization.cloud_serializer import CloudSerializer
-from .registering_worker_pool import Worker, RegisteringWorkerPool
+from .registering_worker_pool import Worker, RegisteringWorkerPool, WorkerDisabledException
 from .launchers import GeventLauncher, SubprocessLauncher
 
 def _debugPrint(msg): 
@@ -44,7 +44,11 @@ class ZeroRpcWorkerPool(RegisteringWorkerPool):
             super(ZeroRpcWorkerPool.WorkerProxy, self).__init__()
 
             _debugPrint("Creating zerorpc.Client")
-            self._zerorpc_client = zerorpc.Client(timeout=None, heartbeat=None)
+            #self._zerorpc_client = zerorpc.Client(timeout=None, heartbeat=None)
+            self._zerorpc_client = zerorpc.Client(timeout=None)
+            #self._zerorpc_client = zerorpc.Client(heartbeat=None)
+            #self._zerorpc_client = zerorpc.Client()
+
             self._scope.on_exit(lambda: _debugPrint("Closing zerorpc.Client for " + " ".join(worker_endpoints)),
                                 self._zerorpc_client.close)
             
@@ -56,8 +60,17 @@ class ZeroRpcWorkerPool(RegisteringWorkerPool):
 
         def run(self, task):
             _debugPrint("running task at "  + " ".join(self._worker_endpoints))
-            res = self._zerorpc_client.run_serialized(CloudSerializer().serialize_to_string(task),async=True)
-            res.get()
+            try:
+                res = self._zerorpc_client.run_serialized(CloudSerializer().serialize_to_string(task),async=True)
+                res.get()
+            except zerorpc.TimeoutExpired as e:
+                _debugPrint("Caught TimeoutExpired exception from worker at {}".format(self._worker_endpoints))
+                _debugPrint("Error was {}".format(e))
+                raise WorkerDisabledException(e)
+            except zerorpc.LostRemote as e:
+                _debugPrint("Caught LostRemote exception from worker at {}".format(self._worker_endpoints))
+                _debugPrint("Error was {}".format(e))
+                raise WorkerDisabledException(e)
             return res
         
         def close_client(self):

@@ -4,24 +4,25 @@
 # Anders Sjögren 2013
 
 from sys import exit, stdout
-from subprocess import PIPE#, Popen
 from collections import namedtuple
 from time import time
+from gevent.subprocess import Popen, PIPE
+#from gevent import monkey
+#from subprocess import Popen, PIPE
 import argparse
 import os
 import shutil
 import tempfile
 import pkgutil
 import importlib
-
-from gevent.subprocess import Popen
-#import gevent
-#gevent.monkey.patch_subprocess()
 import psutil
-
 import parseModule
+
 from .. import utils
 from ..utils import mapping_utils
+
+# Monkey patch all the things!
+#monkey.patch_all()
 
 #InFiles = namedtuple("InFiles", ["contigs", "reads", "annotations"])
 AllFiles = namedtuple("AllFiles", ["contigs", "reads", "annotations", "annotationStats", "log"])

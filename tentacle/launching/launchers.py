@@ -97,9 +97,8 @@ class SlurmLauncher(Launcher):
         group.add_argument("--slurmJobName",
             default="Tentacle",
             help="The J option for sbatch. [default: %(default)s]")    
-        group.add_argument("--slurmTimeLimit",
-            default="1:00:00",
-            help="The t option for sbatch. [default: %(default)s]")
+        group.add_argument("--slurmTimeLimit", required=True,
+            help="The t option for sbatch. Use format hh:mm:ss, e.g. 05:00:00 for 5h.")
         group.add_argument("--slurmMem",
             default="", choices=['SMALLMEM', 'BIGMEM', 'HUGEMEM'],
             help="The C option for sbatch. [default: let Slurm decide]")

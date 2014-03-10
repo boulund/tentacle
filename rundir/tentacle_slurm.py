@@ -27,7 +27,6 @@ from tentacle import run
 dependencies_bin = join(base_dir,"dependencies","bin",platform.system())
 os.environ["PATH"] += os.pathsep + dependencies_bin
 
-print os.environ["PATH"]
 if __name__ == "__main__":
     ############################################################
     # 

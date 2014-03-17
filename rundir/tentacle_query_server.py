@@ -130,6 +130,9 @@ def print_registered_jobs(options):
                     print "  Completed: ", end_time
                     print "  Runtime:               ", compute_runtime(start_time, end_time)
                     print "  Completed by worker: {}.".format(worker_name)
+                elif len(attempts) > 0:
+                    print "  Incomplete. ERROR(S)."
+                    print "  Retried {} times.".format(len(attempts))
                 else:
                     print "  Incomplete."
                     print "  Run by {}.".format(worker_name)
@@ -167,7 +170,7 @@ def print_registered_jobs(options):
                     print "  Runtime:               ", compute_runtime(start_time, end_time)
                     print "  Completed by worker: {}.".format(worker_name)
                 elif start_time:
-                    print "  Started:    ", start_time
+                    print "  Started:   ", start_time
                     if len(attempts) >= 1:
                         print "  Incomplete. ERROR(S)."
                     else:

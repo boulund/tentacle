@@ -44,8 +44,8 @@ class ZeroRpcWorkerPool(RegisteringWorkerPool):
             super(ZeroRpcWorkerPool.WorkerProxy, self).__init__()
 
             _debugPrint("Creating zerorpc.Client")
-            #self._zerorpc_client = zerorpc.Client(timeout=None, heartbeat=None)
-            self._zerorpc_client = zerorpc.Client(timeout=None)
+            self._zerorpc_client = zerorpc.Client(timeout=None, heartbeat=None)
+            #self._zerorpc_client = zerorpc.Client(timeout=None)
             #self._zerorpc_client = zerorpc.Client(heartbeat=None)
             #self._zerorpc_client = zerorpc.Client()
 

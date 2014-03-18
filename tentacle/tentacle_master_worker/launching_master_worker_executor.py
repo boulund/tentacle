@@ -75,9 +75,9 @@ class LaunchingMasterWorkerExecutor(object):
         
         #create the dependencies
         output_dir_structure = output_dir_structure_factory.create_from_parsed_args(parsed_args)
+        logger = logger_provider_factory.create_from_parsed_args(parsed_args, output_dir_structure.logs)
         print("Output dir: " + output_dir_structure.output)
         stdio_dir_path = output_dir_structure.get_logs_subdir("stdio")
-        logger = logger_provider_factory.create_from_parsed_args(parsed_args, output_dir_structure.logs)
         launcher = launcher_factory.create_from_parsed_args(stdio_dir=stdio_dir_path, parsed_args=parsed_args)
         
         #Get the tasks

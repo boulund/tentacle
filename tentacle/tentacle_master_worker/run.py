@@ -4,7 +4,6 @@ from tentacle.tentacle_master_worker import TentacleMaster, TentacleWorker, Laun
 from tentacle.launching.zero_rpc_worker_pool import ZeroRpcDistributedWorkerPoolFactory
 from tentacle.launching.registering_worker_pool import GeventWorkerPoolFactory
 from tentacle.launching.launchers import SubprocessLauncher, SlurmLauncher, GeventLauncher
-from tentacle.utils.query_jobs_utils import write_job_summary
 
 __all__ = ["run"]
 
@@ -21,10 +20,6 @@ def run(argv,
     if hasattr(g, 'get'):
         print("Waiting for processing to complete")
         g.get()
-    server_address = "tcp://10.21.1.130:49152"
-    import os
-    print("Writing summary to {}".format(os.getcwd()+"run_summary.txt"))
-    write_job_summary(server_address, "run_summary.txt")
     print("Done")
 
 ###################

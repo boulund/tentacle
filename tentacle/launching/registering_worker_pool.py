@@ -1,4 +1,5 @@
 from __future__ import print_function
+import os
 import argparse
 import unittest
 import gevent
@@ -7,6 +8,7 @@ from datetime import datetime
 from .launchers import GeventLauncher
 from ..utils.gevent_utils import IterableQueue
 from ..utils import ScopedObject
+from tentacle.utils.query_jobs_utils import write_jobs_summary
 
 
 __all__ = []
@@ -101,12 +103,21 @@ class RegisteringWorkerPool(ScopedObject):
         for job in tasks_and_results:
             job["result"].wait()
         results = [job["result"] for job in tasks_and_results] #pylint: disable=W0601
+        self.write_run_summary()
         return results
 
+    def write_run_summary(self):
+        """ Writes a complete summary on the status of all jobs after job "completion". """
+        summary_file = "run_summary.txt"
+        print("Writing run summary to {}".format(os.getcwd()+"/"+summary_file))
+        write_jobs_summary(self.get_mapped_jobs_description(), summary_file)
+
     def get_mapped_jobs_description(self):
+        """ Provides a way to query the status of jobs currently registered with the server."""
         return [[self.describe_task(item) for item in map_job] for map_job in self.map_jobs]
 
     def describe_task(self, item_entry):
+        """ Prepares the information in the job list for serialization. """
         serializable_types = set([str, list, tuple, dict])
         task_description = {}
         for key, value in item_entry.iteritems():

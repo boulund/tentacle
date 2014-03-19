@@ -18,9 +18,9 @@ def run(argv,
                                                            launcher_factory, 
                                                            distributed_worker_pool_factory)
     if hasattr(g, 'get'):
-        print("Waiting for processing to complete")
+        #print("Waiting for processing to complete")
         g.get()
-    print("Done")
+    #print("Done")
 
 ###################
 #

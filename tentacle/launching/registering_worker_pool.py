@@ -79,8 +79,8 @@ class RegisteringWorkerPool(ScopedObject):
                         "Lost connection to Worker {} with endpoint(s) {}".format(d["worker_name"], worker._worker_endpoints))
                     break
                 except Exception as e:
-                    #self.logger.error("Error when trying to execute task {} by worker {}\n{}".format(task, worker, traceback.format_exc())) # TODO
-                    print("Error when trying to execute task {} by Worker {}.\nException: {}.".format(d["task"], d["worker_name"], str(e)))
+                    #self.logger.error("Error when trying to execute task {} by worker {}\n{}".format(description, worker, traceback.format_exc())) # TODO
+                    print("Error when trying to execute task '{}' by Worker {}.\n{}: {}.".format(d["description"][0], d["worker_name"], e.name, e.msg))
                     self, d = put_failed_job_back_into_queue(self, d, e)
 
                 #self.logger.info("Finished {task} at worker with endpoint(s): {ep}".format(task=task, ep=worker._worker_endpoints))
@@ -108,8 +108,9 @@ class RegisteringWorkerPool(ScopedObject):
 
     def write_run_summary(self):
         """ Writes a complete summary on the status of all jobs after job "completion". """
-        summary_file = "run_summary.txt"
-        print("Writing run summary to {}".format(os.getcwd()+"/"+summary_file))
+        summary_filename = "run_summary.txt"
+        summary_file = self.output_dir+"/"+summary_filename
+        #self.logger.debug("Writing run summary to {}".format(summary_file))
         write_jobs_summary(self.get_mapped_jobs_description(), summary_file)
 
     def get_mapped_jobs_description(self):

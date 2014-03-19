@@ -11,52 +11,46 @@ __all__ = list()
 unique_logger_id = 0
 __all__.append("create_file_logger")
 def create_file_logger(logLevel, logNoStdout, logfile):
-    """
-    Set logger basic config and start logging
+    """ Set logger basic config and start logging.
     """
 
-    configFormat = "%(asctime)s: %(levelname)s: %(message)s" 
+    configFormat = "%(asctime)s: %(levelname)-8s: %(message)s" 
+    formatter = logging.Formatter(configFormat)
     dateFormat = "%Y-%m-%d %H:%M:%S"
 
     logLevel = logLevel.lower()
-    if logLevel == "debug" or logLevel == "verbose":
+    if logLevel in ("debug", "verbose"):
         logLevel = logging.DEBUG
-    elif logLevel == "info" or logLevel == "default":
+    elif logLevel in ("info", "default"):
         logLevel = logging.INFO
     elif logLevel == "critical":
         logLevel = logging.CRITICAL
 
-    if logNoStdout:
-        logging.basicConfig(configFormat=configFormat,
-                            dateFormat=dateFormat,
-                            level=logLevel,
-                            stream=stdout)
-    else:
-        logging.basicConfig(configFormat=configFormat,
-                            dateFormat=dateFormat,
-                            level=logLevel,
-                            )
-
-    #Get a new unique_logger_id to ask for, forcing a new logger to be returned
-    #We really just want a new instance, not reuse an old one, since a new file is to be created.   
+    # Get a new unique_logger_id to ask for, forcing a new logger to be returned
+    # We really just want a new instance, not reuse an old one, since a new file is to be created.   
     logger = logging.getLogger(os.path.basename(logfile))
+    logger.setLevel(logLevel)
 
     print "Creating logger with id {} writing to file {}".format(unique_logger_id, logfile)
-    # Create streamhandler to log to stdout as well as file
-    ch = logging.FileHandler(logfile)
-    # Set a better configFormat for console display
-    formatter = logging.Formatter(configFormat)
+    # Create FileHandler to log to logfile
+    fh = logging.FileHandler(logfile)
+    fh.setFormatter(formatter)
+    fh.setLevel(logLevel)
+    # Create StreamHandler to log modify format of stdout-output
+    ch = logging.StreamHandler()
     ch.setFormatter(formatter)
-    # Add the handler to the Tentacle logger
-    logger.addHandler(ch)
+    ch.setLevel(logLevel)
+    # Add the handlers to the Tentacle logger
+    logger.addHandler(fh)
+    if not logNoStdout:
+        logger.addHandler(ch)
 
     logger.info(" ----- ===== LOGGING STARTED ===== ----- ")
     return logger
 
 
 def create_std_logger():
-    # create logger
-    logger = logging.getLogger('std')
+    """ Create the standard logger. """
     return logger
 
 
@@ -115,14 +109,13 @@ def get_std_logger():
 def format_dict(d):
     s = ""
     for k, v in d.iteritems():
-        s = "".join([s, "{:>25}: {}\n".format(k, v)]) 
+        s = "".join([s, "{:>35}: {}\n".format(k, v)]) 
     return s   
 
 
 __all__.append("print_run_settings")
 def print_run_settings(options, logger):
-    """
-    Prints the settings used for the current run to log
+    """ Prints the current run settings to log
     """
     logger.info("The program was run with the following settings:\n{}\n".format(format_dict(options.__dict__)))
 

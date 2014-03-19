@@ -76,22 +76,23 @@ class LaunchingMasterWorkerExecutor(object):
         #create the dependencies
         output_dir_structure = output_dir_structure_factory.create_from_parsed_args(parsed_args)
         logger = logger_provider_factory.create_from_parsed_args(parsed_args, output_dir_structure.logs)
-        print("Output dir: " + output_dir_structure.output)
+        print "Output dir: " + output_dir_structure.output
         stdio_dir_path = output_dir_structure.get_logs_subdir("stdio")
-        launcher = launcher_factory.create_from_parsed_args(stdio_dir=stdio_dir_path, parsed_args=parsed_args)
         
         #Get the tasks
         master = master_factory.create(logger)
         tasks = master.get_tasks_from_parsed_args(parsed_args, output_dir_structure)
-        return cls.launch_worker_pool_and_process_tasks(parsed_args, worker_factory, distributed_worker_pool_factory, logger, launcher, tasks)
+
+        launcher = launcher_factory.create_from_parsed_args(logger=master.master_logger, stdio_dir=stdio_dir_path, parsed_args=parsed_args)
+        return cls.launch_worker_pool_and_process_tasks(parsed_args, output_dir_structure, worker_factory, distributed_worker_pool_factory, logger, master.master_logger, launcher, tasks)
 
     @classmethod
-    def launch_worker_pool_and_process_tasks(cls, parsed_args, worker_factory, distributed_worker_pool_factory, logger_provider, launcher, tasks):
+    def launch_worker_pool_and_process_tasks(cls, parsed_args, output_dir_structure, worker_factory, distributed_worker_pool_factory, logger_provider, master_logger, launcher, tasks):
         def create_distributed_worker_pool_and_process_tasks():
             """Creating the worker pool (with launched workers) and processing the tasks"""
             #create the distributed worker pool
             #TODO: handle logging/exceptions
-            with distributed_worker_pool_factory.create_from_parsed_args(parsed_args, launcher) as distributed_worker_pool:
+            with distributed_worker_pool_factory.create_from_parsed_args(parsed_args, master_logger, launcher, output_dir_structure) as distributed_worker_pool:
                 distributed_worker_pool.map(
                     lambda task: worker_factory.create_from_parsed_args(parsed_args, logger_provider).process(task), tasks)
                 #TODO, what to do with results?

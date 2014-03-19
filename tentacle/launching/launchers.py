@@ -42,12 +42,13 @@ class Launcher(object):
         return argparse.ArgumentParser(add_help=False)
 
     @classmethod
-    def create_from_parsed_args(cls, stdio_dir, parsed_args):
-        return cls(stdio_dir, parsed_args)
+    def create_from_parsed_args(cls, logger, stdio_dir, parsed_args):
+        return cls(logger, stdio_dir, parsed_args)
     
-    def __init__(self, stdio_dir=".", parsed_args=argparse.Namespace()):
+    def __init__(self, logger, stdio_dir=".", parsed_args=argparse.Namespace()):
         self.stdio_dir = stdio_dir
         self.parsed_args = parsed_args
+        self.logger = logger
 
 
 __all__.append("GeventLauncher")
@@ -154,11 +155,13 @@ class SlurmLauncher(Launcher):
         self.script = self.create_sbatch_script(all_commands, self.stdio_dir, self.parsed_args)
         self.write_sbatch_workerscript_to_file("create_additional_workers_"+self.parsed_args.slurmJobName+".sh")
         call_pars = shlex.split(self.parsed_args.slurmBinary) #pylint: disable=E1103
-        print("launching: " + " ".join(call_pars) + " with input " + self.script)
+        self.logger.debug("Launching '{}' with input:\n{}".format(" ".join(call_pars), self.script))
+        #print("launching '" + " ".join(call_pars) + "' with input:\n" + self.script)
         #Make the sbatch call
         (out, err) = Popen(call_pars, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate(self.script)
-        print("launch result: " + str((out,err)))
-        #assert that correct results was received
+        self.logger.debug("Launch result: {}".format(str((out,err))))
+        #print("launch result: " + str((out,err)))
+        #TODO: assert that correct results were received
         return (out, err)
 
     def launch_python_function(self, f):

@@ -147,12 +147,14 @@ def print_registered_jobs(options):
                     print "  Incomplete."
             else:
                 print "  Not started."
+            printouts+=1
         elif "running" in display:
             if start_time and not end_time:
                 print "Job:", basename, reads_file
                 print "  Started:   ", start_time
                 print "  Incomplete."
                 print "  Run by {}.".format(worker_name)
+                printouts+=1
         elif "completed" in display:
             if bool(start_time and end_time):
                 print "Job:", basename, reads_file
@@ -160,6 +162,7 @@ def print_registered_jobs(options):
                 print "  Completed: ", end_time 
                 print "  Runtime:               ", compute_runtime(start_time, end_time)
                 print "  Completed by worker: {}.".format(worker_name)
+                printouts+=1
         elif "incomplete" in display:
             if "unset" in result:
                 print "Job:", basename, reads_file
@@ -181,6 +184,7 @@ def print_registered_jobs(options):
                     print "  Not started."
                     if len(attempts) >= 1:
                         print "  Incomplete. ERROR(S)."
+                printouts+=1
         elif "errors" in display:
             if len(attempts) > 0:
                 print "Job:", basename, reads_file
@@ -189,10 +193,10 @@ def print_registered_jobs(options):
                     worker_name, attempt_start_time, error_message = attempt
                     print "  Attempt at worker {}\n  at time {}.".format(worker_name, attempt_start_time)
                     print "  Received error message:\n", error_message
+                printouts+=1
         else:
             break
 
-        printouts+=1
             
             
 

@@ -29,12 +29,13 @@ class WorkerDisabledException(Exception):
 
 __all__.append("RegisteringWorkerPool")
 class RegisteringWorkerPool(ScopedObject):
-    def __init__(self):
+    def __init__(self, output_dir):
         #TODO: Handle errors in init?
         super(RegisteringWorkerPool, self).__init__()
         self.tasks_with_result_slots_queue = IterableQueue()
         self.working_greenlets = IterableQueue()
         self.map_jobs = []
+        self.output_dir = output_dir
         self._scope.on_exit(lambda: self.working_greenlets.close(), #close for adding more entries
                             lambda: self.tasks_with_result_slots_queue.close(), #close for adding more entries
                             lambda: [g.join() for g in self.working_greenlets])
@@ -62,8 +63,11 @@ class RegisteringWorkerPool(ScopedObject):
                 d["result"].set_exception(e)
             return (self, d)
             
+        try:    
+            worker_ip = worker._worker_endpoints[0].split("//")[1].split(":")[0]
+        except AttributeError:
+            worker_ip = "localhost"
         # Here is where the jobs are run
-        worker_ip = worker._worker_endpoints[0].split("//")[1].split(":")[0]
         try:
             for d in self.tasks_with_result_slots_queue:
                 try:
@@ -80,7 +84,7 @@ class RegisteringWorkerPool(ScopedObject):
                     break
                 except Exception as e:
                     #self.logger.error("Error when trying to execute task {} by worker {}\n{}".format(description, worker, traceback.format_exc())) # TODO
-                    print("Error when trying to execute task '{}' by Worker {}.\n{}: {}.".format(d["description"][0], d["worker_name"], e.name, e.msg))
+                    print("Error when trying to execute task '{}' by Worker {}.\n{}.".format(d["description"][0], d["worker_name"], str(e)))
                     self, d = put_failed_job_back_into_queue(self, d, e)
 
                 #self.logger.info("Finished {task} at worker with endpoint(s): {ep}".format(task=task, ep=worker._worker_endpoints))
@@ -139,12 +143,12 @@ class GeventWorkerPoolFactory(object):
         parser.add_argument_group(group)
         return parser
     
-    def create_from_parsed_args(self, parsed_args, *args, **kwargs):
-        return self.create(worker_count=parsed_args.node_count)
+    def create_from_parsed_args(self, parsed_args, output_dir, *args, **kwargs):
+        return self.create(worker_count=parsed_args.node_count, output_dir=output_dir)
     
-    def create(self, worker_count):
+    def create(self, worker_count, output_dir):
         #Create the pool
-        pool = RegisteringWorkerPool()
+        pool = RegisteringWorkerPool(output_dir=output_dir)
         try:
             ws = [Worker() for _ in range(worker_count)]
             for w in ws: 

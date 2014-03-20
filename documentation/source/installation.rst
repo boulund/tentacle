@@ -16,10 +16,9 @@ e.g. using `pip`. Below are the required Python packages (tested versions
 in parenthesis).
 
  * cloud (2.8.5)
- * Cython (0.19.2)
  * gevent (1.0)
- * greenlet (0.4.1)
- * msgpack-python (0.4.0)
+ * greenlet (0.4.2)
+ * msgpack-python (0.4.1)
  * numpy (1.8.0)
  * psutil (1.2.1)
  * pyzmq (13.1.0)
@@ -46,19 +45,18 @@ script (this will change your prompt, as illustrated below)::
 To install the required packages into the virtualenv, make sure the virtualenv
 is activated, then use `pip` from the virtualenv to install the packages::
 
-  (tentacle_env)$ pip install cython
-  (tentacle_env)$ pip install greenlet
-  (tentacle_env)$ pip install gevent
-  (tentacle_env)$ pip install pyzmq
   (tentacle_env)$ pip install cloud
-  (tentacle_env)$ pip install numpy
+  (tentacle_env)$ pip install gevent
+  (tentacle_env)$ pip install greenlet
   (tentacle_env)$ pip install msgpack-python
-  (tentacle_env)$ pip install zerorpc
+  (tentacle_env)$ pip install numpy
   (tentacle_env)$ pip install psutil
+  (tentacle_env)$ pip install pyzmq
+  (tentacle_env)$ pip install zerorpc
 
 You can copy-paste the following line to install all of them in one command::
 
-  pip install cython greenlet gevent pyzmq cloud numpy msgpack-python zerorpc psutil
+  pip install cloud gevent greenlet msgpack-python numpy psutil pyzmq zerorpc
 
 Make sure all packages install correctly into the virtulenv. Note that some
 of the listed packages might in turn have further dependencies. 

@@ -187,9 +187,9 @@ class ZeroRpcDistributedWorkerPoolFactory(object):
         return parser
     
         
-    def create_from_parsed_args(self, parsed_args, master_logger, remote_launcher, output_dir_structure, local_launcher=GeventLauncher()):
+    def create_from_parsed_args(self, parsed_args, master_logger, remote_launcher, output_dir, local_launcher=GeventLauncher()):
         return self.create(logger=master_logger, 
-                           output_dir=output_dir_structure.output,
+                           output_dir=output_dir,
                            worker_count=parsed_args.node_count, 
                            use_dedicated_coordinator=parsed_args.use_dedicated_coordinator, 
                            idle_timeout=parsed_args.distributedNodeIdleTimeout,
@@ -208,7 +208,7 @@ class ZeroRpcDistributedWorkerPoolFactory(object):
 
         #Create the pool
         logger.debug("Creating ZeroRpcWorkerPool.")
-        pool = ZeroRpcWorkerPool(logger, output_dir)
+        pool = ZeroRpcWorkerPool(logger=logger, output_dir=output_dir)
         try:
             #Launch the workers
             if worker_count==0:

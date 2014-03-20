@@ -42,13 +42,14 @@ class Launcher(object):
         return argparse.ArgumentParser(add_help=False)
 
     @classmethod
-    def create_from_parsed_args(cls, logger, stdio_dir, parsed_args):
-        return cls(logger, stdio_dir, parsed_args)
+    def create_from_parsed_args(cls, logger, stdio_dir, parsed_args, output_dir):
+        return cls(logger, stdio_dir, parsed_args, output_dir)
     
-    def __init__(self, logger, stdio_dir=".", parsed_args=argparse.Namespace()):
+    def __init__(self, logger, stdio_dir=".", parsed_args=argparse.Namespace(), output_dir="."):
         self.stdio_dir = stdio_dir
         self.parsed_args = parsed_args
         self.logger = logger
+        self.output_dir = output_dir
 
 
 __all__.append("GeventLauncher")

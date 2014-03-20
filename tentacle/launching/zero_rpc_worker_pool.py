@@ -19,7 +19,7 @@ __all__ = []
 __all__.append("ZeroRpcWorkerPool")
 class ZeroRpcWorkerPool(RegisteringWorkerPool):
     def __init__(self, logger, output_dir):
-        super(ZeroRpcWorkerPool, self).__init__()
+        super(ZeroRpcWorkerPool, self).__init__(output_dir=output_dir)
         self._endpoints = None #Is needed since zerorpc invokes endpoints property for some reason when starting server
         s, self._endpoints = spawn_server(self)
         self.logger = logger

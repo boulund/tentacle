@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 #
-# Tentacle Parallel (Slurm)
+# Tentacle Local (GeventLauncher)
 #
 # Authors:
 #   Anders Sjögren

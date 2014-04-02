@@ -10,11 +10,23 @@ import argparse
 import re
 from datetime import datetime
 
-#Add the folder of tentacle to path, to be able to import it
-run_dir = abspath(dirname(__file__))
-base_dir = abspath(join(run_dir,".."))
-path.append(base_dir)
-from tentacle.utils.zerorpc_utils import run_single_rpc
+try:
+    from tentacle.utils.zerorpc_utils import run_single_rpc
+except ImportError:
+    # If import fails Tentacle is probably not installed in 
+    # python site-packages. Try to run it from the 
+    # current directory instead.
+    # Add TENTACLE_ROOT to PATH to be able to import Tentacle
+    run_dir = abspath(dirname(__file__))
+    base_dir = abspath(join(run_dir,".."))
+    path.append(base_dir)
+    try:
+        from tentacle.utils.zerorpc_utils import run_single_rpc
+    except ImportError:
+        print "ERROR: Cannot import/find Tentacle, is it properly installed?"
+        print "If you're trying to run Tentacle without installing, make sure to"
+        print "run it from within the %TENTACLE_ROOT%/rundir directory."
+        exit()
 
 
 def parse_argv(argv):

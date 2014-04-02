@@ -14,20 +14,30 @@ import os
 import sys
 import platform
 
-# Add TENTACLE_ROOT to PATH to be able to import Tentacle
-run_dir = dirname(os.path.realpath(__file__))
-base_dir = abspath(join(run_dir,".."))
-os.environ["PATH"] = base_dir + os.pathsep + os.environ["PATH"]
-sys.path.insert(1, base_dir)
-
-# Import Tentacle
-from tentacle.launching.launchers import SlurmLauncher
-from tentacle import run
-
-# Add the Tentacle dependencies directory to PATH 
-dependencies_bin = join(base_dir,"dependencies","bin",platform.system())
-os.environ["PATH"] += os.pathsep + dependencies_bin
-sys.path.append(dependencies_bin)
+try:
+    from tentacle.launching.launchers import SlurmLauncher
+    from tentacle import run
+except ImportError:
+    # If import fails Tentacle is probably not installed in 
+    # python site-packages. Try to run it from the 
+    # current directory instead.
+    # Add TENTACLE_ROOT to PATH to be able to import Tentacle
+    run_dir = dirname(os.path.realpath(__file__))
+    base_dir = abspath(join(run_dir,".."))
+    os.environ["PATH"] = base_dir + os.pathsep + os.environ["PATH"]
+    sys.path.insert(1, base_dir)
+    try:
+        from tentacle.launching.launchers import SlurmLauncher
+        from tentacle import run
+    except ImportError:
+        print "ERROR: Cannot import/find Tentacle, is it properly installed?"
+        print "If you're trying to run Tentacle without installing, make sure to"
+        print "run it from within the %TENTACLE_ROOT%/rundir directory."
+        exit()
+    # Add the Tentacle dependencies directory to PATH 
+    dependencies_bin = join(base_dir,"dependencies","bin",platform.system())
+    os.environ["PATH"] += os.pathsep + dependencies_bin
+    sys.path.append(dependencies_bin)
 
 if __name__ == "__main__":
     ############################################################

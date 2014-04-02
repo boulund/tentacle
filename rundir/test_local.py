@@ -6,20 +6,36 @@ import platform
 import tempfile
 import unittest
 
-#Add the folder of tentacle to path, to be able to import it
-run_dir = abspath(dirname(__file__))
-base_dir = abspath(join(run_dir,".."))
-sys.path.append(base_dir)
-
-from tentacle.tentacle_master_worker import TentacleMaster, TentacleWorker, LaunchingMasterWorkerExecutor
-from tentacle.launching.zero_rpc_worker_pool import ZeroRpcDistributedWorkerPoolFactory
-from tentacle.launching.registering_worker_pool import GeventWorkerPoolFactory
-from tentacle.launching.launchers import SubprocessLauncher, SlurmLauncher, GeventLauncher
-from tentacle import run
-
-#Add the dependencies directory to PATH
-bin_dir = os.path.join(base_dir,"dependencies","bin",platform.system())
-os.environ["PATH"]  = bin_dir + os.pathsep + os.environ["PATH"]
+try:
+    from tentacle.tentacle_master_worker import TentacleMaster, TentacleWorker, LaunchingMasterWorkerExecutor
+    from tentacle.launching.zero_rpc_worker_pool import ZeroRpcDistributedWorkerPoolFactory
+    from tentacle.launching.registering_worker_pool import GeventWorkerPoolFactory
+    from tentacle.launching.launchers import SubprocessLauncher, SlurmLauncher, GeventLauncher
+    from tentacle import run
+except ImportError:
+    # If import fails Tentacle is probably not installed in 
+    # python site-packages. Try to run it from the 
+    # current directory instead.
+    # Add TENTACLE_ROOT to PATH to be able to import Tentacle
+    run_dir = dirname(os.path.realpath(__file__))
+    base_dir = abspath(join(run_dir,".."))
+    os.environ["PATH"] = base_dir + os.pathsep + os.environ["PATH"]
+    sys.path.insert(1, base_dir)
+    try:
+        from tentacle.tentacle_master_worker import TentacleMaster, TentacleWorker, LaunchingMasterWorkerExecutor
+        from tentacle.launching.zero_rpc_worker_pool import ZeroRpcDistributedWorkerPoolFactory
+        from tentacle.launching.registering_worker_pool import GeventWorkerPoolFactory
+        from tentacle.launching.launchers import SubprocessLauncher, SlurmLauncher, GeventLauncher
+        from tentacle import run
+    except ImportError:
+        print "ERROR: Cannot import/find Tentacle, is it properly installed?"
+        print "If you're trying to run Tentacle without installing, make sure to"
+        print "run it from within the %TENTACLE_ROOT%/rundir directory."
+        exit()
+    # Add the Tentacle dependencies directory to PATH 
+    dependencies_bin = join(base_dir,"dependencies","bin",platform.system())
+    os.environ["PATH"] += os.pathsep + dependencies_bin
+    sys.path.append(dependencies_bin)
 
 
 class Test_complete_pipelines(unittest.TestCase):

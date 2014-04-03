@@ -6,16 +6,18 @@ Tentacle
 :Contact: fredrik.boulund@chalmers.se
 :License: GPL
 
-Welcome! This is the README for Tentacle |release|, last updated |today|.
+Welcome! This is the README for the distributed gene quantification
+framework Tentacle.
 
-The documentation is available online at http://bioinformatics.math.chalmers.se/tentacle/.
+The complete documentation for Tentacle is available online at 
+http://bioinformatics.math.chalmers.se/tentacle/.
 
 Citing Tentacle
 ***************
-If you find Tentacle useful and use it in your research, please cite us!.
+If you use Tentacle in your research, please cite us!.
 
-The framework is described in the paper Boulund et al. (2014). A framework for
-gene quantification in large metagenomic data sets. 
+The work is described in the paper Boulund et al. (2014). A framework for gene
+quantification in large metagenomic data sets. 
 
 
 Installing Tentacle

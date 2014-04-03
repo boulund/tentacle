@@ -16,7 +16,8 @@ import platform
 import tempfile
 
 try:
-    from tentacle.launching.launchers import SlurmLauncher
+    from tentacle.launching.launchers import GeventLauncher, SubprocessLauncher
+    from tentacle.launching.registering_worker_pool import GeventWorkerPoolFactory
     from tentacle import run
 except ImportError:
     # If import fails Tentacle is probably not installed in 
@@ -28,7 +29,8 @@ except ImportError:
     os.environ["PATH"] = base_dir + os.pathsep + os.environ["PATH"]
     sys.path.insert(1, base_dir)
     try:
-        from tentacle.launching.launchers import SlurmLauncher
+        from tentacle.launching.launchers import GeventLauncher, SubprocessLauncher
+        from tentacle.launching.registering_worker_pool import GeventWorkerPoolFactory
         from tentacle import run
     except ImportError:
         print "ERROR: Cannot import/find Tentacle, is it properly installed?"

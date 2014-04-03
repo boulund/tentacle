@@ -1,19 +1,21 @@
-#########################
-Installation instructions
-#########################
-Here follows instructions on how to setup the environment required for Tentacle.
-A note on pathnames: The directory in which Tentacle is installed will be 
-referred to as `$TENTACLE_ROOT` for convenience. Also, aside from the section on
-how to install, prepare, and activate virtualenv, the `(tentacle_env)` 
-prefix to the command line will be omitted for brevity. Note however, that
-all commands that utilize the Tentacle framework will require the virtualenv
-to be activated.
+###################
+Installing Tentacle
+###################
+Here follows instructions on how to setup the environment required for
+Tentacle.  A note on pathnames: The directory in which Tentacle is installed
+will be referred to as ``$TENTACLE_ROOT`` for convenience. Also, aside from the
+section on how to install, prepare, and activate virtualenv, the
+``(tentacle_env)`` prefix to the command line will be omitted for brevity. Note
+however, that all commands that utilize the Tentacle framework will require the
+virtualenv to be activated.
 
 Dependencies
 ************
-Tentacle depends on a number of packages, all of which are easily installed
-e.g. using `pip`. Below are the required Python packages (tested versions
-in parenthesis).
+Tentacle depends on a number of packages. If they are not installed they will
+automatically be installed if you install Tentacle using ``pip``. Should you
+decide to run Tentacle without installing it, you need to make sure that the
+required packages are available in your local Python installation.  Below is a
+list of the required Python packages (tested versions in parenthesis).
 
  * cloud (2.8.5)
  * gevent (1.0)
@@ -29,10 +31,17 @@ in parenthesis).
 
 Python virtualenv
 *****************
-The recommended way to use Tentacle is to setup a Python virtualenv (virtual 
-environment), in which all required packages are installed. Assuming that 
-virtualenv is installed and globally available on your system, create a 
-virtual environment in which to run Tentacle::
+.. sidebar:: Python 2.7
+
+    Since Tentacle requires Python 2.7, make sure that this is the Python version
+    used when creating your virtualenv.
+   
+The recommended way to use Tentacle is to setup a Python virtualenv (virtual
+environment), into which all required packages are installed. You can read more
+about virtualenv on the official website: http://www.virtualenv.org/en/latest/.
+
+Assuming that virtualenv is installed and globally available on your system,
+create a virtual environment in which to run Tentacle::
 
   $ virtualenv tentacle_env
 
@@ -42,42 +51,48 @@ script (this will change your prompt, as illustrated below)::
   $ source tentacle_env/bin/activate
   (tentacle_env)$ 
 
-To install the required packages into the virtualenv, make sure the virtualenv
-is activated, then use `pip` from the virtualenv to install the packages::
-
-  (tentacle_env)$ pip install cloud
-  (tentacle_env)$ pip install gevent
-  (tentacle_env)$ pip install greenlet
-  (tentacle_env)$ pip install msgpack-python
-  (tentacle_env)$ pip install numpy
-  (tentacle_env)$ pip install psutil
-  (tentacle_env)$ pip install pyzmq
-  (tentacle_env)$ pip install zerorpc
-
-You can copy-paste the following line to install all of them in one command::
-
-  pip install cloud gevent greenlet msgpack-python numpy psutil pyzmq zerorpc
-
-Make sure all packages install correctly into the virtulenv. Note that some
-of the listed packages might in turn have further dependencies. 
-
 
 .. _installation:
 
-Tentacle Python package and scripts
-***********************************
-
+Download Tentacle sources
+*************************
 The Tentacle software is distributed as a downloadable compressed archive.
-Unpack the archive and add the files in `$TENTACLE/rundir` to your $PATH variable.
-This could be done for your current user with the following commands::
+Either download a release tarball from the download section, or download
+the latest development version from Bitbucket. It is recommended to use the
+latest release version as this is probably more stable.
+Example download command::
+
+  $ wget http://bioinformatics.math.chalmers.se/tentacle/downloads/tentacle-0.1.0.tar.gz
+
+Installing Tentacle into virtualenv
+===================================
+To install Tentacle into the virtualenv, make sure the virtualenv
+is activated and use ``pip`` from within the virtualenv to install Tentacle::
+
+  $ pip install tentacle-0.1.0.tar.gz
+
+Running this command will download and install Tentacle along with all
+dependencies.  Make sure all packages install correctly into the virtulenv.
+Note that some of the required packages might in turn have further
+dependencies.  You can verify that all packages installed correctly by running
+``pip list``.
+
+The pip installation will install the three program files
+``tentacle_local.py``, ``tentacle_slurm.py``, and ``tentacle_query_jobs.py``
+into the ``bin`` directory of the virtualenv. You can call these from the
+command line to launch Tentacle.
+
+Using Tentacle without installation
+===================================
+It is also possible (but not recommended) to run tentacle without installing it
+into a virtualenv. To do this, unpack the archive and add the files in
+`$TENTACLE/rundir` to your $PATH variable. This could be done for your current
+user with the following commands::
   
+  $ tar -xf tentacle-0.1.0.tar.gz
   $ ln -s tentacle-0.1.0/rundir/tentacle* ~/bin
 
-For a system-wide installation of Tentacle, put `$TENTACLE_ROOT` at a location
-were all users can access it and either put `$TENTACLE/rundir` in all users'
-$PATH variable or add symlinks to a directory which is in their $PATH. For
-information on how to best do this for your specific system, ask your 
-system administrator.
+Please note that this is NOT the recommended way to use Tentacle.
 
 
 
@@ -112,20 +127,20 @@ For installation instructions for the alignment software, please refer to the
 respective documentation/website. 
 
 After downloading/compiling the binaries for your mapper of interest, either 
-ensure that they are available in `$PATH` or put the binaries (or symlinks)
-in `$TENTACLE_ROOT/dependencies/bin/Linux` so that Tentacle can find them 
-on runtime. 
-
+ensure that they are available in ``$PATH`` or put the binaries (or symlinks)
+in ``%TENTACLE_VENV%/bin`` so that Tentacle can find them on runtime. 
 
 
 Verifying installation
 **********************
-After setting up and activating the virtualenv and installing a suitable
-mapper, run one of the included tests to verify that the installation is
-working as intended. From within `$TENTACLE_ROOT`, initiate the tests::
+This section is not yet complete. 
 
-  (tentacle_env)[$TENTACLE_ROOT]$ rundir/tests_local.py
-
-This will fire off a tests for each mapper to verify that the pipeline 
-runs as intended locally on your computer. Note that these tests will 
-fail if the mappers are not installed.
+.. After setting up and activating the virtualenv and installing a suitable
+   mapper, run one of the included tests to verify that the installation is
+   working as intended. From within ``$TENTACLE_ROOT``, initiate the tests::
+   
+     (tentacle_env)[$TENTACLE_ROOT]$ rundir/tests_local.py
+   
+   This will fire off a tests for each mapper to verify that the pipeline 
+   runs as intended locally on your computer. Note that these tests will 
+   fail if the mappers are not installed.

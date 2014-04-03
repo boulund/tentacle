@@ -48,8 +48,8 @@ for coverage calculations.
    '.fasta' will result in an error. 
 
 Certain mappers require that the reference sequences are available in
-a custom database format (e.g. USEARCH uses `*.udb` and bowtie2 has several
-indexes in `*.bt2.*` files). It is important to note that you must prepare 
+a custom database format (e.g. USEARCH uses ``*.udb`` and bowtie2 has several
+indexes in ``*.bt2.*`` files). It is important to note that you must prepare 
 the reference sequences (FASTA file + potential database-related files)
 so that they share the same **basename** (i.e. the filename up until
 the first dot "."). For example, in the USEARCH case, create a tarball
@@ -59,13 +59,12 @@ containing the following files::
   references.fasta references.udb
   $ tar -zvcf reference_tarball.tar.gz references.fasta references.udb
 
-
 It does not matter what you call the tarball, as long as the basename for
 the FASTA file and the database-related files are the same (in the above
 example the basename is *references*). 
 The basename is important to remember to add to the command line arguments 
 when running Tentacle so that the mapper can find the correct files later,
-e.g. for USEARCH the command line flag is `--usearchDBName`. Refer to the
+e.g. for USEARCH the command line flag is ``--usearchDBName``. Refer to the
 command line help for each mapper for their specific flag name.
 
 
@@ -110,7 +109,7 @@ FASTA file. Just put a + in the strand column.
 TUTORIAL 1. Mapping reads to contigs (pBLAT)
 *********************************************
 This mapping scenario is relevant for quantifying the gene content 
-of a complete metagenome. In this tutorial the mapper `pBLAT` will
+of a complete metagenome. In this tutorial the mapper ``pBLAT`` will
 be used. However, the techniques displayed in this tutorial applies
 equally to other mappers that do not require a premade database
 (i.e. that can map a FASTA/FASTQ reads file to a FASTA reference), 
@@ -119,7 +118,7 @@ such as for example RazerS3.
 Step-by-step tutorial
 =====================
 To begin this tutorial, extract the tutorial tarball, available from :ref:`download`.
-It contains a folder called `tutorial_1` which contains the following files that 
+It contains a folder named ``tutorial_1`` which contains the following files that 
 are relevant for this part of the tutorial::
 
   tutorial_1/
@@ -150,8 +149,8 @@ order::
   {reads}   {reference}   {annotation}
 
 To create a mapping manifest is easy. The simplest way is probably to
-use the standard GNU tools `find` and `paste`. Assuming you are
-standing in the `tutorial_1` directory it could look like this::
+use the standard GNU tools ``find`` and ``paste``. Assuming you are
+standing in the ``tutorial_1`` directory it could look like this::
 
   $ find `pwd`/data/r* > tmp_reads
   $ find `pwd`/data/c* > tmp_references
@@ -159,16 +158,16 @@ standing in the `tutorial_1` directory it could look like this::
   $ paste tmp_reads tmp_references tmp_annotations > mapping_manifest.tab
   $ rm tmp_*
 
-What happens is that `find` lists all files matching the pattern `r*` in the
-data directory under our current working directory (`pwd` returns the 
+What happens is that ``find`` lists all files matching the pattern ``r*`` in the
+data directory under our current working directory (``pwd`` returns the 
 absolute path to the current working directory), i.e. all read files
 in the data directory. We then do the same for the references (contigs
 in this case) and the annotation files. After we have produced three files
 containing listings of the absolute paths of all our data files, we paste
-them together using `paste` into a tab separated file `mapping_manifest.tab`.
+them together using ``paste`` into a tab separated file ``mapping_manifest.tab``.
 
 This technique can easily be extend to add files from different folders
-by appending (`>>`) to the `tmp_reads` for example. 
+by appending (``>>``) to the ``tmp_reads`` for example. 
 There is no need to follow this specific procedure for the creation of 
 the mapping manifest; you are free to use whatever tools or techniques
 you want for the mapping manifest as long as the end result is the same.
@@ -181,39 +180,38 @@ Step 2: Run Tentacle on cluster using Slurm
 
 .. sidebar:: Running Tentacle locally
 
-   Tentacle can also be run locally, with several instances of the mapper
-   run simultaneously on your computer. This is not recommended as this
-   is normally not very efficient, because several instances of the mapper
-   will compete for resources (disk I/O, memory, CPU). To run Tentacle
-   locally, call the file `tentacle_local.py` instead of tentacle_slurm.py.
+   Tentacle can also be run locally, with several instances of the mapper run
+   simultaneously on your computer. This is not recommended as this is normally
+   not very efficient, because several instances of the mapper will compete for
+   resources (disk I/O, memory, CPU). To run Tentacle locally, call the file
+   `tentacle_local.py` instead of tentacle_slurm.py.
 
-As `pBLAT` is only able to read FASTA format files, the reads file in
-FASTQ format needs to be converted. Tentacle does this automatically 
-when it detects that we are using a mapper that does not accept FASTQ
-input. The user does not have to do anything here.
+As ``pBLAT`` is only able to read FASTA format files, the reads file in FASTQ
+format needs to be converted. Tentacle does this automatically when it detects
+that we are using a mapper that does not accept FASTQ input. The user does not
+have to do anything here.
 
-For this tutorial we will use the default settings that `pBLAT` uses
-for mapping. For a list of options that can be modified for the specific
-mapper module used in Tentacle, run Tentacle with the `--pblat --help` 
-command line options. For options not available via the mapper module 
-in Tentacle, please refer to `pBLAT`'s command line help.
+For this tutorial we will use the default settings that ``pBLAT`` uses for
+mapping. For a list of options that can be modified for the specific mapper
+module used in Tentacle, run Tentacle with the ``--pblat --help`` command line
+options. For options not available via the mapper module in Tentacle, please
+refer to ``pBLAT``'s command line help.
 
-First of all, make sure that the Python virtualenv that we created in
-the :ref:`virtualenv` section is activated. 
-Tentacle can be run on the commandline by calling the file `tentacle_parallel.py`
-in `$TENTACLE_ROOT/rundir`. If you installed Tentacle according to the
-instructions in :ref:`installation` it should be available in your
-`$PATH` variable as well.
+First of all, make sure that the Python virtualenv that we created in the
+:ref:`virtualenv` section is activated.  Tentacle can be run on the commandline
+by calling the file ``tentacle_parallel.py``.  If you installed Tentacle
+according to the instructions in :ref:`installation` it should be available in
+your ``$PATH`` variable as well.
 
-The call to Tentacle must minimally include the required command line 
-parameters (in the case for `pBLAT` it is only the mapping manifest).
-If we use the mapping manifest that we created in Step 1, the command 
-line could look like this::
+The call to Tentacle must minimally include the required command line
+parameters (in the case for ``pBLAT`` it is only the mapping manifest). If we
+use the mapping manifest that we created in Step 1, the command line could look
+like this::
 
   $ tentacle_slurm.py --mappingManifest tutorial_1/mapping_manifest.tab --distributionNodeCount 2
 
-A call like this runs Tentacle using the :ref:`slurm launcher`, e.g. 
-in a cluster environment.
+A call like this runs Tentacle using the :ref:`slurm launcher`, e.g. in a
+cluster environment.
 
 
 Step 3: Check results 
@@ -221,8 +219,8 @@ Step 3: Check results
 After a successful run, the Tentacle master process shuts down after
 all nodes have completed computations. The results are continously 
 written to the output directory (either specified when starting the run
-using the `--outputDirectory` command line option or into the default
-output directory `tentacle_output`). The output directory contains
+using the ``--outputDirectory`` command line option or into the default
+output directory ``tentacle_output``). The output directory contains
 one folder with log files and one folder with the actual quantification
 results. 
 
@@ -274,14 +272,14 @@ are relevant for this part of the tutorial::
 Step 1: Preparing the ref DB
 ----------------------------
 Prior to running Tentacle, we need to prepare the reference 
-sequences into the format that `USEARCH` uses for reference databases: `udb`.
-Running the following command in the `tutorial_2` directory will 
-produce a `USEARCH` database that we can use::
+sequences into the format that ``USEARCH`` uses for reference databases: ``udb``.
+Running the following command in the ``tutorial_2`` directory will 
+produce a ``USEARCH`` database that we can use::
 
   $ usearch -makeudb_usearch data/references.fasta -output data/references.udb
 
 There is one more thing that is required; Tentacle requires both the 
-database file (for `USEARCH` to do its thing) but also the original
+database file (for ``USEARCH`` to do its thing) but also the original
 FASTA file for the references, as this is used when computing the
 coverage of the reference sequences. So package all of the reference
 files (database and FASTA) into one *tar.gz* archive so that Tentacle can
@@ -291,7 +289,7 @@ transfer both of them at once::
 
 Note how the basename of all files are the same (this is important!).
 When we are calling Tentacle later, we will have to specify the common
-basename using the `--usearchDBName` command line parameter (see
+basename using the ``--usearchDBName`` command line parameter (see
 section :ref:`Run Tentacle usearch`. 
 
 
@@ -310,8 +308,8 @@ order::
   {reads}   {reference}   {annotation}
 
 To create a mapping manifest is easy. The simplest way is probably to
-use the standard GNU tools `find` and `paste`. Assuming you are
-standing in the `tutorial_1` directory it could look like this::
+use the standard GNU tools ``find`` and ``paste``. Assuming you are
+standing in the ``tutorial_1?`` directory it could look like this::
 
   $ find `pwd`/data/r* > tmp_reads
   $ find `pwd`/data/c* > tmp_references
@@ -319,16 +317,16 @@ standing in the `tutorial_1` directory it could look like this::
   $ paste tmp_reads tmp_references tmp_annotations > mapping_manifest.tab
   $ rm tmp_*
 
-What happens is that `find` lists all files matching the pattern `r*` in the
-data directory under our current working directory (`pwd` returns the 
+What happens is that ``find`` lists all files matching the pattern ``r*`` in the
+data directory under our current working directory (``pwd`` returns the 
 absolute path to the current working directory), i.e. all read files
 in the data directory. We then do the same for the references (contigs
 in this case) and the annotation files. After we have produced three files
 containing listings of the absolute paths of all our data files, we paste
-them together using `paste` into a tab separated file `mapping_manifest.tab`.
+them together using ``paste`` into a tab separated file ``mapping_manifest.tab``.
 
 This technique can easily be extend to add files from different folders
-by appending (`>>`) to the `tmp_reads` for example. 
+by appending (``>>``) to the ``tmp_reads`` for example. 
 There is no need to follow this specific procedure for the creation of 
 the mapping manifest; you are free to use whatever tools or techniques
 you want for the mapping manifest as long as the end result is the same.
@@ -340,14 +338,14 @@ three entries with read, reference, and annotation file.
 Step 3: Run Tentacle
 --------------------
 In this example we will map reads to a common reference database using
-the mapper `USEARCH`. Assuming we want to find the best alignment for each
+the mapper ``USEARCH``. Assuming we want to find the best alignment for each
 read to the reference using a 90% identity threshold the commandline for
 Tentacle/USEARCH could be the following. Assume you are standing in the
-`tutorial_2` directory::
+``tutorial_2`` directory::
 
   $ tentacle_slurm.py --mappingManifest mapping_manifest.tab --usearch --usearchDBName references --usearchID 0.9 --distributionNodeCount 2
 
-The call to Tentacle when using `USEARCH` must minimally include the 
+The call to Tentacle when using ``USEARCH`` must minimally include the 
 following command line arguments:
 
  * --mappingManifest
@@ -355,7 +353,7 @@ following command line arguments:
  * --usearchDBName
 
 For more information about the available command line arguments, call
-Tentacle with the `--help` argument to display a list of alla available
+Tentacle with the ``--help`` argument to display a list of alla available
 options.
 
 Step 4: Check results 
@@ -363,8 +361,8 @@ Step 4: Check results
 After a successful run, the Tentacle master process shuts down after
 all nodes have completed computations. The results are continously 
 written to the output directory (either specified when starting the run
-using the `--outputDirectory` command line option or into the default
-output directory `tentacle_output`). The output directory contains
+using the ``--outputDirectory`` command line option or into the default
+output directory ``tentacle_output``). The output directory contains
 one folder with log files and one folder with the actual quantification
 results. 
 

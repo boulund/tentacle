@@ -9,16 +9,14 @@ The Tentacle framework is developed to enable researchers to leverage
 high-performance computer (HPC) systems to quantify genes in large metagenomic
 data sets.
 
-What does it do
-***************
 Tentacle provides a way to distribute resource intensive mapping tasks, such
 as mapping large numbers of metagenomic samples to a reference, in order to 
 reduce the time required to analyze large data sets. Tentacle makes it possible
 to define what mapper and mapping critera to use, and computes the coverage of
 all annotated areas of the reference sequence(s).
 
-What to use it for
-******************
+Use examples
+************
 Tentacle is well suited for the following tasks:
 
  * Map samples of metagenomic reads back to previously annotated contigs

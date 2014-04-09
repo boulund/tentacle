@@ -1,4 +1,5 @@
 .. _tutorial:
+
 ########
 Tutorial
 ########
@@ -93,9 +94,10 @@ The first few lines of an example annotation file could read::
 As you can see in the example above, a reference sequence can occur on multiple
 lines, with different annotations on each line. 
 
-**The annotation file is required in order to compute the coverage of each
-annotated region of the reference sequences. Tentacle will not run 
-without an annotation file.**
+.. note::
+   The annotation file is required in order to compute the coverage of each
+   annotated region of the reference sequences. Tentacle will not run 
+   without an annotation file.
 
 There is a special case where the entire length of each reference sequence
 is the actual annotated region (e.g. when the reference file contains
@@ -108,12 +110,14 @@ FASTA file. Just put a + in the strand column.
 
 TUTORIAL 1. Mapping reads to contigs (pBLAT)
 *********************************************
-This mapping scenario is relevant for quantifying the gene content 
-of a complete metagenome. In this tutorial the mapper ``pBLAT`` will
-be used. However, the techniques displayed in this tutorial applies
-equally to other mappers that do not require a premade database
-(i.e. that can map a FASTA/FASTQ reads file to a FASTA reference), 
-such as for example RazerS3.
+This mapping scenario is relevant for quantifying the gene content of a
+complete metagenome. In this tutorial the mapper ``pBLAT`` will be used.
+However, the techniques displayed in this tutorial applies equally to other
+mappers that do not require a premade database (i.e. that can map a FASTA/FASTQ
+reads file to a FASTA reference), such as for example RazerS3.
+
+First of all, make sure to install ``pBLAT`` and make the binary available in
+your ``$PATH``, e.g. by putting it in ``%TENTACLE_VENV/bin``.
 
 Step-by-step tutorial
 =====================

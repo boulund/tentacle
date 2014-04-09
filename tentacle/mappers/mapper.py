@@ -1,9 +1,15 @@
 #!/usr/bin/env python
-# coding: UTF-8
-"""Generic mapping module for Tentacle.
+# coding: utf-8
+"""
+Generic mapping module for Tentacle.
+
+This module contains a class meant for subclassing to produce
+functional mapping modules for Tentacle. Read the docstrings
+and compare with other mapping modules to enable support for
+other mappers with Tentacle.
 
 .. moduleauthor:: Fredrik Boulund <fredrik.boulund@chalmers.se>
-
+   
 .. module:: mapper
    :synopsis: Generic mapping module for Tentacle.
 
@@ -37,6 +43,7 @@ class Mapper(object):
 
         Args:
             logger: A logging.logger object.
+            
             mapper (str): The executable name of the mapper.
 
         Returns:
@@ -69,6 +76,7 @@ class Mapper(object):
         instead of just --option if you are adding a module for BLAST).
 
         .. note:
+
            This method must be customized in a subclass.
 
         """
@@ -82,15 +90,18 @@ class Mapper(object):
         Args:
             local_files (namedtuple): A tuple with three fields containing
                 node-local filenames. Fields: 'reads', 'contigs', 'annotations'.
+
             options (Namespace): A Namespace from ArgpumentParser.parse_args with
                 all arguments parsed from the command line (incl. non-mapper-related).
 
         Returns:
             mapper_call (list): A shlex.split()-style list of the mapper call.
+
             output_filename (str): A string with the output filename.
 
         .. note::
-            This method must be customized in a subclass.
+
+           This method must be customized in a subclass.
 
         For examples on how to customize this method, please refer to one 
         of the other modules available in :mod:`tentacle.mappers`.
@@ -104,7 +115,8 @@ class Mapper(object):
         before continuing with the rest of the pipeline.
 
         .. note::
-            This method must be customized in a subclass.
+
+           This method must be customized in a subclass.
         """
         pass
         # TODO: Assert mapping results
@@ -121,7 +133,9 @@ class Mapper(object):
 
         Args:
             remote_files (namedtuple): Contains fields; 'contigs', 'reads', 'annotations'.
+
             local_files (namedtuple): Contains fields; 'contigs', 'reads', 'annotations'.
+
             options (Namespace): Parsed arguments from the Tentacle command line.
 
         Kwargs:
@@ -132,7 +146,8 @@ class Mapper(object):
             local_files (namedtuple): Updated with new filename of transferred references.
 
         .. note::
-            This method normally does NOT require modification.
+
+           This method normally does NOT require modification.
         """
         new_contigs = mapping_utils.gunzip_copy(remote_files.contigs, local_files.contigs, self.logger)
         return local_files._replace(contigs=new_contigs)
@@ -147,16 +162,21 @@ class Mapper(object):
 
         Args:
             remote_files (namedtuple): Contains fields; 'contigs', 'reads', 'annotations'.
+
             local_files (namedtuple): Contains fields; 'contigs', 'reads', 'annotations'.
+
             options (Namespace): Parsed arguments from the Tentacle command line.
+
         Returns:
             local_files (namedtuple): Updated with new filename of the prepared reads. 
+
         Raises:
             PipelineError: If any part of the quality control/conversion pipeline
                 malfunctions.
 
         .. note::
-            This method normally does NOT require modification.
+
+           This method normally does NOT require modification.
         """
 
         def check_return_code(Popen_tuple):
@@ -278,15 +298,20 @@ class Mapper(object):
 
         Args:
             remote_files (namedtuple): Contains fields; 'contigs', 'reads', 'annotations'.
+
             options (Namespace): A Namespace from ArgpumentParser.parse_args with
-                all arguments parsed from the command line (incl. non-mapper-related).
+
+            all arguments parsed from the command line (incl. non-mapper-related).
+
         Returns:
             output_filename (str): Filename of mapping results.
+
         Raises:
             MapperError: If the mapper does not return with returncode 0.
 
         .. note::
-            This method normally does NOT require modification.
+
+           This method normally does NOT require modification.
         """
 
         mapper_call, output_filename = self.construct_mapper_call(local_files, options)

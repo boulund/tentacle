@@ -21,6 +21,8 @@ are welcome to look at, improve, or come with suggestions for improvement to
 the code at the project's Bitbucket page at
 https://bitbucket.org/chalmersmathbioinformatics/tentacle/.
 
+.. _`citing`:
+
 Citing Tentacle
 ***************
 If you find Tentacle useful and use it in your research, please cite us!.

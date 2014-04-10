@@ -121,62 +121,60 @@ your ``$PATH``, e.g. by putting it in ``%TENTACLE_VENV/bin``.
 
 Step-by-step tutorial
 =====================
-To begin this tutorial, extract the tutorial tarball, available from :ref:`download`.
-It contains a folder named ``tutorial_1`` which contains the following files that 
-are relevant for this part of the tutorial::
+To begin this tutorial, extract the tutorial tarball, available from
+:ref:`download`.  It contains a folder named ``tutorial_1`` which contains the
+following files that are relevant for this part of the tutorial::
 
   tutorial_1/
-  tutorial_1/data/annotation_1.tab      tab-delimited file with annotation for references.fasta
-  tutorial_1/data/annotation_2.tab      tab-delimited file with annotation for references.fasta
+  tutorial_1/data/annotation_1.tab      tab-delimited file with annotation for contigs_1.fasta
+  tutorial_1/data/annotation_2.tab      tab-delimited file with annotation for contigs_2.fasta
   tutorial_1/data/reads_1.fasta         reads in FASTA format
   tutorial_1/data/reads_2.fastq         reads in FASTQ format
   tutorial_1/data/contigs_1.fasta       contigs in FASTA format
   tutorial_1/data/contigs_2.fasta       contigs in FASTA format
 
-In our example, we are mapping reads from two small sequencing projects
-back to the contigs that were assembled from the same reads. One of the
-input read files is in FASTQ format, and one is in FASTA. 
+In our example, we are mapping reads from two small sequencing projects back to
+the contigs that were assembled from the same reads. One of the input read
+files is in FASTQ format, and one is in FASTA. 
 
 
 Step 1: Setting up the mapping manifest
 ---------------------------------------
-For Tentacle to know what to do, a *mapping manifest* must be created.
-The manifest details what reads file should be mapped to what reference
-using what annotation. By utilizing a mapping manifest file, it is 
-easy to go back to old runs and inspect their mapping manifests to see
-what was actually run.
+For Tentacle to know what to do, a *mapping manifest* must be created.  The
+manifest details what reads file should be mapped to what reference using what
+annotation. By utilizing a mapping manifest file, it is easy to go back to old
+runs and inspect their mapping manifests to see what was actually run.
 
-The format for the mapping manifest is simple; it consists of three
-columns with absolute paths for the different files in the following
-order::
+The format for the mapping manifest is simple; it consists of three columns
+with absolute paths for the different files in the following order::
 
   {reads}   {reference}   {annotation}
 
-To create a mapping manifest is easy. The simplest way is probably to
-use the standard GNU tools ``find`` and ``paste``. Assuming you are
-standing in the ``tutorial_1`` directory it could look like this::
+To create a mapping manifest is easy. The simplest way is probably to use the
+standard GNU tools ``find`` and ``paste``. Assuming you are standing in the
+``tutorial_1`` directory it could look like this::
 
-  $ find `pwd`/data/r* > tmp_reads
-  $ find `pwd`/data/c* > tmp_references
-  $ find `pwd`/data/a* > tmp_annotations
-  $ paste tmp_reads tmp_references tmp_annotations > mapping_manifest.tab
+  $ find `pwd`/data/r* > tmp_reads 
+  $ find `pwd`/data/c* > tmp_references 
+  $ find `pwd`/data/a* > tmp_annotations 
+  $ paste tmp_reads tmp_references tmp_annotations > mapping_manifest.tab 
   $ rm tmp_*
 
-What happens is that ``find`` lists all files matching the pattern ``r*`` in the
-data directory under our current working directory (``pwd`` returns the 
-absolute path to the current working directory), i.e. all read files
-in the data directory. We then do the same for the references (contigs
-in this case) and the annotation files. After we have produced three files
-containing listings of the absolute paths of all our data files, we paste
-them together using ``paste`` into a tab separated file ``mapping_manifest.tab``.
+What happens is that ``find`` lists all files matching the pattern ``r*`` in
+the data directory under our current working directory (``pwd`` returns the
+absolute path to the current working directory), i.e. all read files in the
+data directory. We then do the same for the references (contigs in this case)
+and the annotation files. After we have produced three files containing
+listings of the absolute paths of all our data files, we paste them together
+using ``paste`` into a tab separated file ``mapping_manifest.tab``.
 
-This technique can easily be extend to add files from different folders
-by appending (``>>``) to the ``tmp_reads`` for example. 
-There is no need to follow this specific procedure for the creation of 
-the mapping manifest; you are free to use whatever tools or techniques
-you want for the mapping manifest as long as the end result is the same.
-It must contain absolute paths to all files and each row should contain
-three entries with read, reference, and annotation file. 
+This technique can easily be extended to add files from different folders by
+appending (``>>``) to the ``tmp_reads`` for example.  There is no need to
+follow this specific procedure for the creation of the mapping manifest; you
+are free to use whatever tools or techniques you want for the mapping manifest
+as long as the end result is the same.  It must contain absolute paths to all
+files and each row should contain three entries with read, reference, and
+annotation file. 
 
 
 Step 2: Run Tentacle on cluster using Slurm
@@ -208,11 +206,11 @@ according to the instructions in :ref:`installation` it should be available in
 your ``$PATH`` variable as well.
 
 The call to Tentacle must minimally include the required command line
-parameters (in the case for ``pBLAT`` it is only the mapping manifest). If we
-use the mapping manifest that we created in Step 1, the command line could look
-like this::
+parameters (in the case for ``pBLAT`` the only extra parameter required is the
+mapping manifest). If we use the mapping manifest that we created in Step 1,
+the command line could look like this::
 
-  $ tentacle_slurm.py --mappingManifest tutorial_1/mapping_manifest.tab --distributionNodeCount 2
+  $ tentacle_slurm.py --pblat --mappingManifest tutorial_1/mapping_manifest.tab --distributionNodeCount 2
 
 A call like this runs Tentacle using the :ref:`slurm launcher`, e.g. in a
 cluster environment.
@@ -220,51 +218,51 @@ cluster environment.
 
 Step 3: Check results 
 ---------------------
-After a successful run, the Tentacle master process shuts down after
-all nodes have completed computations. The results are continously 
-written to the output directory (either specified when starting the run
-using the ``--outputDirectory`` command line option or into the default
-output directory ``tentacle_output``). The output directory contains
-one folder with log files and one folder with the actual quantification
-results. 
+After a successful run, the Tentacle master process shuts down when all nodes
+have completed their computations. The results are continously written to the
+output directory (which is either specified when starting the run using the
+``--outputDirectory`` command line option or into the default output directory
+``tentacle_output``). The output directory contains one folder with log files
+and one folder with the actual quantification results, as well as a file called
+``run_summary.txt`` that shows an overview of all jobs.
 
 
 
 
 TUTORIAL 2. Mapping nucleotide reads to amino acid database (USEARCH)
 ***********************************************************************
-This mapping scenario is common typically when a reference database (ref DB) 
-of known genes exists (e.g. known antibiotic resistance genes). Since
-all metagenomic samples needs to be compared to the same reference genes, a
-single ref DB is constructed beforehand. This steps displayed in this tutorial
-are relevant for other mappers using a premade ref DB such as Bowtie2, GEM,
-BLAST etc.
+This mapping scenario is common typically when a reference database (ref DB) of
+known genes exists (e.g. known antibiotic resistance genes). Since all
+metagenomic samples needs to be compared to the same reference genes, a single
+ref DB is constructed beforehand. This steps displayed in this tutorial are
+relevant for other mappers using a premade ref DB such as Bowtie2, GEM, BLAST
+etc.
 
 Introductory remarks
 =====================
 
 .. sidebar:: Modification of mapper call
 
-   How the actual commandline is constructed in Tentacle is defined in the 
-   mapping module usearch.py; the interested reader should have a look there to
-   see how it is constructed. 
+   How the actual commandline is constructed in Tentacle is defined in the
+   mapping modules, in this case ``usearch.py``; the interested reader should
+   have a look there to see how it is constructed. 
 
-In this example we will use USEARCH as the mapper because of its excellent 
-performance in the nucleotide-to-amino-acid mapping scenario (translated search). 
-As we are only interested in identifying the best matches we will utilize 
-the *usearch_global* algorithm and search both strands of the reads. 
-We are interested in genes with high sequence identity to the references 
-and will only pick the best hit. 
-If we boil it down to what we would run on a single machine, the commandline 
+In this example we will use USEARCH as the mapper because of its excellent
+performance in the nucleotide-to-amino-acid mapping scenario (translated
+search).  As we are only interested in identifying the best matches we will
+utilize the *usearch_global* algorithm and search both strands of the reads.
+We are interested in genes with high sequence identity to the references and
+will only pick the best hit. 
+If we boil it down to what we would run on a single machine, the commandline
 might look like this::
 
   $ usearch -usearch_global reads.fasta -db references.udb -id 0.9 -strand both
 
 Step-by-step tutorial
 =====================
-To begin this tutorial, extract the tutorial tarball, available from :ref:`download`.
-It contains a folder called tutorial_2 which contains the following files that 
-are relevant for this part of the tutorial::
+To begin this tutorial, extract the tutorial tarball, available from
+:ref:`download`.  It contains a folder called tutorial_2 which contains the
+following files that are relevant for this part of the tutorial::
 
   tutorial_2/
   tutorial_2/data/annotation.tab        tab-delimited file with annotation for references.fasta
@@ -275,26 +273,25 @@ are relevant for this part of the tutorial::
 
 Step 1: Preparing the ref DB
 ----------------------------
-Prior to running Tentacle, we need to prepare the reference 
-sequences into the format that ``USEARCH`` uses for reference databases: ``udb``.
-Running the following command in the ``tutorial_2`` directory will 
-produce a ``USEARCH`` database that we can use::
+Prior to running Tentacle, we need to prepare the reference sequences into the
+format that ``USEARCH`` uses for reference databases: ``udb``.  Running the
+following command in the ``tutorial_2`` directory will produce a ``USEARCH``
+database that we can use::
 
   $ usearch -makeudb_usearch data/references.fasta -output data/references.udb
 
-There is one more thing that is required; Tentacle requires both the 
-database file (for ``USEARCH`` to do its thing) but also the original
-FASTA file for the references, as this is used when computing the
-coverage of the reference sequences. So package all of the reference
-files (database and FASTA) into one *tar.gz* archive so that Tentacle can
-transfer both of them at once::
+There is one more thing that is required; Tentacle requires both the database
+file (for ``USEARCH`` to do its thing) but also the original FASTA file for the
+references, as this is used when computing the coverage of the reference
+sequences. So package all of the reference files (database and FASTA) into one
+*tar.gz* archive so that Tentacle can transfer both of them at once::
 
   $ tar -cvzf data/references.tar.gz data/references*
 
-Note how the basename of all files are the same (this is important!).
-When we are calling Tentacle later, we will have to specify the common
-basename using the ``--usearchDBName`` command line parameter (see
-section :ref:`Run Tentacle usearch`. 
+Note how the basename of all files are the same (this is important!).  When we
+are calling Tentacle later, we will have to specify the common basename using
+the ``--usearchDBName`` command line parameter (see section :ref:`Run Tentacle
+usearch`. 
 
 
 Step 2: Setting up the mapping manifest
@@ -311,31 +308,39 @@ order::
 
   {reads}   {reference}   {annotation}
 
-To create a mapping manifest is easy. The simplest way is probably to
-use the standard GNU tools ``find`` and ``paste``. Assuming you are
-standing in the ``tutorial_1?`` directory it could look like this::
+To create a mapping manifest is easy. The simplest way is probably to use the
+standard GNU tools ``find`` and ``paste`` like in the previous example above.
+However, in the case when a single reference database is to be used there is an
+extra step to ensure that there are as many lines of with the path to the
+reference database and the annotation file as there are read files to be
+mapped.  Assuming you are standing in the ``tutorial_2`` directory it could
+look like this::
 
-  $ find `pwd`/data/r* > tmp_reads
-  $ find `pwd`/data/c* > tmp_references
-  $ find `pwd`/data/a* > tmp_annotations
+  $ find `pwd`/data/reads* > tmp_reads
+  $ find `pwd`/data/references.tar.gz | awk '{for(i=0;i<2;i++)print}' > tmp_references
+  $ find `pwd`/data/annotation.tab  | awk '{for(i=0;i<2;i++)print}' > tmp_annotations
   $ paste tmp_reads tmp_references tmp_annotations > mapping_manifest.tab
   $ rm tmp_*
 
-What happens is that ``find`` lists all files matching the pattern ``r*`` in the
-data directory under our current working directory (``pwd`` returns the 
-absolute path to the current working directory), i.e. all read files
-in the data directory. We then do the same for the references (contigs
-in this case) and the annotation files. After we have produced three files
-containing listings of the absolute paths of all our data files, we paste
-them together using ``paste`` into a tab separated file ``mapping_manifest.tab``.
+What happens is that ``find`` lists all files matching the pattern ``reads*``
+in the data directory under our current working directory (``pwd`` returns the
+absolute path to the current working directory), i.e. all read files in the
+data directory.  For references and annotations it is a bit different in this
+use case with a single reference database and accompanying single annotation
+file. In the example above we pipe the output from ``find`` via ``awk`` to
+multiply the line with the path to the reference tarball and the annotation
+file two times so that we can paste all the temporary files together and have
+one row for each read file.  After we have produced three files containing
+listings of the absolute paths of all our data files, we paste them together
+using ``paste`` into a tab separated file ``mapping_manifest.tab``.
 
-This technique can easily be extend to add files from different folders
-by appending (``>>``) to the ``tmp_reads`` for example. 
-There is no need to follow this specific procedure for the creation of 
-the mapping manifest; you are free to use whatever tools or techniques
-you want for the mapping manifest as long as the end result is the same.
-It must contain absolute paths to all files and each row should contain
-three entries with read, reference, and annotation file. 
+This technique can easily be extend to add files from different folders by
+appending (``>>``) to the ``tmp_reads`` for example.  There is no need to
+follow this specific procedure for the creation of the mapping manifest; you
+are free to use whatever tools or techniques you want for the mapping manifest
+as long as the end result is the same.  It must contain absolute paths to all
+files and each row should contain three entries with read, reference, and
+annotation file. 
 
 .. _Run Tentacle usearch:
 
@@ -347,28 +352,26 @@ read to the reference using a 90% identity threshold the commandline for
 Tentacle/USEARCH could be the following. Assume you are standing in the
 ``tutorial_2`` directory::
 
-  $ tentacle_slurm.py --mappingManifest mapping_manifest.tab --usearch --usearchDBName references --usearchID 0.9 --distributionNodeCount 2
+  $ tentacle_slurm.py --usearch --usearchDBName references.fasta --usearchID 0.9 --mappingManifest mapping_manifest.tab --distributionNodeCount 2
 
-The call to Tentacle when using ``USEARCH`` must minimally include the 
+The call to Tentacle when using ``USEARCH`` must minimally include the
 following command line arguments:
 
  * --mappingManifest
  * --usearch
  * --usearchDBName
 
-For more information about the available command line arguments, call
-Tentacle with the ``--help`` argument to display a list of alla available
-options.
+For more information about the available command line arguments, call Tentacle
+with the ``--help`` argument to display a list of all available options.
 
 Step 4: Check results 
 ---------------------
-After a successful run, the Tentacle master process shuts down after
-all nodes have completed computations. The results are continously 
-written to the output directory (either specified when starting the run
-using the ``--outputDirectory`` command line option or into the default
-output directory ``tentacle_output``). The output directory contains
-one folder with log files and one folder with the actual quantification
-results. 
+After a successful run, the Tentacle master process shuts down after all nodes
+have completed computations. The results are continously written to the output
+directory (either specified when starting the run using the
+``--outputDirectory`` command line option or into the default output directory
+``tentacle_output``). The output directory contains one folder with log files
+and one folder with the actual quantification results. 
 
 
 
@@ -383,9 +386,9 @@ of what mappers might be best suited.
 ============================    =====================   =============================================
 Scenario                        Mapper(s)               Comments
 ============================    =====================   =============================================
-Reads to annotated contigs      pBLAT, RazerS3          Many small "references" files, potentially 
-                                                        different for each reads file.
-                                                        No precomputed reference DB.
+Reads to annotated contigs      pBLAT, RazerS3          Many small "reference" files, potentially 
+                                                        different for each reads file. (e.g. assembled
+                                                        contigs). No precomputed reference DB.
 Reads to nt reference           USEARCH, GEM, Bowtie2   GEM works well with very large reference DBs
 Reads to aa reference           USEARCH                 BLASTX-like scenario, *translated search*
 ============================    =====================   =============================================

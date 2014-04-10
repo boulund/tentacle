@@ -40,8 +40,9 @@ Documentation:
    installation
    tutorial
    running
+   output
    mappers
-   modules
+..   modules
    
 
 Indices and tables

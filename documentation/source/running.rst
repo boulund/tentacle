@@ -100,4 +100,3 @@ mode for more continous querying of running jobs. The interactive mode is
 activated with ``--interactive``. 
 
 
-

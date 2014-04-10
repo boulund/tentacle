@@ -226,6 +226,8 @@ output directory (which is either specified when starting the run using the
 and one folder with the actual quantification results, as well as a file called
 ``run_summary.txt`` that shows an overview of all jobs.
 
+The Tentacle output format is further detailed in section :ref:`output`.
+
 
 
 
@@ -373,6 +375,7 @@ directory (either specified when starting the run using the
 ``tentacle_output``). The output directory contains one folder with log files
 and one folder with the actual quantification results. 
 
+The Tentacle output format is further detailed in section :ref:`output`.
 
 
 

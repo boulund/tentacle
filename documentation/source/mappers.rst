@@ -13,8 +13,8 @@ Creating/modifying mapper modules
 
 Within the Tentacle folder structure, the mapper modules are located in
 ``$TENTACLE_ROOT/tentacle/mappers``. If Tentacle was installed using ``pip``
-into a virtualenv, the mapper modules must be placed in 
-``%TENTACLE_VENV%/lib/python2.7/site-packages/tentacle/mappers`` so that
+into a virtualenv, the mapper modules must be placed (or symlinked) in 
+``$TENTACLE_VENV/lib/python2.7/site-packages/tentacle/mappers`` so that
 Tentacle can find them.
 
 Mapper modules inherit from the base mapper class, as seen in the example

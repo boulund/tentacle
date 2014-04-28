@@ -26,56 +26,54 @@ The Tentacle pipeline requires three types of data files:
 Reads
 =====
 Reads (or query sequences) are normally metagenomic reads produced with
-high-throughput sequencing technologies such as Illumina. The reads
-can be supplied to Tentacle as either FASTQ (with quality scores) or
-FASTA files. The Tentacle pipeline can figure out what to do with either,
-but be aware that quality filtering cannot be performed and will be skipped
-for input files in FASTA format (it lacks quality information).
+high-throughput sequencing technologies such as Illumina. The reads can be
+supplied to Tentacle as either FASTQ (with quality scores) or FASTA files. The
+Tentacle pipeline can figure out what to do with either, but be aware that
+quality filtering cannot be performed and will be skipped for input files in
+FASTA format (it lacks quality information).
 
-It is important to note that the input read files should preferrably be
-located on a parallel file system that has high throughput and can handle
-the high load that will be put on it when Tentacle is running.
+It is important to note that the input read files should preferrably be located
+on a parallel file system that has high throughput and can handle the high load
+that will be put on it when Tentacle is running.
 
 References
 ==========
 Reference sequences are normally some kind of gene or predicted ORF data.
-Tentacle expects reference sequences to be available in FASTA
-format, as this is the format used when indexing the reference sequences
-for coverage calculations. 
+Tentacle expects reference sequences to be available in FASTA format, as this
+is the format used when indexing the reference sequences for coverage
+calculations. 
 
 .. note::
    It is important that the reference filename ends in '.fasta', as Tentacle
-   expects this filename ending and using reference files not ending in 
+   expects this filename ending and using reference files not ending in
    '.fasta' will result in an error. 
 
-Certain mappers require that the reference sequences are available in
-a custom database format (e.g. USEARCH uses ``*.udb`` and bowtie2 has several
-indexes in ``*.bt2.*`` files). It is important to note that you must prepare 
-the reference sequences (FASTA file + potential database-related files)
-so that they share the same **basename** (i.e. the filename up until
-the first dot "."). For example, in the USEARCH case, create a tarball
-containing the following files::
+Certain mappers require that the reference sequences are available in a custom
+database format (e.g. USEARCH uses ``*.udb`` and bowtie2 has several indexes in
+``*.bt2.*`` files). It is important to note that you must prepare the reference
+sequences (FASTA file + potential database-related files) so that they share
+the same **basename** (i.e. the filename up until the first dot "."). For
+example, in the USEARCH case, create a tarball containing the following files::
 
   $ ls
   references.fasta references.udb
   $ tar -zvcf reference_tarball.tar.gz references.fasta references.udb
 
-It does not matter what you call the tarball, as long as the basename for
-the FASTA file and the database-related files are the same (in the above
-example the basename is *references*). 
-The basename is important to remember to add to the command line arguments 
-when running Tentacle so that the mapper can find the correct files later,
-e.g. for USEARCH the command line flag is ``--usearchDBName``. Refer to the
-command line help for each mapper for their specific flag name.
+It does not matter what you call the tarball, as long as the basename for the
+FASTA file and the database-related files are the same (in the above example
+the basename is *references*).  The basename is important to remember to add to
+the command line arguments when running Tentacle so that the mapper can find
+the correct files later, e.g. for USEARCH the command line flag is
+``--usearchDBName``. Refer to the command line help for each mapper for their
+specific flag name.
 
 
 Annotations
 ===========
-The annotations are used in Tentacle when producing and computing the 
-coverage output. Tentacle computes the coverage (i.e. how large 
-portions of the reference sequences that have reads aligned to them) 
-and requires the annotation of the reference sequences to produce 
-that output. 
+The annotations are used in Tentacle when producing and computing the coverage
+output. Tentacle computes the coverage (i.e. how large portions of the
+reference sequences that have reads aligned to them) and requires the
+annotation of the reference sequences to produce that output. 
 
 The annotation file is a simple tab separated text file with one annotated
 region per line. The format of the annotation file is as follows::
@@ -96,14 +94,14 @@ lines, with different annotations on each line.
 
 .. note::
    The annotation file is required in order to compute the coverage of each
-   annotated region of the reference sequences. Tentacle will not run 
-   without an annotation file.
+   annotated region of the reference sequences. Tentacle will not run without
+   an annotation file.
 
-There is a special case where the entire length of each reference sequence
-is the actual annotated region (e.g. when the reference file contains
-entire genes). In such cases it is easy to create a dummy annotation
-file that annotates the entire length of each sequence in the reference
-FASTA file. Just put a + in the strand column.
+There is a special case where the entire length of each reference sequence is
+the actual annotated region (e.g. when the reference file contains entire
+genes). In such cases it is easy to create a dummy annotation file that
+annotates the entire length of each sequence in the reference FASTA file. Just
+put a + in the strand column.
 
 
 
@@ -186,7 +184,7 @@ Step 2: Run Tentacle on cluster using Slurm
    simultaneously on your computer. This is not recommended as this is normally
    not very efficient, because several instances of the mapper will compete for
    resources (disk I/O, memory, CPU). To run Tentacle locally, call the file
-   `tentacle_local.py` instead of tentacle_slurm.py.
+   ``tentacle_local.py`` instead of ``tentacle_slurm.py``.
 
 As ``pBLAT`` is only able to read FASTA format files, the reads file in FASTQ
 format needs to be converted. Tentacle does this automatically when it detects
@@ -293,7 +291,7 @@ sequences. So package all of the reference files (database and FASTA) into one
 Note how the basename of all files are the same (this is important!).  When we
 are calling Tentacle later, we will have to specify the common basename using
 the ``--usearchDBName`` command line parameter (see section :ref:`Run Tentacle
-usearch`. 
+usearch`). 
 
 
 Step 2: Setting up the mapping manifest
@@ -370,7 +368,7 @@ Step 4: Check results
 ---------------------
 After a successful run, the Tentacle master process shuts down after all nodes
 have completed computations. The results are continously written to the output
-directory (either specified when starting the run using the
+directory (which is either specified when starting the run using the
 ``--outputDirectory`` command line option or into the default output directory
 ``tentacle_output``). The output directory contains one folder with log files
 and one folder with the actual quantification results. 

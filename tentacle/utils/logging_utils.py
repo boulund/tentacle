@@ -106,10 +106,11 @@ def get_std_logger():
     return _std_logger
 
 
-def format_dict(d):
+def format_dict(d,adjust):
     s = ""
+    format_string = "{:>"+str(adjust)+"}: {}\n"
     for k, v in d.iteritems():
-        s = "".join([s, "{:>35}: {}\n".format(k, v)]) 
+        s = "".join([s, format_string.format(k, v)]) 
     return s   
 
 
@@ -117,9 +118,9 @@ __all__.append("print_run_settings")
 def print_run_settings(options, logger):
     """ Prints the current run settings to log
     """
-    logger.info("The program was run with the following settings:\n{}\n".format(format_dict(options.__dict__)))
+    logger.info("The program was run with the following settings:\n{}\n".format(format_dict(options.__dict__, 35)))
 
 
 __all__.append("print_files_settings")
 def print_files_settings(files, logger):
-    logger.info("Processing the following files:\n{}\n".format(format_dict(files._asdict())))
+    logger.info("Processing the following files:\n{}\n".format(format_dict(files._asdict(), 15)))

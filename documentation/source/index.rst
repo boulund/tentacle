@@ -43,6 +43,7 @@ Documentation:
    tutorial
    running
    output
+   coverage
    mappers
 ..   modules
    

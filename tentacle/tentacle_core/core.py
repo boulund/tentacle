@@ -16,8 +16,9 @@ import tempfile
 import pkgutil
 import importlib
 import psutil
-import parseModule
 
+from ..parsers import index_references
+from .. import coverage
 from .. import utils
 from ..utils import mapping_utils
 
@@ -99,12 +100,12 @@ class TentacleCore:
     
         # Perform analysis of contigs and initialize data structure
         self.logger.info("Initializing map coverage data structure...")
-        contig_coverage = parseModule.indexContigs(mapped_reads.contigs, self.logger)
+        contig_coverage = index_references.create_contigCoverage(mapped_reads.contigs, self.logger)
         self.logger.info("Map coverage data structure initialized.")
     
         # Sum the number of mapped contigs
         self.logger.info("Summing number of mapped contigs...")
-        contig_coverage = parseModule.sumMapCounts(mapped_reads.mapped_reads, 
+        contig_coverage = coverage.sumMapCounts(mapped_reads.mapped_reads, 
                                                    contig_coverage, 
                                                    options,
                                                    self.logger)
@@ -122,7 +123,7 @@ class TentacleCore:
     
         # Compute counts per annotation
         self.logger.info("Computing counts per annotation, writing to {}...".format(outfile))
-        parseModule.computeAnnotationCounts(mapped_reads.annotations, contig_coverage, outfile, self.logger)
+        coverage.computeAnnotationCounts(mapped_reads.annotations, contig_coverage, outfile, self.logger)
         self.logger.info("Counts per annotation computation completed.")
 
 

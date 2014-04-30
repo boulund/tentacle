@@ -82,25 +82,6 @@ def computeAnnotationCounts(annotationFilename, contigCoverage, outFilename, log
                     raise ParseError("Header {} not found in annotation file {}".format(contigHeader, annotationFilename))
 
 
-
-def computeStatistics(region):
-    """
-    Compute general statistics of reads mapped to a region of a contig.
-
-    Input:
-        region  a NumPy array of ints with the number of reads mapped
-                to the region.
-    Output:
-        median  (float) the median number of reads mapped to the region.
-        mean    (float) the mean numbr of reads mapped to the region.
-        stdev   (float) the standard deviation of number of reads
-                mapped to the region.
-    """
-    return (np.median(region), np.mean(region), np.std(region))
-
-
-
-
 ###############################################
 #    Exceptions
 ###############################################

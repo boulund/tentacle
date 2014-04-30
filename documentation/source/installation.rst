@@ -11,11 +11,11 @@ virtualenv to be activated.
 
 Dependencies
 ************
-Tentacle depends on a number of packages. If they are not installed they will
-automatically be installed if you install Tentacle using ``pip``. Should you
-decide to run Tentacle without installing it, you need to make sure that the
-required packages are available in your local Python installation.  Below is a
-list of the required Python packages (tested versions in parenthesis).
+Tentacle depends on a number of Python packages. If they are not installed they
+will automatically be installed if you install Tentacle using ``pip``. Should
+you decide to run Tentacle without installing it, you need to make sure that
+the required packages are available in your local Python installation.  Below
+is a list of the required Python packages (tested versions in parenthesis).
 
  * cloud (2.8.5)
  * gevent (1.0)
@@ -26,6 +26,25 @@ list of the required Python packages (tested versions in parenthesis).
  * pyzmq (13.1.0)
  * zerorpc (0.4.4)
 
+Non-Python dependencies
+=======================
+To run Tentacle several non-Python programs are required as well. They should
+be installed and available on your ``$PATH`` or put in
+``$TENTACLE_ROOT/dependencies/bin/<system>``, where ``<system>`` is either
+``Linux`` or ``Darwin`` depending on if you run Linux or OS X.  The required
+software is listed below (tested version in parenthesis):
+ 
+ * ``seqtk`` (1.0-r45). Used for high-performance FASTQ to FASTA conversion.
+   https://github.com/lh3/seqtk
+
+Some software is only required if you required the functionality offered by them:
+
+* FASTX toolkit (0.0.13): ``fastq_quality_filter``, ``fastq_quality_trimmer``. 
+  http://hannonlab.cshl.edu/fastx_toolkit/
+
+Note that a mapper (sequence alignment software) is also required. See section
+`mappers`_ for information about what mappers are supported.
+ 
 
 .. _virtualenv:
 
@@ -99,6 +118,7 @@ user with the following commands::
 Please note that this is NOT the recommended way to use Tentacle.
 
 
+.. _mappers:
 
 Sequence alignment/mapping software
 ***********************************

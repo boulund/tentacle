@@ -5,6 +5,6 @@
 """
 import blast8
 import gem
-import index_contigs
+import index_references
 import razers3
 import sam

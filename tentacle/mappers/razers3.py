@@ -6,6 +6,7 @@
 from subprocess import PIPE#, Popen
 from gevent.subprocess import Popen
 from mapper import Mapper
+import psutil 
 
 from ..utils import resolve_executable
 from ..utils import mapping_utils
@@ -44,6 +45,9 @@ class Razers3(Mapper):
         mapping_group.add_argument("--r3Swift", dest="razers3Swift", action="store_true", 
             default=False,
             help="RazerS3: Change RazerS3 from pigeonhole to swift filter. [default: pigeonhole]")
+        mapping_group.add_argument("--r3Threads", dest="razers3Threads",
+            type=int, default=psutil.NUM_CPUS, metavar="N",
+            help="RazerS3: Number of threads for RazerS3. [default: %(default)s (autodetected)]")
         
         return parser
     
@@ -57,7 +61,8 @@ class Razers3(Mapper):
         mapper_call = [self.mapper,
                        "-i", str(options.razers3Identity),
                        "-rr", str(options.razers3Recognition),
-                       "-m", str(options.razers3Max)]
+                       "-m", str(options.razers3Max),
+                       "-tc", str(options.razers3Threads)]
         
         if options.razers3Swift:
             mapper_call.append("-fl")

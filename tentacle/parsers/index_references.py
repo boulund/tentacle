@@ -7,7 +7,7 @@ purpose:: Indexes contigsFiles to produce the data structure that holds contigCo
 """
 import numpy as np
 
-def create_contigCoverage(contigsFile, logger):
+def initialize_coverage_dictionary(contigsFile, logger):
     """
     Creates a dictionary indexed by first-space separated header string
     in both single and multiline FASTA files.

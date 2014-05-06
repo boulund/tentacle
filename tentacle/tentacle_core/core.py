@@ -98,12 +98,12 @@ class TentacleCore:
         Analyses mapped contigs and counts map coverage
         """
     
-        # Perform analysis of contigs and initialize data structure
+        coveragetime = time()
+        # Initialize data structure to hold coverage information for each reference sequence
         self.logger.info("Initializing map coverage data structure...")
-        contig_coverage = index_references.create_contigCoverage(mapped_reads.contigs, self.logger)
+        contig_coverage = index_references.initialize_coverage_dictionary(mapped_reads.contigs, self.logger)
         self.logger.info("Map coverage data structure initialized.")
-    
-        # Sum the number of mapped contigs
+        # Sum the counts for each nucleotide to produce coverage for each reference sequence
         self.logger.info("Summing number of mapped contigs...")
         contig_coverage = coverage.sumMapCounts(mapped_reads.mapped_reads, 
                                                    contig_coverage, 
@@ -113,18 +113,16 @@ class TentacleCore:
     
         # DEBUG printing (EXTREMELY SLOW)
         if options.outputCoverage:
-            import numpy as np
-            np.set_printoptions(threshold='nan', linewidth='inf')
-            self.logger.debug("Writing complete coverage maps to contigCoverage.txt... (this is sloooow!)")
-            with open("contigCoverage.txt", "w") as coverageFile:
-                for contig in contig_coverage.keys():
-                    coverageFile.write('\t'.join([contig, str(contig_coverage[contig])+"\n"]))
-            self.logger.debug("Coverage maps written to contigCoverage.txt.")
+            coverage_output_filename = "contigCoverage.txt"
+            coverage.debug_output_coverage(self.logger, coverage_output_filename, contig_coverage)
     
         # Compute counts per annotation
         self.logger.info("Computing counts per annotation, writing to {}...".format(outfile))
-        coverage.computeAnnotationCounts(mapped_reads.annotations, contig_coverage, outfile, self.logger)
+        coverage.compute_counts_per_annotation(mapped_reads.annotations, contig_coverage, outfile, self.logger)
         self.logger.info("Counts per annotation computation completed.")
+
+        self.logger.info("Time to analyse coverage: %s", time()-coveragetime)
+        self.logger.info("Results available in %s", files.annotationStats)
 
 
     def delete_temporary_files(self, temp_dir):
@@ -155,16 +153,17 @@ class TentacleCore:
 
     def analyse(self, files, options):
         mapped_reads, temp_dir = self.preprocess_data_and_map_reads(files, options)
+
         if options.saveMappingResultsFile:
             target_filename = os.path.dirname(files.annotationStats)+"/"+\
                               os.path.basename(mapped_reads.mapped_reads)+".gz"
             self.save_mapping_results(mapped_reads, target_filename)
-        coveragetime = time()
+
         self.analyse_coverage(mapped_reads, files.annotationStats, options)
-        self.logger.info("Time to analyse coverage: %s", time()-coveragetime)
-        self.logger.info("Results available in %s", files.annotationStats)
+
         if options.deleteTempFiles:
             self.delete_temporary_files(temp_dir)
+
         self.logger.info(" ----- ===== LOGGING COMPLETED ===== ----- ")
     
     

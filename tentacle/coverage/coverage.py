@@ -39,6 +39,10 @@ def sumMapCounts(mappings, contigCoverage, options, logger):
         np.cumsum(contigCoverage[contig][0], dtype=np.int32, out=contigCoverage[contig][0])
     return contigCoverage
 
+class read_position_checker(Object):
+    """A class with utility functions for checking if a mapped read belongs to an annotation."""
+    
+    def __init__(annotationFilename, 
 
 def computeAnnotationCounts(annotationFilename, contigCoverage, outFilename, logger):
     """
@@ -58,6 +62,8 @@ def computeAnnotationCounts(annotationFilename, contigCoverage, outFilename, log
     with open(annotationFilename) as annotationFile:
         logger.debug("Parsing {}".format(annotationFilename))
         with open(outFilename, "w") as outFile:
+            logger.debug("Writing to {}.".format(outFilename))
+
             # Initialize dictionary for storage of annotation counts
             annotationCounts = {}
             for line in annotationFile:

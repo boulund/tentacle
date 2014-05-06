@@ -39,11 +39,6 @@ def sumMapCounts(mappings, contigCoverage, options, logger):
         np.cumsum(contigCoverage[contig][0], dtype=np.int32, out=contigCoverage[contig][0])
     return contigCoverage
 
-class read_position_checker(Object):
-    """A class with utility functions for checking if a mapped read belongs to an annotation."""
-    
-    def __init__(annotationFilename, 
-
 def computeAnnotationCounts(annotationFilename, contigCoverage, outFilename, logger):
     """
     Produces counts for each annotated region. Writes results to file.

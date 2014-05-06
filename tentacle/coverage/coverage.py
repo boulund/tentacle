@@ -104,32 +104,3 @@ class Error(Exception):
 
 class ParseError(Error):
     """ Raised for parsing errors. """
-
-###############################################
-#    DEBUG
-###############################################
-def _printAnnotationCounts(annotationCounts, outputFile=""):
-    """
-    Debug function that prints annotationCounts to stdout or file.
-    WARNING EXTREMELY SLOW
-    """
-    if outputFile:
-        with open(outputFile, "w") as file:
-            for annotation in annotationCounts.keys():
-
-                info = [annotation, 
-                        annotationCounts[annotation][0],
-                        annotationCounts[annotation][1],
-                        annotationCounts[annotation][2]]
-                info = [str(text) for text in info]
-                file.write('\t'.join(info))
-                file.write('\n')
-    else:
-        print "\n\nAnnotation\tMedian\tMean\tStdev"
-        for annotation in annotationCounts.keys():
-            info = [annotation, 
-                    annotationCounts[annotation][0],
-                    annotationCounts[annotation][1],
-                    annotationCounts[annotation][2]]
-            info = [str(text) for text in info]
-            print '\t'.join(info)

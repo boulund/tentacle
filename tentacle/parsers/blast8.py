@@ -5,31 +5,19 @@ date:: 2014-04-30
 """
 
 import numpy as np
+from ..coverage import update_contig_data
 
-def parse_blast8(mappings, contigCoverage, options, logger):
-    """
-    Parses mapped data in blast8 format (used for blast and pblat) and fills the
-    contigCoverage dictionary
-    """
+def parse_blast8(mappings, contig_data, options, logger):
+    """ Parses mapped data in blast8 format (e.g. for usearch, pblat, blast).  """
     #DEBUG
     #np.set_printoptions(threshold='nan') 
-
-    def update_contigCoverage(contig, sstart, send):
-        """ Updates contigCoverage. """
-        # Add 1 at the starting position of the mapped read and 
-        # subtract 1 at the end so that we later can compute the 
-        # cumulative sum from left to right across the entire contig.
-        contigCoverage[contig][0][sstart-1] += 1
-        contigCoverage[contig][0][send] += -1
-        contigCoverage[contig][1] += 1 # Number of mapped reads
-
 
     def check_new_read(read, identity, aligned_length, contig, sstart, send, previous_read, previous_information):
         """ Determines if the most recently parsed read has been seen before """
         # We cannot assume the output is ordered so 
         # check if readname has already been seen and 
         # determine if the new hit is better before 
-        # committing to contigCoverage.
+        # committing to contig_data.
         if read in previous_readname:
             logger.debug("Read {} seen before".format(read))
             if identity > previous_information[0]:
@@ -44,14 +32,14 @@ def parse_blast8(mappings, contigCoverage, options, logger):
         else:
             logger.debug("Read {} NOT seen before".format(read))
             if previous_information:
-                logger.debug("Read {} with stats {}, {}, {}, {}, {}, was best hit, committing to contigCoverage".format(
+                logger.debug("Read {} with stats {}, {}, {}, {}, {}, was best hit, committing to contig_data".format(
                                 previous_readname, previous_information[0], previous_information[1], previous_information[2], previous_information[3], previous_information[4]))
                 _, _, contig, sstart, send = previous_information
-                update_contigCoverage(contig, sstart, send)
+                contig_data = update_contig_data(contig_data, contig, sstart-1, send, options, logger)
             previous_readname.clear()
             previous_readname.add(read)
             previous_information = (identity, aligned_length, contig, sstart, send)
-        return (previous_readname, previous_information)
+        return (contig_data, previous_readname, previous_information)
 
 
     with open(mappings) as f:
@@ -95,23 +83,18 @@ def parse_blast8(mappings, contigCoverage, options, logger):
             logger.debug("Formatted to: {}".format(read))
 
             if options.coverageAllAlignments:
-                previous_readname, previous_information = check_new_read(read, identity, aligned_length, contig, sstart, send, previous_readname, previous_information)
+                contig_data, previous_readname, previous_information = check_new_read(read, identity, aligned_length, contig, sstart, send, previous_readname, previous_information)
             else:
-                update_contigCoverage(contig, sstart, send)
+                contig_data = update_contig_data(contig_data, contig, sstart-1, send, options, logger)
 
-            # DEBUG
-            #if np.min(np.cumsum(contigCoverage[contig])) < 0:
-            #    print read, contig, qstart, qend, sstart, send
-            #    print contigCoverage[contig]
-            #    exit(1)
-        
-        # Add the last read to contigCoverage
+
+        # Add the last read to contig_data
         try:
             check_new_read(read, identity, aligned_length, contig, sstart, send, previous_readname, previous_information)
         except UnboundLocalError:
             logger.info("Mappings file {} appears to be empty".format(mappings))
 
-    return contigCoverage
+    return contig_data
 
 
 

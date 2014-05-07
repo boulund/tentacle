@@ -5,43 +5,43 @@
 
 """
 import numpy as np
-from ..parsers import blast8, razers3, sam, gem 
-from statistics import compute_coverage_statistics
+from statistics import compute_region_statistics
 
-def sumMapCounts(mappings, contigCoverage, options, logger):
-    """
-    Adds the number of mapped reads to the correct positions in 
-    a contigCoverage dictionary.
 
-    Uses NumPy.
+def update_contig_data(contig_data, contig, rstart, rend, options, logger):
+    """ Updates mapping data for contig.
+    
+    Use 0-based starting positions and non-inclusive end positions (like Python)."""
+    if not options.noCoverage:
+        # Add 1 at the starting position of the mapped read and 
+        # subtract 1 at the end so that we later can compute the 
+        # cumulative sum from left to right across the entire contig.
+        contig_data[contig]["__coverage__"][rstart] += 1
+        contig_data[contig]["__coverage__"][rend] += -1
+    if not options.noCounts:
+        annotations_matched = determine_if_read_is_inside_region(contig_data, contig, rstart, rend, options, logger)
+        for annotation in annotations_matched:
+            contig_data[contig][annotation][0] += 1 # Number of mapped reads
+    return contig_data
 
-    Input:
-        mappings    mapper output file.
-        contigCoverage  the contigCoverage dictionary
-        options     all options
-        logger      a logger object
-    Output:
-        contigCoverage 
-    """
-    if options.mapperName in ("pblat", "blast", "usearch"):
-        contigCoverage = blast8.parse_blast8(mappings, contigCoverage, options, logger)
-    elif options.mapperName == "razers3":
-        contigCoverage = razers3.parse_razers3(mappings, contigCoverage, logger)
-    elif options.mapperName == "bowtie2":
-        contigCoverage = sam.parse_sam(mappings, contigCoverage, logger)
-    elif options.mapperName == "gem":
-        contigCoverage = gem.parse_gem(mappings, contigCoverage, logger)
-    else:
-        logger.error("Couldn't figure out what mapper was used! This should never happen?!")
-        exit(1)
 
-    for contig in contigCoverage.keys():
-        np.cumsum(contigCoverage[contig][0], dtype=np.int32, out=contigCoverage[contig][0])
-    return contigCoverage
+def determine_if_read_is_inside_region(contig_data, contig, rstart, rend, options, logger):
+    """ Determines if a read lies within an annotated region of a contig. """
+    rstart = rstart+1 # Annotations have 1-based numbers
+    annotations_matched = []
+    for annotation in contig_data[contig].keys():
+        a_start = contig_data[contig][annotation][1]
+        a_end = contig_data[contig][annotation][2]
+        # TODO: Extend using options to determine overlap requirements
+        if rend >= a_start and rend <= a_end:
+            annotations_matched.append(annotation)
+        elif rstart >= a_start and rstart <= a_end:
+            annotations_matched.append(annotation)
+    return annotations_matched
 
-def computeAnnotationCounts(annotationFilename, contigCoverage, outFilename, logger):
-    """
-    Produces counts for each annotated region. Writes results to file.
+
+def compute_and_write_coverage_statistics(annotationFilename, contig_data, outFilename, options, logger):
+    """ Computes coverage for each annotated region. Writes results to file.
 
     Input:
         annotationFilename  filename of annotation file
@@ -53,34 +53,42 @@ def computeAnnotationCounts(annotationFilename, contigCoverage, outFilename, log
     Raises:
         ParseError          On parsing errors
     """
-    
-    with open(annotationFilename) as annotationFile:
-        logger.debug("Parsing {}".format(annotationFilename))
-        with open(outFilename, "w") as outFile:
-            logger.debug("Writing to {}.".format(outFilename))
 
-            # Initialize dictionary for storage of annotation counts
-            annotationCounts = {}
-            for line in annotationFile:
-                try:
-                    contig, start, end, strand, annotation = line.split()
-                except ValueError, e:
-                    logger.error("Could not parse annotation line\n{}\nfrom file {}".format(line, annotationFilename))
-                    raise ParseError("Could not parse line {} in file {}".format(line, annotationFilename))
-                    
-                start = int(start)-1
-                end = int(end)
+    outFile = open(outFilename, "w")
+    logger.debug("Writing to {}.".format(outFilename))
+    for contig in contig_data.keys():
+        for annotation in contig_data[contig].keys():
+            if "__coverage__" in annotation:
+                pass
+            else:
+                count, start, end, strand = contig_data[contig][annotation]
+                if options.noCoverage:
+                    stats = ["N", "N", "N"]
+                else: 
+                    stats = compute_region_statistics(contig_data[contig]["__coverage__"][start:end])
+
+                if options.noCounts:
+                    annotation_count = "N"
+                else:
+                    annotation_count = contig_data[contig][annotation][0]
 
                 try:
-                    stats = compute_coverage_statistics(contigCoverage[contig][0][start:end])
-                    outFile.write(contig+"_"+annotation+":"+str(start)+":"+str(end)+":"+strand+"\t"+
-                                  str(contigCoverage[contig][1])+"\t"+
-                                  str(stats[0])+"\t"+
-                                  str(stats[1])+"\t"+
-                                  str(stats[2])+"\n")
+                    outFile.write("{}_{}:{}:{}:{}\t{}\t{}\t{}\t{}\n".format(contig,
+                            annotation,
+                            str(start),
+                            str(end),
+                            strand,
+                            str(annotation_count),
+                            str(stats[0]),
+                            str(stats[1]),
+                            str(stats[2]))
+                            )
                 except KeyError, contigHeader:
-                    logger.error("Could not find match for contig header {0} in annotation file {1}.".format(contigHeader, annotationFilename))
+                    logger.error("Could not find match for contig header {} in annotation file {}.".format(contigHeader, annotationFilename))
                     raise ParseError("Header {} not found in annotation file {}".format(contigHeader, annotationFilename))
+
+
+
 
 def debug_output_coverage(logger, output_filename, contig_coverage):
     """Debug function to write out the numpy arrays for manual inspection. WARNING: SLOOOW!"""
@@ -91,6 +99,13 @@ def debug_output_coverage(logger, output_filename, contig_coverage):
             for contig in contig_coverage.keys():
                 coverageFile.write('\t'.join([contig, str(contig_coverage[contig])+"\n"]))
         logger.debug("Coverage maps written to {}.".format(output_filename))
+
+def debug_print_single_coverage(contig_coverage, contig, annotation=False):
+    """ Debug function to print a single contigs numpy array and additional annotation information."""
+    np.set_printoptions(threshold='nan', linewidth='inf')
+    if annotation: 
+        print contig_coverage[contig][annotation]
+    print contig_coverage[contig]["__coverage__"]
 
 ###############################################
 #    Exceptions

@@ -32,10 +32,11 @@ except ImportError:
         from tentacle.launching.launchers import GeventLauncher, SubprocessLauncher
         from tentacle.launching.registering_worker_pool import GeventWorkerPoolFactory
         from tentacle import run
-    except ImportError:
+    except ImportError,e :
         print "ERROR: Cannot import/find Tentacle, is it properly installed?"
         print "If you're trying to run Tentacle without installing, make sure to"
         print "run it from within the %TENTACLE_ROOT%/rundir directory."
+        print e
         exit()
     # Add the Tentacle dependencies directory to PATH 
     dependencies_bin = join(base_dir,"dependencies","bin",platform.system())

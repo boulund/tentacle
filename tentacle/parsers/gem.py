@@ -5,8 +5,9 @@ date:: 2014-04-30
 """
 
 import numpy as np
+from ..coverage import update_contig_data
 
-def parse_gem(mappings, contigCoverage, logger):
+def parse_gem(mappings, contig_data, options, logger):
     """
     Parses GEM alignment format.
     """
@@ -47,15 +48,15 @@ def parse_gem(mappings, contigCoverage, logger):
                     pass
         return endpos
 
-    def update_contig_coverage(line, contigCoverage):
+    def parse_gem_line(line, contig_data):
         """
         Takes a line, extracts the required information from it
-        and updates contigCoverage accordingly.
+        and updates contig_data accordingly.
         """
         # reference contig, start, and end position are extracted from gigar string.
         readname, readseq, readqual, matchsummary, alignments = line.split("\t", 4) 
         if alignments.startswith("-"):
-            return contigCoverage
+            return contig_data
         else:
             # We only use the first alignment if there are several
             alignments = alignments.split(",")[0] 
@@ -69,17 +70,15 @@ def parse_gem(mappings, contigCoverage, logger):
                 logger.error("Cannot split alignment information: '{}'".format(alignments))
                 raise ParseError("Cannot split alignment information: {}".format(alignments))
             startpos = int(startpos)
-            end = startpos + find_end_pos_from_gigar(gigar, plus_strand) - 1
+            endpos = startpos + find_end_pos_from_gigar(gigar, plus_strand) - 1
 
-            contigCoverage[contigname][0][startpos-1] += 1
-            contigCoverage[contigname][0][end] += -1
-            contigCoverage[contigname][1] += 1 # Number of mapped reads
-            return contigCoverage
+            return (contigname, startpos, endpos)
 
     with open(mappings) as f:
         for line in f:
-            contigCoverage = update_contig_coverage(line, contigCoverage)
-    return contigCoverage
+            contigname, startpos, endpos = parse_gem_line(line, contig_data)
+            contig_data = update_contig_data(contig_data, contigname, startpos-1, endpos, options, logger)
+    return contig_data
 
 
 ###############################################

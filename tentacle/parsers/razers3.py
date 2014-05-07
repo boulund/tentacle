@@ -5,12 +5,10 @@ date:: 2014-04-30
 """
 
 import numpy as np
+from ..coverage import update_contig_data
 
-def parse_razers3(mappings, contigCoverage, logger):
-    """
-    Parses razers3 output and fills the
-    contigCoverage dictionary
-    """
+def parse_razers3(mappings, contig_data, options, logger):
+    """ Parses razers3 output.  """
     with open(mappings) as f:
         for line in f:
             # Read name, Read start, Read end, Direction, Contig name, 
@@ -27,15 +25,9 @@ def parse_razers3(mappings, contigCoverage, logger):
             cstart = int(cstart)
             cend = int(cend) # End coordinate is non-inclusive
 
-            # Add 1 at the starting position of the mapped read and subtract
-            # 1 at the end so that we later can compute the cumulative sum
-            # from left to right across the entire contig. Note that the end
-            # position is non-inclusive and thus already +1:ed.
-            contigCoverage[contig][0][cstart] += 1
-            contigCoverage[contig][0][cend] += -1
-            contigCoverage[contig][1] += 1
+            contig_data = update_contig_data(contig_data, contig, cstart, cend, options, logger)
 
-    return contigCoverage
+    return contig_data
 
 
 ###############################################

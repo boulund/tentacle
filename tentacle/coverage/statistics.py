@@ -6,7 +6,7 @@
 """
 import numpy as np
 
-def compute_coverage_statistics(region):
+def compute_region_statistics(region):
     """
     Compute general statistics of reads mapped to a region of a contig.
 

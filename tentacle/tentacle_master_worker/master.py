@@ -21,8 +21,12 @@ class TentacleMaster(object):
             help="a tab delimited text file with mapping triplets on each row")
         general_group.add_argument("--saveMappingResultsFile", action="store_true",
             help="Retrieve the mapping results file from the node after mapping completion")
+        general_group.add_argument("--noCoverage", action="store_true",
+            help="Skip computing coverage for all annotated regions [default: %(default)s].")
+        general_group.add_argument("--noCounts", action="store_true",
+            help="Skip computing counts for all annotated regions [default: %(default)s].")
         general_group.add_argument("--coverageAllAlignments", action="store_true",
-            help="Include all matching alignments in coverage computations. Default is to only include the 'best' hit found in the mapper output [default %(default)s]")
+            help="Include all matching alignments in coverage computations. Note that this might inflate coverage! Default is to only include the 'best' hit found in the mapper output [default %(default)s].")
         return parser
     
     @staticmethod

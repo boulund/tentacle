@@ -17,7 +17,7 @@ import pkgutil
 import importlib
 import psutil
 
-from ..parsers import index_references
+from ..parsers import initialize_contig_data, parse_mapping_output
 from .. import coverage
 from .. import utils
 from ..utils import mapping_utils
@@ -99,30 +99,26 @@ class TentacleCore:
         """
     
         coveragetime = time()
-        # Initialize data structure to hold coverage information for each reference sequence
-        self.logger.info("Initializing map coverage data structure...")
-        contig_coverage = index_references.initialize_coverage_dictionary(mapped_reads.contigs, self.logger)
-        self.logger.info("Map coverage data structure initialized.")
-        # Sum the counts for each nucleotide to produce coverage for each reference sequence
-        self.logger.info("Summing number of mapped contigs...")
-        contig_coverage = coverage.sumMapCounts(mapped_reads.mapped_reads, 
-                                                   contig_coverage, 
+        # Initialize data structure to hold results
+        contig_data = initialize_contig_data(mapped_reads, options, self.logger)
+        self.logger.info("Computing coverage/counts across reference sequences...")
+        contig_data = parse_mapping_output(mapped_reads.mapped_reads,
+                                                   contig_data,
                                                    options,
                                                    self.logger)
-        self.logger.info("Number of mapped contigs summation completed.")
+        self.logger.info("Coverage/counts computed.")
     
         # DEBUG printing (EXTREMELY SLOW)
-        if options.outputCoverage:
+        if not options.noCoverage and options.outputCoverage:
             coverage_output_filename = "contigCoverage.txt"
             coverage.debug_output_coverage(self.logger, coverage_output_filename, contig_coverage)
     
-        # Compute counts per annotation
-        self.logger.info("Computing counts per annotation, writing to {}...".format(outfile))
-        coverage.compute_counts_per_annotation(mapped_reads.annotations, contig_coverage, outfile, self.logger)
-        self.logger.info("Counts per annotation computation completed.")
+        self.logger.info("Computing coverage statistics and writing results to {}...".format(outfile))
+        coverage.compute_and_write_coverage_statistics(mapped_reads.annotations, contig_data, outfile, options, self.logger)
+        self.logger.info("Annotation coverage statistics and writing of results completed.")
 
-        self.logger.info("Time to analyse coverage: %s", time()-coveragetime)
-        self.logger.info("Results available in %s", files.annotationStats)
+        self.logger.info("Time to analyse coverage/counts: %s", time()-coveragetime)
+        self.logger.info("Results available in %s", outfile)
 
 
     def delete_temporary_files(self, temp_dir):

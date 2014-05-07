@@ -5,8 +5,9 @@ date:: 2014-04-30
 """
 
 import numpy as np
+from ..coverage import update_contig_data
 
-def parse_sam(mappings, contigCoverage, logger):
+def parse_sam(mappings, contig_data, options, logger):
     """
     Parses standard SAM alignments.
     Useful for bowtie2 and other aligners that output SAM format
@@ -22,23 +23,22 @@ def parse_sam(mappings, contigCoverage, logger):
         allowed_operators = set(['M', 'D', '=', 'X'])
         return sum([int(operator[:-1]) for operator in re.findall(regex, cigar) if operator[-1] in allowed_operators])
 
-    def update_contig_coverage(line, contigCoverage):
+    def parse_sam_line(line, contig_data):
         """
         Takes a line, extracts the required information from it
-        and updates contigCoverage accordingly.
+        and updates contig_data accordingly.
         """
         # rname is reference/contig name, pos is starting position of aligned read,
         # end position is extracted from cigar.
         qname, flag, rname, pos, mapq, cigar, rest = line.split(None, 6)
         if rname == '*':
-            return contigCoverage
+            return contig_data
         else:
             start = int(pos)
             end = start + find_end_pos_from_cigar(cigar) - 1
-            contigCoverage[rname][0][start-1] += 1
-            contigCoverage[rname][0][end] += -1
-            contigCoverage[rname][1] += 1 # Update mapped read count
-            return contigCoverage
+
+            contig_data = update_contig_data(contig_data, rname, start-1, end, options, logger)
+            return contig_data
                 
     with open(mappings) as f:
         line = f.readline()
@@ -48,12 +48,12 @@ def parse_sam(mappings, contigCoverage, logger):
             raise ParseError("Mapping results file {} does not start with @HD".format(mappings))
         for line in f:
             if not line.startswith("@"):
-                contigCoverage = update_contig_coverage(line, contigCoverage)
+                contig_data = parse_sam_line(line, contig_data)
                 break # We're in alignment territory and no longer need the check!
         for line in f:
-            contigCoverage = update_contig_coverage(line, contigCoverage)
+            contig_data = parse_sam_line(line, contig_data)
 
-    return contigCoverage
+    return contig_data
 
 
 

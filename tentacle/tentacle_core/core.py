@@ -109,9 +109,11 @@ class TentacleCore:
         self.logger.info("Coverage/counts computed.")
     
         # DEBUG printing (EXTREMELY SLOW)
-        if not options.noCoverage and options.outputCoverage:
+        if not options.noCoverage and options.debugOutputCoverage:
             coverage_output_filename = "contigCoverage.txt"
             coverage.debug_output_coverage(self.logger, coverage_output_filename, contig_coverage)
+        if options.debugPrintSingleCoverage:
+            coverage.debug_print_single_coverage(contig_data, options.debugPrintSingleCoverage)
     
         self.logger.info("Computing coverage statistics and writing results to {}...".format(outfile))
         coverage.compute_and_write_coverage_statistics(mapped_reads.annotations, contig_data, outfile, options, self.logger)
@@ -236,8 +238,10 @@ class TentacleCore:
                                                   mapper.create_argparser()], add_help=False)
         
         debug_group = parser.add_argument_group("DEBUG developer options", "Use with caution!")
-        debug_group.add_argument("--outputCoverage", dest="outputCoverage", action="store_true", default=False,
+        debug_group.add_argument("--debugOutputCoverage", action="store_true", default=False,
             help="Outputs complete coverage information into contigCoverage.txt")
+        debug_group.add_argument("--debugPrintSingleCoverage", default="",
+                help="Prints the coverage of a single contig. Supply a valid contigname [default: not used]")
             
         return (parser, options, argv)
         

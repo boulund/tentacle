@@ -98,7 +98,7 @@ def initialize_annotation_counts(contig_data, annotations_filename, options, log
                 logger.error("Could not parse annotation line\n{}\nfrom file {}.".format(line, annotations_filename))
                 raise ParseError("Could not parse line {} in file {}.".format(line, annotations_filename))
 
-            start = int(start)-1
+            start = int(start) # Uses 0-based indexing
             end = int(end)
             contig_data[contig_header][annotation] = [0, start, end, strand]
 

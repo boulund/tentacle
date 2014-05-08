@@ -84,13 +84,14 @@ region per line. The format of the annotation file is as follows::
 The first few lines of an example annotation file could read::
 
   scaffold3_2    899 3862    +   COG3321
-  scaffold6_1    1   570     +   COG0768
+  scaffold6_1    0   570     +   COG0768
   scaffold11_2   3   1589    -   NOG08628
-  scaffold13_1   3   260     -   NOG21937
+  scaffold13_1   1   260     -   NOG21937
   scaffold13_1   880 1035    +   COG0110
 
 As you can see in the example above, a reference sequence can occur on multiple
-lines, with different annotations on each line. 
+lines, with different annotations on each line. Note that the start and end
+coordinates are 0-based (like Python).
 
 .. note::
    The annotation file is required in order to compute the coverage of each

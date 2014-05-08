@@ -39,6 +39,7 @@ def parse_mapping_output(mappings, contig_data, options, logger):
         logger.error("Couldn't figure out what mapper was used! This should never happen?!")
         exit(1)
 
-    for contig in contig_data.keys():
-        np.cumsum(contig_data[contig]["__coverage__"], dtype=np.int32, out=contig_data[contig]["__coverage__"])
+    if not options.noCoverage:
+        for contig in contig_data.keys():
+            np.cumsum(contig_data[contig]["__coverage__"], dtype=np.int32, out=contig_data[contig]["__coverage__"])
     return contig_data

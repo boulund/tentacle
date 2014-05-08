@@ -8,16 +8,16 @@ purpose:: Creates an empty data structure for contig coverage and annotated regi
 import numpy as np
 
 def initialize_contig_data(files, options, logger):
-    """ Reads annotation and reference (FASTA) files to create an empty data structure. """
-    
-    # Data structure is a nested dictionary:
-    #  contig_data              MAIN DICTIONARY
-    #    ["CONTIG0101"]         CONTIG KEY
-    #      ["TIGRFAM0101"]      ANNOTATION KEY
-    #        [int, int, int, "+"]    LIST WITH: [ANNOTATION COUNT, ANNOTATION START, ANNOTATION STOP, STRAND]
-    #      ["__coverage__"]     COVERAGE SPECIAL KEY (if reference sequence has this name error ensues!)
-    #        np.array           COVERAGE DATA STRUCTURE (NumPy array)
+    """ Reads annotation and reference (FASTA) files to create an empty data structure.
 
+    Data structure is a nested dictionary:
+     contig_data                 MAIN DICTIONARY
+       ["CONTIG0101"]            CONTIG KEY
+         ["TIGRFAM0101"]         ANNOTATION KEY
+           [int, int, int, "+"]  LIST WITH: [ANNOTATION COUNT, ANNOTATION START, ANNOTATION STOP, STRAND]
+         ["__coverage__"]        COVERAGE SPECIAL KEY (if reference sequence has this name error ensues!)
+           np.array              COVERAGE DATA STRUCTURE (NumPy array)
+    """
     logger.info("Initializing coverage data structure...")
     contig_data = {}
     contig_data = initialize_contig_keys(contig_data, files.contigs, options, logger)

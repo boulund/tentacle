@@ -5,7 +5,3 @@
 """
 from initialize_contig_data import initialize_contig_data
 from parse_mapping_output import parse_mapping_output
-import blast8
-import gem
-import razers3
-import sam

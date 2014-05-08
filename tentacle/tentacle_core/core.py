@@ -17,7 +17,8 @@ import pkgutil
 import importlib
 import psutil
 
-from ..parsers import initialize_contig_data, parse_mapping_output
+#from ..parsers import initialize_contig_data, parse_mapping_output
+from .. import parsers
 from .. import coverage
 from .. import utils
 from ..utils import mapping_utils
@@ -100,9 +101,9 @@ class TentacleCore:
     
         coveragetime = time()
         # Initialize data structure to hold results
-        contig_data = initialize_contig_data(mapped_reads, options, self.logger)
+        contig_data = parsers.initialize_contig_data(mapped_reads, options, self.logger)
         self.logger.info("Computing coverage/counts across reference sequences...")
-        contig_data = parse_mapping_output(mapped_reads.mapped_reads,
+        contig_data = parsers.parse_mapping_output(mapped_reads.mapped_reads,
                                                    contig_data,
                                                    options,
                                                    self.logger)

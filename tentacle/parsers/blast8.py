@@ -12,7 +12,7 @@ def parse_blast8(mappings, contig_data, options, logger):
     #DEBUG
     #np.set_printoptions(threshold='nan') 
 
-    def check_new_read(read, identity, aligned_length, contig, sstart, send, previous_read, previous_information):
+    def check_new_read(contig_data, read, identity, aligned_length, contig, sstart, send, previous_read, previous_information):
         """ Determines if the most recently parsed read has been seen before """
         # We cannot assume the output is ordered so 
         # check if readname has already been seen and 
@@ -83,16 +83,13 @@ def parse_blast8(mappings, contig_data, options, logger):
             logger.debug("Formatted to: {}".format(read))
 
             if options.coverageAllAlignments:
-                contig_data, previous_readname, previous_information = check_new_read(read, identity, aligned_length, contig, sstart, send, previous_readname, previous_information)
+                contig_data, previous_readname, previous_information = check_new_read(contig_data, read, identity, aligned_length, contig, sstart, send, previous_readname, previous_information)
             else:
                 contig_data = update_contig_data(contig_data, contig, sstart-1, send, options, logger)
 
 
         # Add the last read to contig_data
-        try:
-            check_new_read(read, identity, aligned_length, contig, sstart, send, previous_readname, previous_information)
-        except UnboundLocalError:
-            logger.info("Mappings file {} appears to be empty".format(mappings))
+        check_new_read(contig_data, read, identity, aligned_length, contig, sstart, send, previous_readname, previous_information)
 
     return contig_data
 

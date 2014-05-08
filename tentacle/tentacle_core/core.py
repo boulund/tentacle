@@ -17,7 +17,7 @@ import pkgutil
 import importlib
 import psutil
 
-#from ..parsers import initialize_contig_data, parse_mapping_output
+#Tentacle-related imports
 from .. import parsers
 from .. import coverage
 from .. import utils
@@ -26,7 +26,6 @@ from ..utils import mapping_utils
 # Monkey patch all the things!
 #monkey.patch_all()
 
-#InFiles = namedtuple("InFiles", ["contigs", "reads", "annotations"])
 AllFiles = namedtuple("AllFiles", ["contigs", "reads", "annotations", "annotationStats", "log"])
 
 class TentacleCore:

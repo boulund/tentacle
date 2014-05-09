@@ -90,10 +90,10 @@ class TentacleCore:
         mapped_reads = MappedReadsTuple(local.contigs,
                                         mapped_reads_file_path, 
                                         local.annotations)
-        return (mapped_reads, temp_dir)
+        return (mapped_reads, temp_dir, mapper)
     
     
-    def analyse_coverage(self, mapped_reads, outfile, options):
+    def analyse_coverage(self, mapped_reads, mapper, outfile, options):
         """
         Analyses mapped contigs and counts map coverage
         """
@@ -102,7 +102,8 @@ class TentacleCore:
         # Initialize data structure to hold results
         contig_data = parsers.initialize_contig_data(mapped_reads, options, self.logger)
         self.logger.info("Computing coverage/counts across reference sequences...")
-        contig_data = parsers.parse_mapping_output(mapped_reads.mapped_reads,
+        contig_data = parsers.parse_mapping_output(mapper,
+                                                   mapped_reads.mapped_reads,
                                                    contig_data,
                                                    options,
                                                    self.logger)
@@ -150,14 +151,14 @@ class TentacleCore:
 
 
     def analyse(self, files, options):
-        mapped_reads, temp_dir = self.preprocess_data_and_map_reads(files, options)
+        mapped_reads, temp_dir, mapper = self.preprocess_data_and_map_reads(files, options)
 
         if options.saveMappingResultsFile:
             target_filename = os.path.dirname(files.annotationStats)+"/"+\
                               os.path.basename(mapped_reads.mapped_reads)+".gz"
             self.save_mapping_results(mapped_reads, target_filename)
 
-        self.analyse_coverage(mapped_reads, files.annotationStats, options)
+        self.analyse_coverage(mapped_reads, mapper, files.annotationStats, options)
 
         if options.deleteTempFiles:
             self.delete_temporary_files(temp_dir)

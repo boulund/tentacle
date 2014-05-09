@@ -10,6 +10,7 @@ import psutil
 
 from ..utils import resolve_executable
 from ..utils import mapping_utils
+from ..parsers import blast8
 
 __all__ = ["Blastn"]
 
@@ -23,6 +24,8 @@ class Blastn(Mapper):
         self.mapper = resolve_executable(mapper_name)
         self.options = {}
         self.input_reads_format = "FASTA"
+        self.output_parser = blast8.parse_blast8
+
 
     @staticmethod
     def create_argparser():

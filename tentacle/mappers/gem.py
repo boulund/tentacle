@@ -10,6 +10,7 @@ import psutil
 
 from ..utils import resolve_executable
 from ..utils import mapping_utils
+from ..parsers import gem
 
 __all__ = ["Gem"]
 
@@ -23,6 +24,7 @@ class Gem(Mapper):
         self.mapper = resolve_executable("gem-mapper")
         self.options = {}
         self.input_reads_format = "FASTQ"
+        self.output_parser = gem.parse_gem
 
     @staticmethod
     def create_argparser():

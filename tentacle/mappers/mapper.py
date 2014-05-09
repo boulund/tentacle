@@ -23,6 +23,7 @@ import os
 
 from ..utils import resolve_executable
 from ..utils import mapping_utils
+from ..parsers import blast8 # EXAMPLE OUTPUT PARSER
 
 __all__ = ["Mapper"]
 
@@ -57,6 +58,7 @@ class Mapper(object):
         self.mapper = resolve_executable(mapper)
         self.options = {}
         self.input_reads_format = "FASTA" # "FASTQ"
+        self.output_parser = blast8.parse_blast8 #EXAMPLE
 
 
     @staticmethod

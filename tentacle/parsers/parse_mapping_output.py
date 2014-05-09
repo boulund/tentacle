@@ -12,7 +12,7 @@ import razers3
 import sam
 import gem
 
-def parse_mapping_output(mappings, contig_data, options, logger):
+def parse_mapping_output(mapper, mappings, contig_data, options, logger):
     """
     Adds the number of mapped reads to the correct positions in 
     a contig_data dictionary.
@@ -20,6 +20,7 @@ def parse_mapping_output(mappings, contig_data, options, logger):
     Uses NumPy.
 
     Input:
+        mapper      mapper object used to map the data
         mappings    mapper output file.
         contig_data  the contig_data dictionary
         options     all options
@@ -27,17 +28,7 @@ def parse_mapping_output(mappings, contig_data, options, logger):
     Output:
         contig_data 
     """
-    if options.mapperName in ("pblat", "blast", "usearch"):
-        contig_data = blast8.parse_blast8(mappings, contig_data, options, logger)
-    elif options.mapperName == "razers3":
-        contig_data = razers3.parse_razers3(mappings, contig_data, options, logger)
-    elif options.mapperName == "bowtie2":
-        contig_data = sam.parse_sam(mappings, contig_data, options, logger)
-    elif options.mapperName == "gem":
-        contig_data = gem.parse_gem(mappings, contig_data, options, logger)
-    else:
-        logger.error("Couldn't figure out what mapper was used! This should never happen?!")
-        exit(1)
+    contig_data = mapper.output_parser(mappings, contig_data, options, logger)
 
     if not options.noCoverage:
         for contig in contig_data.keys():

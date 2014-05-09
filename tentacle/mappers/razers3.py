@@ -10,6 +10,7 @@ import psutil
 
 from ..utils import resolve_executable
 from ..utils import mapping_utils
+from ..parsers import razers3
 
 __all__ = ["Razers3"]
 
@@ -23,6 +24,7 @@ class Razers3(Mapper):
         self.mapper = resolve_executable(mapper)
         self.options = {}
         self.input_reads_format = "FASTQ"
+        self.output_parser = razers3.parse_razers3
 
     @staticmethod
     def create_argparser():

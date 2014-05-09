@@ -38,7 +38,7 @@ class Usearch(Mapper):
             type=float, default="0.9", metavar="I",
             help="usearch: Sequence similarity for usearch_global [default: %(default)s]")
         mapping_group.add_argument("--usearchQueryCov", dest="usearchQueryCov",
-            type=str, default="", metavar="COVERAGE",
+            type=str, default="", metavar="C",
             help="usearch: Query coverage in range 0.0-1.0.")
         mapping_group.add_argument("--usearchDBName", dest="usearchDBName",
             type=str, default="", metavar="DBNAME", required=True,
@@ -73,7 +73,8 @@ class Usearch(Mapper):
 
         output_filename = local_files.reads+".mapped"
         mapper_call = [self.mapper,
-                       "-usearch_global", str(local_files.reads),
+                       "-usearch_local", str(local_files.reads),
+                       "-query_cov", str(options.usearchQueryCov), 
                        "-db", options.usearchDBName.split(".",1)[0]+".udb",
                        "-id", str(options.usearchID),
                        "-blast6out", output_filename]

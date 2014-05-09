@@ -38,7 +38,7 @@ class Usearch(Mapper):
             type=float, default="0.9", metavar="I",
             help="usearch: Sequence similarity for usearch_global [default: %(default)s]")
         mapping_group.add_argument("--usearchQueryCov", dest="usearchQueryCov",
-            type=str, default="", metavar="C",
+            type=str, default="1.0", metavar="C",
             help="usearch: Query coverage in range 0.0-1.0.")
         mapping_group.add_argument("--usearchDBName", dest="usearchDBName",
             type=str, default="", metavar="DBNAME", required=True,

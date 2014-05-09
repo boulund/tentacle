@@ -72,12 +72,6 @@ def parse_blast8(mappings, contig_data, options, logger):
             if sstart > send:
                 sstart, send = (send, sstart)
 
-            if options.mapperName == "usearch":
-                if options.usearchFilterSequencesShorterThan:
-                    if aligned_length < int(options.usearchFilterSequencesShorterThan):
-                        logger.debug("Removed read '{}' with length {}".format(read, aligned_length))
-                        continue
-            
             logger.debug("Read: {}".format(read))
             read = read.split()[0]
             logger.debug("Formatted to: {}".format(read))

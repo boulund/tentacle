@@ -17,8 +17,8 @@ class TentacleMaster(object):
     def create_get_tasks_argparser():
         parser = argparse.ArgumentParser(add_help=False)
         general_group = parser.add_argument_group("General options")
-        general_group.add_argument("--mappingManifest", required=True,
-            help="a tab delimited text file with mapping triplets on each row")
+        general_group.add_argument("-m", "--mappingManifest", required=True, metavar="FILE",
+            help="a tab delimited text file with mapping triplets on each row. Required.")
         general_group.add_argument("--saveMappingResultsFile", action="store_true",
             help="Retrieve the mapping results file from the node after mapping completion")
         general_group.add_argument("--noCoverage", action="store_true",
@@ -27,6 +27,8 @@ class TentacleMaster(object):
             help="Skip computing counts for all annotated regions [default: %(default)s].")
         general_group.add_argument("--coverageAllAlignments", action="store_true",
             help="Include all matching alignments in coverage computations. Note that this might inflate coverage! Default is to only include the 'best' hit found in the mapper output [default %(default)s].")
+        general_group.add_argument("--discardSequencesShorterThan", default="", metavar="N",
+            help="After mapping reads, discard reads with aligned portions shorter than this [default: 0]")
         return parser
     
     @staticmethod

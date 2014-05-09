@@ -46,9 +46,6 @@ class Usearch(Mapper):
         mapping_group.add_argument("--usearchStrand", dest="usearchStrand",
             type=str, default="both", metavar="S",
             help="usearch: If searching nucleotide sequences, specify either 'both' or 'plus' [default: %(default)s]")
-        mapping_group.add_argument("--usearchFilterSequencesShorterThan", dest="usearchFilterSequencesShorterThan",
-            type=int, default=0, metavar="L",
-            help="usearch: Remove sequences that align with less than L nucleotides to a reference")
         mapping_group.add_argument("--usearchOther", dest="usearchOther",
             type=str, default="", metavar="S",
             help="usearch: Quoted string containing usearch arguments. Warning: No checks of"+\

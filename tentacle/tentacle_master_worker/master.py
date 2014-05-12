@@ -26,7 +26,7 @@ class TentacleMaster(object):
         general_group.add_argument("--noCounts", action="store_true",
             help="Skip computing counts for all annotated regions [default: %(default)s].")
         general_group.add_argument("--coverageAllAlignments", action="store_true",
-            help="Include all matching alignments in coverage computations. Note that this might inflate coverage! Default is to only include the 'best' hit found in the mapper output [default %(default)s].")
+                help="Specific to mappers with blast8 tabular output: Include all matching alignments in coverage computations. Note that this might inflate coverage! Default is to only include the 'best' hit found in the mapper output [default %(default)s].")
         general_group.add_argument("--discardSequencesShorterThan", default="", metavar="N",
             help="After mapping reads, discard reads with aligned portions shorter than this [default: 0]")
         return parser

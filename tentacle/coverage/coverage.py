@@ -38,14 +38,14 @@ def determine_if_read_is_inside_region(contig_data, contig, rstart, rend, option
     annotations_matched = []
 
     for annotation in contig_data[contig].keys():
-        a_start = contig_data[contig][annotation][1]
-        a_end = contig_data[contig][annotation][2]
-
-        # TODO: Extend using options to determine overlap requirements
-        if rend >= a_start and rend <= a_end:
-            annotations_matched.append(annotation)
-        elif rstart >= a_start and rstart <= a_end:
-            annotations_matched.append(annotation)
+        if rend - rstart + 1 >= options.coverageReadOverlap:
+            a_start = contig_data[contig][annotation][1] + options.coverageReadOverlap
+            a_end = contig_data[contig][annotation][2] - options.coverageReadOverlap
+            
+            if rend >= a_start and rend <= a_end:
+                annotations_matched.append(annotation)
+            elif rstart >= a_start and rstart <= a_end:
+                annotations_matched.append(annotation)
 
     return annotations_matched
 

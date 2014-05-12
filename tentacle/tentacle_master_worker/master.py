@@ -25,10 +25,12 @@ class TentacleMaster(object):
             help="Skip computing coverage for all annotated regions [default: %(default)s].")
         general_group.add_argument("--noCounts", action="store_true",
             help="Skip computing counts for all annotated regions [default: %(default)s].")
+        general_group.add_argument("--coverageReadOverlap", default=0, type=int, metavar="O",
+                help="Minimum overlap between read and annotated region for it to count towards the count for that region [default: 0]")
         general_group.add_argument("--coverageAllAlignments", action="store_true",
                 help="Specific to mappers with blast8 tabular output: Include all matching alignments in coverage computations. Note that this might inflate coverage! Default is to only include the 'best' hit found in the mapper output [default %(default)s].")
-        general_group.add_argument("--discardSequencesShorterThan", default="", metavar="N",
-            help="After mapping reads, discard reads with aligned portions shorter than this [default: 0]")
+        general_group.add_argument("--discardSequencesShorterThan", default=0, type=int, metavar="N",
+            help="After mapping reads, discard reads with aligned portions shorter than this [default: not used]")
         return parser
     
     @staticmethod

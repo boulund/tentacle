@@ -25,12 +25,13 @@ setup(name="tentacle",
       packages=find_packages(),
       package_data={'tentacle': ['README.rst'],
                    },
-      data_files=[('bin', ['dependencies/bin/Linux/fastq_quality_filter', # TODO: Add OS detection
-                           'dependencies/bin/Linux/fastq_quality_trimmer',
-                           'dependencies/bin/Linux/seqtk',
-                           'dependencies/bin/Linux/pblat',
-                           'dependencies/bin/Linux/razers3'])
-                 ],
+      # TODO: If we add binary dependencies, make sure to have OS detection as well.
+      #data_files=[('bin', ['dependencies/bin/Linux/fastq_quality_filter', 
+      #                     'dependencies/bin/Linux/fastq_quality_trimmer',
+      #                     'dependencies/bin/Linux/seqtk',
+      #                     'dependencies/bin/Linux/pblat',
+      #                     'dependencies/bin/Linux/razers3'])
+      #           ],
       scripts=['rundir/tentacle_local.py', 
                'rundir/tentacle_slurm.py', 
                'rundir/tentacle_query_server.py'

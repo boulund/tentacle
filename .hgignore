@@ -1,0 +1,11 @@
+syntax: glob
+.DS_Store
+*.pyc
+*.log
+*tentacle_results
+*~
+*tentacle_output*
+*.gz
+*.tab
+workdir* 
+*.suo

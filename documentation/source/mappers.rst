@@ -24,6 +24,11 @@ copy one of the others, change the filename and modify it to suit your mapper.
 Make sure that the mapper you want to use is available in your ``PATH``
 variable.
 
+Another important aspect to consider when adding support for an additional mapper 
+is that there needs to be a parser that can extract the information Tentacle 
+requires from the mapper's output files. All such parsers are located in the submodule
+``tentacle.parsers``. See :ref:`parsers`.
+
 Generic mapper class for Tentacle
 =================================
 .. automodule:: tentacle.mappers.mapper

@@ -1,3 +1,5 @@
+.. _coverage:
+
 ########
 Coverage
 ########
@@ -25,10 +27,38 @@ file. The array contains integers and after going through the mapper output
 each position in the array contains a number representing the number of times
 that position was covered by a read. 
 
-It is possible to modify the way the statistics are computed. The two functions
-involved in computing the coverage statistics are
-``tentacle.coverage.statistics.compute_coverage_statistics`` and
-``tentacle.coverage.coverage.computeAnnotationCounts``. Check the files to see
-how they can be modified according to your specific needs.
+It is possible to modify the way the statistics are computed. See the files in 
+the ``coverage`` module to see how it works.
 
-.. TODO: The previous paragraphs should link to the files for viewing in the browser.
+Functions in the coverage module
+********************************
+
+Coverage
+========
+This module contains all the functions required to manipulate the contig
+coverage data structure. 
+
+.. automodule:: tentacle.coverage.coverage
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Statistics
+===========
+This module contains the function that computes statistics across annotated
+regions of the reference sequences. 
+
+.. automodule:: tentacle.coverage.statistics
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Compute and write coverage statistics
+=====================================
+This module contains a single function responsible for formatting the output.
+
+.. automodule:: tentacle.coverage.compute_and_write_coverage_statistics
+    :members:
+    :undoc-members:
+    :show-inheritance:

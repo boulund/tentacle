@@ -37,6 +37,10 @@ all annotated areas of the reference sequence(s).
    back to the distributed file system. After completing a job, the Worker
    process requests a new one from the Master process.
 
+More information available on how Tentacle computes coverage is available in
+section :ref:`coverage`. Further information on the implementation will also be
+published.
+
 Use examples
 ************
 Tentacle is well suited for the following tasks:

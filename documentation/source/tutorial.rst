@@ -14,6 +14,9 @@ available for download in section :ref:`download`. Note that the tutorial
 file contains example files for all tutorial examples showcased below, 
 to provide a complete tutorial experience.
 
+This tutorial is available online at:
+http://bioinformatics.math.chalmers.se/tentacle/tutorial.html
+
 
 Important information about files and file formats
 **************************************************

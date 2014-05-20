@@ -45,10 +45,11 @@ Use examples
 ************
 Tentacle is well suited for the following tasks:
 
- * Map samples of metagenomic reads back to previously annotated contigs
-   to determine the presence and abundance of certain genes.
+ * Map samples of metagenomic reads back to previously annotated contigs to
+   determine the presence and abundance of certain genes. Check out 
+   :ref:`tutorial1`.
  * Map metagenomic reads to a reference database of e.g. antibiotic 
-   resistance genes. 
+   resistance genes. Check out :ref:`tutorial2`.
 
 Abstract
 ********

@@ -14,22 +14,25 @@ Tentacle |version|  documentation
 Welcome! This is the documentation for Tentacle |release|, last updated |today|.
 
 The documentation is available online at
+
 http://bioinformatics.math.chalmers.se/tentacle/.
 
 Tentacle is published as open-source under the GNU Public License (v3) and you
 are welcome to look at, improve, or come with suggestions for improvement to
-the code at the project's Bitbucket page at
-https://bitbucket.org/chalmersmathbioinformatics/tentacle/.
+the code at the project's Bitbucket_ page.
+
+.. _Bitbucket: https://bitbucket.org/chalmersmathbioinformatics/tentacle/.
 
 .. _`citing`:
 
 Citing Tentacle
 ***************
 If you find Tentacle useful and use it in your research, please cite us!.
+The framework is described in the following paper:
 
-The framework is described in the paper 
-Boulund, F., Sjögren, A., Kristiansson, E. (2014). *Tentacle: A framework for
-gene quantification in large metagenomic data sets.*
+Boulund, F., Sjögren, A., Kristiansson, E. (2014). 
+*Tentacle: distributed gene quantification in metagenomes*.
+**(submitted)**
 
 Documentation:
 **************

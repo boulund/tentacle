@@ -52,7 +52,7 @@ SAM format
 Parser to create coverage data structure
 ========================================
 
-.. automodule:: tentacle.parsers.initalize_contig_data
+.. automodule:: tentacle.parsers.initialize_contig_data
     :members:
     :undoc-members:
     :show-inheritance:

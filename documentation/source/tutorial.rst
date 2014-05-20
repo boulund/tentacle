@@ -106,6 +106,7 @@ put a + in the strand column.
 
 
 
+.. _tutorial1: 
 
 TUTORIAL 1. Mapping reads to contigs (pBLAT)
 *********************************************
@@ -229,6 +230,7 @@ The Tentacle output format is further detailed in section :ref:`output`.
 
 
 
+.. _tutorial2:
 
 TUTORIAL 2. Mapping nucleotide reads to amino acid database (USEARCH)
 ***********************************************************************
@@ -246,18 +248,19 @@ Introductory remarks
 
    How the actual commandline is constructed in Tentacle is defined in the
    mapping modules, in this case ``usearch.py``; the interested reader should
-   have a look there to see how it is constructed. 
+   have a look there to see how it is constructed. It is available for
+   inspection in :ref:`usearch`.
 
 In this example we will use USEARCH as the mapper because of its excellent
 performance in the nucleotide-to-amino-acid mapping scenario (translated
 search).  As we are only interested in identifying the best matches we will
-utilize the *usearch_global* algorithm and search both strands of the reads.
+utilize the *usearch_local* algorithm and search both strands of the reads.
 We are interested in genes with high sequence identity to the references and
 will only pick the best hit. 
 If we boil it down to what we would run on a single machine, the commandline
 might look like this::
 
-  $ usearch -usearch_global reads.fasta -db references.udb -id 0.9 -strand both
+  $ usearch -usearch_local reads.fasta -db references.udb -id 0.9 -strand both -query_cov 1.0
 
 Step-by-step tutorial
 =====================
@@ -275,14 +278,14 @@ following files that are relevant for this part of the tutorial::
 Step 1: Preparing the ref DB
 ----------------------------
 Prior to running Tentacle, we need to prepare the reference sequences into the
-format that ``USEARCH`` uses for reference databases: ``udb``.  Running the
-following command in the ``tutorial_2`` directory will produce a ``USEARCH``
+format that ``usearch`` uses for reference databases: ``udb``.  Running the
+following command in the ``tutorial_2`` directory will produce a ``usearch``
 database that we can use::
 
   $ usearch -makeudb_usearch data/references.fasta -output data/references.udb
 
 There is one more thing that is required; Tentacle requires both the database
-file (for ``USEARCH`` to do its thing) but also the original FASTA file for the
+file (for ``usearch`` to do its thing) but also the original FASTA file for the
 references, as this is used when computing the coverage of the reference
 sequences. So package all of the reference files (database and FASTA) into one
 *tar.gz* archive so that Tentacle can transfer both of them at once::
@@ -348,19 +351,19 @@ annotation file.
 Step 3: Run Tentacle
 --------------------
 In this example we will map reads to a common reference database using
-the mapper ``USEARCH``. Assuming we want to find the best alignment for each
+the mapper ``usearch``. Assuming we want to find the best alignment for each
 read to the reference using a 90% identity threshold the commandline for
 Tentacle/USEARCH could be the following. Assume you are standing in the
 ``tutorial_2`` directory::
 
   $ tentacle_slurm.py --usearch --usearchDBName references.fasta --usearchID 0.9 --mappingManifest mapping_manifest.tab --distributionNodeCount 2
 
-The call to Tentacle when using ``USEARCH`` must minimally include the
+The call to Tentacle when using ``usearch`` must minimally include the
 following command line arguments:
 
- * --mappingManifest
- * --usearch
- * --usearchDBName
+ * ``--mappingManifest``
+ * ``--usearch``
+ * ``--usearchDBName``
 
 For more information about the available command line arguments, call Tentacle
 with the ``--help`` argument to display a list of all available options.

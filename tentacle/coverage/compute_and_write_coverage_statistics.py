@@ -1,8 +1,8 @@
 """Tentacle coverage module: compute coverage statistics
 
-.. moduleauthor:: Fredrik Boulund <fredrik.boulund@chalmers.se>
-.. date:: 2014-04-30
-.. purpose:: Writes results to file, and computes coverage statistics 
+author: Fredrik Boulund <fredrik.boulund@chalmers.se>
+date: 2014-04-30
+purpose: Writes results to file, and computes coverage statistics 
 
 """
 from statistics import compute_region_statistics

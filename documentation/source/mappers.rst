@@ -35,3 +35,46 @@ Generic mapper class for Tentacle
     :members:
     :undoc-members:
     :show-inheritance:
+
+
+Specific mapper classes for Tentacle
+====================================
+Here is a list of the implemented mapper classes that comes with Tentacle by
+default.
+
+BLASTN
+------
+.. automodule:: tentacle.mappers.blastn
+    :members:
+    :undoc-members:
+    :show-inheritance:
+ 
+GEM
+---
+.. automodule:: tentacle.mappers.gem
+    :members:
+    :undoc-members:
+    :show-inheritance:
+ 
+pBLAT
+-----
+.. automodule:: tentacle.mappers.pblat
+    :members:
+    :undoc-members:
+    :show-inheritance:
+ 
+RazerS3
+-------
+.. automodule:: tentacle.mappers.razers3
+    :members:
+    :undoc-members:
+    :show-inheritance:
+ 
+.. _usearch:
+
+USEARCH
+-------
+.. automodule:: tentacle.mappers.usearch
+    :members:
+    :undoc-members:
+    :show-inheritance:

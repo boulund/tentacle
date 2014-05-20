@@ -1,7 +1,8 @@
 """Tentacle coverage module.
 
 .. moduleauthor:: Fredrik Boulund <fredrik.boulund@chalmers.se>
-.. date:: 2014-04-30
+
+date: 2014-04-30
 
 """
 import numpy as np

@@ -35,13 +35,11 @@ be installed and available on your ``$PATH`` or put in
 software is listed below (tested version in parenthesis):
  
  * ``seqtk`` (1.0-r45). Used for high-performance FASTQ to FASTA conversion.
-
    https://github.com/lh3/seqtk
 
 Some software is only required if you required the functionality offered by them:
 
 * FASTX toolkit (0.0.13): ``fastq_quality_filter``, ``fastq_quality_trimmer``. 
-
   http://hannonlab.cshl.edu/fastx_toolkit/
 
 Note that a mapper (sequence alignment software) is also required. See section
@@ -56,13 +54,18 @@ Python virtualenv
 
     Since Tentacle requires Python 2.7, make sure that this is the Python
     version used when creating your virtualenv. It is possible to specify a
-    PYthon binary for use in the created virtualenv with the ``--python``
+    Python binary for use in the created virtualenv with the ``--python``
     argument to virtualenv.  E.g. ``virtualenv --python=/usr/bin/python2.7
     tentacle_venv``.
    
 The recommended way to use Tentacle is to setup a Python virtualenv (virtual
 environment), into which all required packages are installed. You can read more
-about virtualenv on the official website: http://www.virtualenv.org/en/latest/.
+about virtualenv on their `official website
+<https://virtualenv.pypa.io/en/latest/>`_.
+
+To install virtualenv on your local computer cluster might require
+administrator privileges, contact your server adminstrator or support if it is
+not already available on your system.
 
 Assuming that virtualenv is installed and globally available on your system,
 create a virtual environment in which to run Tentacle::
@@ -81,10 +84,13 @@ activated, as illustrated below)::
 
 Download Tentacle sources
 *************************
+
+.. _Bitbucket: https://bitbucket.org/chalmersmathbioinformatics/tentacle
+
 The Tentacle library is distributed as a downloadable compressed archive.
 Either download a release tarball from the :ref:`download` section, or download
-the latest development version from Bitbucket. It is recommended to use the
-latest release version as this is probably more stable.
+the latest development version from `Bitbucket`_. It is
+recommended to use the latest release version as this is probably more stable.
 Example download command::
 
   (tentacle_env)$  wget http://bioinformatics.math.chalmers.se/tentacle/downloads/tentacle-0.1.0b.tar.gz
@@ -107,9 +113,9 @@ The pip installation will install the three program files
 into the ``bin`` directory of the virtualenv. You can call these from the
 command line to launch Tentacle.
 
-If you are installing from a clone of the Bitbucket repository (e.g. via ``hg
-clone ssh://hg@bitbucket.chalmersmathbioinformatics/tentacle tentacle``), then
-the install command would be::
+If you are installing from a clone of the `Bitbucket`_ repository (e.g. via
+``hg clone ssh://hg@bitbucket.chalmersmathbioinformatics/tentacle tentacle``),
+then the install command would be::
 
   (tentacle_venv)$ pip install ./tentacle
 
@@ -117,15 +123,14 @@ Using Tentacle without installation
 ===================================
 It is also possible (but not recommended) to run tentacle without installing it
 into a virtualenv. To do this, unpack the archive and add the files in
-`$TENTACLE/rundir` to your $PATH variable. This could be done for your current
-user with the following commands::
+``$TENTACLE/rundir`` to your ``$PATH`` variable. This could be done for your
+current user with the following commands::
   
   $ tar -xf tentacle-0.1.0.tar.gz
   $ ln -s tentacle-0.1.0/rundir/tentacle* ~/bin
 
-Please note that this is NOT the recommended way to use Tentacle. This should
-work with a fresh clone of the Bitbucket repository as well.
-
+This should work with a fresh clone of the `Bitbucket`_ repository as well. But
+please note that this is NOT the recommended way to use Tentacle.
 
 .. _mappers:
 

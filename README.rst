@@ -16,8 +16,7 @@ Citing Tentacle
 ***************
 If you use Tentacle in your research, please cite us!.
 
-The work is described in the paper Boulund et al. (2014). A framework for gene
-quantification in large metagenomic data sets. 
+The work is described in the paper Boulund et al. (2014). Tentacle: distributed gene quantification in metagenomes
 
 
 Installing Tentacle

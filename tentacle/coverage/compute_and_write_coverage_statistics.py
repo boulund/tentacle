@@ -1,3 +1,4 @@
+# coding: utf-8
 """Tentacle coverage module: compute coverage statistics
 
 author: Fredrik Boulund <fredrik.boulund@chalmers.se>

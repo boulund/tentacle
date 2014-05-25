@@ -1,4 +1,4 @@
-
+# coding: utf-8
 """Tentacle coverage module: debug functions.
 
 .. moduleauthor:: Fredrik Boulund <fredrik.boulund@chalmers.se>

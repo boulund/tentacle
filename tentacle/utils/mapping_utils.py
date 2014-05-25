@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+# coding: utf-8
 # Fredrik Boulund 2013
 # Anders Sjogren 2013
 #  Copyright (C) 2014  Fredrik Boulund and Anders Sjögren

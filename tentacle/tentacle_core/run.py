@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding: utf-8
 #  Copyright (C) 2014  Fredrik Boulund and Anders Sjögren
 #
 #  This program is free software: you can redistribute it and/or modify

@@ -106,34 +106,36 @@ class SlurmLauncher(Launcher):
         parser = argparse.ArgumentParser(add_help=False)
         group = parser.add_argument_group("SLURM options", "Options for the distributed computing through SLURM")
         group.add_argument("--slurmPartition",
-            default="glenn", #TODO: Remove this hardcoded default, move into config file for easy access
+            default="", 
+            required=True,
             help="The P option for sbatch. [default: %(default)s]")
         group.add_argument("--slurmAccount",
-            default="SNIC2013-1-191", 
+            default="", 
+            required=True,
             help="The A option for sbatch. [default: %(default)s]")
         group.add_argument("--slurmJobName",
             default="Tentacle",
             help="The J option for sbatch. [default: %(default)s]")    
-        group.add_argument("--slurmTimeLimit", required=True,
+        group.add_argument("--slurmTimeLimit", 
+            required=True,
             help="The t option for sbatch. Use format hh:mm:ss, e.g. 05:00:00 for 5h.")
         group.add_argument("--slurmMem",
-            default="", choices=['SMALLMEM', 'BIGMEM', 'HUGEMEM'],
+            default="", 
+            choices=['SMALLMEM', 'BIGMEM', 'HUGEMEM'],
             help="The C option for sbatch. [default: let Slurm decide]")
         group.add_argument("--slurmNodesPerJob",
             default="1", 
             help="Number of nodes in each slurm call [default: %(default)s]")
+#        #TODO: Implement extra options
 #        group.add_argument("--slurmExtraOptions",
 #            default="",
-#            help="Any extra options to be sent to the SLURM sbatch command. [default: %(default)s]") #TODO: Implement.
+#            help="Any extra options to be sent to the SLURM sbatch command. [default: %(default)s]") 
         group.add_argument("--slurmStdOut",
             default="{slurmJobName}%j_%n.stdout", 
             help="The name of the saved standard output file from when slurm has run. Will be placed in a stdio-directory. [default: %(default)s]")
         group.add_argument("--slurmStdErr",
             default="{slurmJobName}%j_%n.stderr", 
             help="The name of the saved standard error file from when slurm has run. Will be placed in a stdio-directory. [default: %(default)s]")
-#        group.add_argument("--slurmSetupCommands",
-#            default='. /c3se/NOBACKUP/groups/c3-snic001-12-175/activate_python',
-#            help="A command to be executed by the shell, e.g. to activate the proper version of python. [default: %(default)s]")
         sbatch_bin = utils.resolve_executable("sbatch", "sbatch not found!")
         group.add_argument("--slurmBinary",
             default=sbatch_bin,

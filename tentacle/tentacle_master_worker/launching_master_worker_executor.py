@@ -66,8 +66,12 @@ class LaunchingMasterWorkerExecutor(object):
                    launcher_factory.create_argparser(),
                    logger_provider_factory.create_argparser()]
         
+        citing_text = "If you find Tentacle useful in your research, please cite Boulund et al. (2014). Tentacle: distributed gene quantification in metagenomes."
+
         joint_parser = argparse.ArgumentParser(description="Run the distributed Tentacle metagenomics workflow",
-            parents=parsers, add_help=True)
+                epilog=citing_text,
+                parents=parsers, 
+                add_help=True)
         
         #Parse the remaining args and make the help section appear if asked for
         return joint_parser.parse_args(argv[1:], namespace=mapper_namespace)

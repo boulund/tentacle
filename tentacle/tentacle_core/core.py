@@ -227,7 +227,10 @@ class TentacleCore:
         Is used both for the single contig-file and many-contig-files cases.
         """
 
-        parser = argparse.ArgumentParser(add_help=False)
+        citing_text = "If you find Tentacle useful in your research, please cite Boulund et al. (2014). Tentacle: distributed gene quantification in metagenomes."
+
+        parser = argparse.ArgumentParser(add_help=False, 
+                epilog=citing_text)
         mapping_group = parser.add_argument_group("Mapping options", 
             "Select a mapper. After specifying a mapper option, combine with --help to show all available options.")
 

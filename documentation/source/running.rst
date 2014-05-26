@@ -1,3 +1,5 @@
+.. _Running Tentacle:
+
 Running Tentacle
 ^^^^^^^^^^^^^^^^
 
@@ -41,16 +43,15 @@ arguments are required in addition to all mapping-related arguments:
  * ``--slurmTimeLimit`` - time limit for nodes allocated via Tentacle
 
 It is possible to run Tentacle with the ``--localCoordinator`` and
-``--distributionUseDedicatedCoordinatorNode``. This tells Tentacle to launch
-the master process on the computer from which the command is run, instead of
-launching and running the master process side-by-side with computations on one
-of the worker nodes. Another benefit of running Tentacle with both these commands
-is that it enables a master process to continue to run even if the time for
-allocated nodes should run out. 
+``--distributionNoDedicatedCoordinatorNode`` options. These tell Tentacle to
+launch the master process on one of the worker nodes side-by-side with
+computations.  Usually it is best to leave these options as is, because it
+enables a master process to continue to run even if the time for allocated
+nodes should run out. 
 
-It is possible to launch additional workers
-that will attach to a currently running master process. See the next section for
-information about how to create additional workers.
+It is possible to launch additional workers that will attach to a currently
+running master process. See the next section for information about how to
+create additional workers.
 
 Create additional workers
 =========================

@@ -193,8 +193,8 @@ class ZeroRpcDistributedWorkerPoolFactory(object):
         group.add_argument("-N", "--distributionNodeCount", dest="node_count", type=int,
             default=1,
             help="The number of distributed nodes to run on. [default =  %(default)s]")
-        group.add_argument("--distributionUseDedicatedCoordinatorNode", dest="use_dedicated_coordinator",
-            action="store_true", default=False,
+        group.add_argument("--distributionNoDedicatedCoordinatorNode", dest="use_dedicated_coordinator",
+            action="store_false", default=True,
             help="Should a dedicated coordinator node be launched (instead of also processing jobs on that node). [default =  %(default)s]")
         group.add_argument("--distributedNodeIdleTimeout", 
             default = 10, type=int, 

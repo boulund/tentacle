@@ -28,8 +28,9 @@ class LaunchingMasterWorkerExecutor(object):
     def create_argparser(cls):
         parser = argparse.ArgumentParser(add_help=False)
         group = parser.add_argument_group("Launching options")
-        group.add_argument("--localCoordinator", action="store_true",
-            default=False,
+        group.add_argument("--localCoordinator", 
+            action="store_false",
+            default=True,
             help="Run the processing coordinator locally, synchronously in the current process,\
                   instead of launching it in a remote process. [default =  %(default)s]")
         group.add_argument("--splitCharReads", type=str, default=".", metavar="C",

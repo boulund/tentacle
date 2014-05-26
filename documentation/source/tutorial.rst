@@ -209,14 +209,20 @@ according to the instructions in :ref:`installation` it should be available in
 your ``$PATH`` variable as well.
 
 The call to Tentacle must minimally include the required command line
-parameters (in the case for ``pBLAT`` the only extra parameter required is the
-mapping manifest). If we use the mapping manifest that we created in Step 1,
-the command line could look like this::
+parameters (in the case for ``pBLAT`` the only extra mapping related parameter
+required is the mapping manifest). If we use the mapping manifest that we
+created in Step 1, the command line could look like this::
 
-  $ tentacle_slurm.py --pblat --mappingManifest tutorial_1/mapping_manifest.tab --distributionNodeCount 2
+  $ tentacle_slurm.py --pblat --mappingManifest tutorial_1/mapping_manifest.tab --distributionNodeCount 2 --localCoordinator --distributionUseDedicatedCoordinatorNode --slurmTimeLimit 01:00:00 --slurmAccount ACCOUNT2014-0-000 --slurmPartition glenn
 
 A call like this runs Tentacle using the :ref:`slurm launcher`, e.g. in a
-cluster environment.
+cluster environment. Parameters ``--localCoordinator`` and
+``--distributionUseDedicatedCoordinatorNode`` are not strictly required but
+definitely recommended. Read more about them in section :ref:`Running
+Tentacle`.  Note that you have to adjust the arguments for parameters
+``--slurmAccount``, ``--slurmPartition``, to fit the account and partition
+names applicable in your specific cluster environment. If you want to try out
+Tentacle running locally, see the sidebar in this section.
 
 
 Step 3: Check results 
@@ -359,7 +365,7 @@ read to the reference using a 90% identity threshold the commandline for
 Tentacle/USEARCH could be the following. Assume you are standing in the
 ``tutorial_2`` directory::
 
-  $ tentacle_slurm.py --usearch --usearchDBName references.fasta --usearchID 0.9 --mappingManifest mapping_manifest.tab --distributionNodeCount 2
+  $ tentacle_slurm.py --usearch --usearchDBName references.fasta --usearchID 0.9 --mappingManifest mapping_manifest.tab --distributionNodeCount 2 --localCoordinator --distributionUseDedicatedCoordinatorNode
 
 The call to Tentacle when using ``usearch`` must minimally include the
 following command line arguments:

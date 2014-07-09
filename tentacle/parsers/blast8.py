@@ -99,7 +99,10 @@ def parse_blast8(mappings, contig_data, options, logger):
 
 
         # Add the last read to contig_data
-        check_new_read(contig_data, read, identity, aligned_length, contig, sstart, send, previous_readname, previous_information)
+        try:
+            check_new_read(contig_data, read, identity, aligned_length, contig, sstart, send, previous_readname, previous_information)
+        except UnboundLocalError:
+            pass # File was empty
 
     return contig_data
 

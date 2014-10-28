@@ -180,6 +180,9 @@ class SlurmLauncher(Launcher):
         (out, err) = Popen(call_pars, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate(self.script)
         self.logger.debug("Launch result: {}".format(str((out,err))))
         #print("launch result: " + str((out,err)))
+        if err:
+            self.logger.error("Slurm batch launch error: {}".format(err))
+            raise Exception("Slurm batch launch error: {}".format(err))
         #TODO: assert that correct results were received
         return (out, err)
 

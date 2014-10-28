@@ -49,6 +49,7 @@ Documentation:
    parsers
    coverage
    mappers
+   choosing_mapper
 ..   modules
    
 

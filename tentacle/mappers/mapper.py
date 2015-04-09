@@ -232,20 +232,28 @@ class Mapper(object):
         if fastq_format and options.qualityControl:
             self.logger.info("Performing quality control on reads...")
             self.logger.info("Filtering reads using {}...".format(program_filter))
+            filter_args = {"-q": options.fastqMinQ,
+                           "-p": options.fastqProportion,
+                           "-v": ""}
+            if options.fastqFilterOther:
+                for key, value in options.fastqFilterOther.split():
+                    filter_args[key] = value
             filtered_reads = mapping_utils.filtered_call(self.logger,
                                     source=read_source,
                                     program=program_filter,
-                                    arguments= {"-q":options.fastqMinQ,
-                                                "-p":options.fastqProportion,
-                                                "-v":""})
+                                    arguments=filter_args)
             pipeline_components.append((filtered_reads, program_filter))
             self.logger.info("Trimming reads using {}...".format(program_filter))
+            trimming_args = {"-t":options.fastqThreshold,
+                             "-l":options.fastqMinLength,
+                             "-v":""}
+            if options.fastqTrimOther:
+                for key, value in options.fastqTrimOther:
+                    trimming_args[key] = value
             trimmed_reads = mapping_utils.filtered_call(self.logger,
                                    source=filtered_reads,
                                    program=program_trim,
-                                   arguments={"-t":options.fastqThreshold,
-                                              "-l":options.fastqMinLength,
-                                              "-v":""})
+                                   arguments=trimming_args)
             pipeline_components.append((trimmed_reads, program_trim))
             if self.input_reads_format == "FASTA":
                 self.logger.info("Converting FASTQ to FASTA using {}...".format(program_convert))

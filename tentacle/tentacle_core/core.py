@@ -190,7 +190,8 @@ class TentacleCore:
         
         parser = argparse.ArgumentParser(add_help=False)
         quality_filtering_group = parser.add_argument_group("Quality filtering options", "Options for FASTQ")
-        #TODO: Change dest to be the same as argument, e.g. fastqMinQ=>fqMinQuality. Will be useful when writing out config file with all options for future use with @saved-opts as argument.
+        # TODO: Change dest to be the same as argument, e.g. fastqMinQ=>fqMinQuality.
+        # Will be useful when writing out config file with all options for future use with @saved-opts as argument.
         quality_filtering_group.add_argument("--qualityControl", dest="qualityControl",
             action="store_true", default=False,
             help="FASTQ quality control: perform quality filtering or trimming [default: %(default)s]")
@@ -200,12 +201,18 @@ class TentacleCore:
         quality_filtering_group.add_argument("--fqProportion", dest="fastqProportion",
             type=int, default=50,
             help="FASTQ filter: minimum proportion of bases above base quality score [default: %(default)s]")
+        quality_filtering_group.add_argument("--fqFilterOther", dest="fastqFilterOther",
+            type=string, default="",
+            help="FASTQ filter: Additional fastq_quality_filter command line options enclosed in single quotes. [default: '%(default)s']") 
         quality_filtering_group.add_argument("--fqThreshold", dest="fastqThreshold",
             type=int, default=1, 
             help="FASTQ trim: minium quality threshold. Nucleotides with lower quality will be trimmed from the end of the sequence, [default: %(default)s]")
         quality_filtering_group.add_argument("--fqMinlength", dest="fastqMinLength",
             type=int, default=0,
             help="FASTQ trim: minimum length. Sequences shorter will be discarded [default: 0 (entire read)]")    
+        quality_filtering_group.add_argument("--fqTrimOther", dest="fastqTrimOther",
+            type=string, default="",
+            help="FASTQ trim: Additional fastq_quality_trimmer command line options enclosed in single quotes. [default: '%(default)s']")    
         quality_filtering_group.add_argument("--bowtie2FilterReads", dest="bowtie2FilterReads",
             action="store_true", 
             help="bowtie2: Use bowtie2 to filter out for example human reads in the read preprocessing step [default: %(default)s].")

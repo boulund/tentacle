@@ -202,7 +202,7 @@ class TentacleCore:
             type=int, default=50,
             help="FASTQ filter: minimum proportion of bases above base quality score [default: %(default)s]")
         quality_filtering_group.add_argument("--fqFilterOther", dest="fastqFilterOther",
-            type=string, default="",
+            type=str, default="",
             help="FASTQ filter: Additional fastq_quality_filter command line options enclosed in single quotes. [default: '%(default)s']") 
         quality_filtering_group.add_argument("--fqThreshold", dest="fastqThreshold",
             type=int, default=1, 
@@ -211,7 +211,7 @@ class TentacleCore:
             type=int, default=0,
             help="FASTQ trim: minimum length. Sequences shorter will be discarded [default: 0 (entire read)]")    
         quality_filtering_group.add_argument("--fqTrimOther", dest="fastqTrimOther",
-            type=string, default="",
+            type=str, default="",
             help="FASTQ trim: Additional fastq_quality_trimmer command line options enclosed in single quotes. [default: '%(default)s']")    
         quality_filtering_group.add_argument("--bowtie2FilterReads", dest="bowtie2FilterReads",
             action="store_true", 

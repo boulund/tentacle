@@ -16,10 +16,10 @@ Citing Tentacle
 ***************
 If you use Tentacle in your research, please cite us!.
 
-The work is described in Boulund et al. (2014). Tentacle: distributed gene quantification in metagenomes. (submitted).
+The work is described in Boulund et al. (2015). Tentacle: distributed gene quantification in metagenomes. (submitted).
 
 
 Installing Tentacle
 *******************
-Follow the installation instructions in the manual provided online at
+Follow the installation instructions in the online manual at
 http://bioinformatics.math.chalmers.se/tentacle/.

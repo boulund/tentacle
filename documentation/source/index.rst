@@ -41,7 +41,6 @@ Documentation:
    :maxdepth: 2
 
    introduction
-   performance
    download
    installation
    tutorial
@@ -51,6 +50,8 @@ Documentation:
    coverage
    mappers
    choosing_mapper
+   performance
+
 ..   modules
    
 

@@ -41,6 +41,7 @@ Documentation:
    :maxdepth: 2
 
    introduction
+   performance
    download
    installation
    tutorial

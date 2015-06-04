@@ -71,25 +71,3 @@ reduce the computation time by a factor of N, where N is the number of nodes
 used (as seen in the scaling evaluation).
 
 
-.. _Quantification accuracy:
-
-Quantification accuracy
-^^^^^^^^^^^^^^^^^^^^^^^
-We investigated the quantification accuracy of our framework by constructing a
-small synthetic metagenome where all abundances are known beforehand.  The
-accuracy of quantification depends highly on how abundance of a reference gene
-is defined, but also what mapper and what settings are used when aligning
-sequences.  In our investigations of quantification accuracy we have decided
-that the abundance of a gene is the number of reads that originate from a
-specific reference sequence and should map to the gene in question (note that
-this means our definition thus does not require complete coverage of the gene).
-
-To test this, we created a synthetic metagenomic data set where random
-fragments were created from a set of reference sequences, in addition to
-several completely random fragments created without the reference sequences as
-template.  Some reads drawn from the reference sequences were randomly
-“mutated” by introduction single point mutations at a rate of approximately 5%.
-The mapping program used in this evaluation was RazerS3 (settings: ``-I 95 –rr
-100 –m 1 –tc 32`` ) and the quantification results show that all reads that
-were drawn from the reference sequences (and thus should map back to the
-reference sequences) did map to the correct reference sequence. 

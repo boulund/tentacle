@@ -86,10 +86,14 @@ Download and install Tentacle
 *****************************
 
 .. _Bitbucket repository: https://bitbucket.org/chalmersmathbioinformatics/tentacle
+.. _Mercurial: https://mercurial.selenic.com
 
-The Tentacle programs and framework is distributed via its `Bitbucket repository`_
-repository. The most recent version can be automatically downloaded and
-installed directly from the online repository with the following command::
+
+The Tentacle programs and framework is distributed via its `Bitbucket
+repository`_ repository. This requires that the distributed version control
+system `Mercurial`_ is installed. The most recent version can be automatically
+downloaded and installed directly from the online repository with the following
+command::
 
   (tentacle_env)$  pip install -e hg+http://bitbucket.org/chalmersmathbioinformatics/tentacle/#egg=Tentacle
 
@@ -108,11 +112,12 @@ command line to launch Tentacle from any folder.
 
 Downloading and installing Tentacle manually
 ============================================
-Tentacle can also be installed from a downloaded compressed archive. However,
-to get the most recent version we recommend installing it directly from the
-`Bitbucket repository`_.  If you are unable to installed Tentacle from the
-repository directly, you can install it using a release tarball as described in
-:ref:`download`.
+If `Mercurial`_ is unavailable or you require to install Tentacle without
+downloading it from the `Bitbucket repository`_, Tentacle can also be installed
+from a downloaded compressed archive. However, to get the most recent version
+we recommend installing it directly from the `Bitbucket repository`_.  If you
+are unable to installed Tentacle from the repository directly, you can install
+it using a release tarball as described in :ref:`download`.
 
 To install Tentacle from a downloaded compressed archive into the virtualenv,
 make sure the virtualenv is activated and use ``pip`` from within the

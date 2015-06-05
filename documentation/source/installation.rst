@@ -169,7 +169,7 @@ Tentacle comes with out-of-the-box support for the following mappers:
 
 .. _Bowtie2: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
 .. _GEM: http://algorithms.cnag.cat/wiki/The_GEM_library
-.. _pBLAT: https://code.google.com/p/pblat/
+.. _pBLAT: http://icebert.github.io/pblat/
 .. _RazerS3: https://www.seqan.de/projects/razers/
 .. _USEARCH: http://www.drive5.com/usearch/
 .. _NCBI BLAST: http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download

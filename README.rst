@@ -20,12 +20,14 @@ Citing Tentacle
 If you use Tentacle in your research, please cite us!.
 
 The work is described in Boulund et al. (2015). Tentacle: distributed gene quantification in metagenomes. *GigaScience* 2015, **4**:40.
+
 DOI: 10.1186/s13742-015-0078-1.
 
 
 Installing Tentacle
 *******************
 Tentacle can be easily installed using ``pip``:
+
 ``pip install -e hg+http://bitbucket.org/chalmersmathbioinformatics/tentacle/#egg=Tentacle``
 
 Complete installation instructions with additional details are available in the manual provided online at

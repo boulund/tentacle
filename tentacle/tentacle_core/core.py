@@ -234,7 +234,7 @@ class TentacleCore:
         Is used both for the single contig-file and many-contig-files cases.
         """
 
-        citing_text = "If you find Tentacle useful in your research, please cite Boulund et al. (2014). Tentacle: distributed gene quantification in metagenomes."
+        citing_text = "If you find Tentacle useful in your research, please cite Boulund et al. (2015). Tentacle: distributed gene quantification in metagenomes. DOI: 10.1186/s13742-015-0078-1"
 
         parser = argparse.ArgumentParser(add_help=False, 
                 epilog=citing_text)

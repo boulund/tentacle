@@ -30,9 +30,12 @@ Citing Tentacle
 If you find Tentacle useful and use it in your research, please cite us!.
 The framework is described in the following paper:
 
-Boulund, F., Sjögren, A., Kristiansson, E. (2014). 
-*Tentacle: distributed gene quantification in metagenomes*.
-**(submitted)**
+Boulund, F., Sjögren, A., Kristiansson, E. (2015). 
+Tentacle: distributed gene quantification in metagenomes.
+*GigaScience*, **4**:40, 
+DOI: `10.1186/s13742-015-0078-1`_
+
+.. _10.1186/s13742-015-0078-1: http://dx.doi.org/10.1186/s13742-015-0078-1
 
 Documentation:
 **************
@@ -50,6 +53,7 @@ Documentation:
    coverage
    mappers
    choosing_mapper
+   performance
 ..   modules
    
 

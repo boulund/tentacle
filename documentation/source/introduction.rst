@@ -12,7 +12,7 @@ data sets.
 Tentacle provides a way to distribute resource intensive mapping tasks, such
 as mapping large numbers of metagenomic samples to a reference, in order to 
 reduce the time required to analyze large data sets. Tentacle makes it possible
-to define what mapper and mapping critera to use, and computes the coverage of
+to define what mapper and mapping criteria to use, and computes the coverage of
 all annotated areas of the reference sequence(s).
 
 .. figure:: ./img/fig1a.png

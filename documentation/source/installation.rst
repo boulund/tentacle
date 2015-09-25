@@ -21,7 +21,7 @@ is a list of the required Python packages (tested versions in parenthesis).
  * gevent (1.0)
  * greenlet (0.4.2)
  * msgpack-python (0.4.1)
- * numpy (1.8.0)
+ * numpy (1.8.2)
  * psutil (1.2.1)
  * pyzmq (13.1.0)
  * zerorpc (0.4.4)
@@ -45,6 +45,7 @@ Some software is only required if you required the functionality offered by them
 Note that a mapper (sequence alignment software) is also required. See section
 `mappers`_ for information about what mappers are supported.
  
+
 
 .. _virtualenv:
 
@@ -82,18 +83,43 @@ activated, as illustrated below)::
 
 .. _installation:
 
-Download Tentacle sources
-*************************
+Download and install Tentacle 
+*****************************
 
+.. _Mercurial: https://mercurial.selenic.com/
 .. _Bitbucket: https://bitbucket.org/chalmersmathbioinformatics/tentacle
 
-The Tentacle library is distributed as a downloadable compressed archive.
-Either download a release tarball from the :ref:`download` section, or download
-the latest development version from `Bitbucket`_. It is
-recommended to use the latest release version as this is probably more stable.
-Example download command::
+The Tentacle programs and framework is distributed via its Bitbucket_
+repository. This requires that the distributed version control system
+Mercurial_ is installed. The most recent version can be automatically
+downloaded and installed directly from the online repository with the following
+command::
 
-  (tentacle_env)$  wget http://bioinformatics.math.chalmers.se/tentacle/downloads/tentacle-0.1.0b.tar.gz
+   (tentacle_env)$  pip install -e hg+http://bitbucket.org/chalmersmathbioinformatics/tentacle/#egg=Tentacle
+
+Running this command will install Tentacle along with all dependencies (it will
+download any required dependencies that might be missing). Take a look at the
+output to make sure all packages install correctly into the virtulenv. Note
+that some of the required packages might in turn have further dependencies,
+these will install automatically. You can verify that all packages installed
+correctly by running ``pip list`` to see a listing of all packages that are
+installed in your virtualenv.
+
+The pip installation will automatically make links to the three program files
+``tentacle_local.py``, ``tentacle_slurm.py``, and ``tentacle_query_jobs.py``
+into the ``bin`` directory of the virtualenv. You can call these from the
+command line to launch Tentacle from any folder.
+
+
+Download and installing Tentacle manually
+*****************************************
+If Mercurial_ is unavailable or you require to install Tentacle without
+downloading it from the Bitbucket_ repository, Tentacle can also be installed
+from a downloaded compressed archive. However, to get the most recent version
+we recommend installing it directly from the Bitbucket_ repository. If you are
+unable to install Tentacle from the repository directly, you can install it
+using a release tarball as described in :ref:`download`.
+
 
 Installing Tentacle into virtualenv
 ===================================
@@ -152,7 +178,7 @@ Tentacle comes with out-of-the-box support for the following mappers:
  * `pBLAT`_ (v.34)
  * `RazerS3`_ (3.2)
  * `USEARCH`_ (v7.0.1001)
- * (`NCBI BLAST`_) (2.2.28+) *[not recommended, but tested]*
+ * (`NCBI BLAST`_) (2.2.28+) *[not recommended: very slow]*
 
 .. _Bowtie2: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
 .. _GEM: http://algorithms.cnag.cat/wiki/The_GEM_library
@@ -169,9 +195,9 @@ ensure that they are available in ``$PATH`` or put the binaries (or symlinks)
 in ``%TENTACLE_VENV%/bin`` so that Tentacle can find them on runtime. 
 
 
-Verifying installation
-**********************
-This section is not yet complete. 
+.. Verifying installation
+.. **********************
+.. This section is not yet complete. 
 
 .. After setting up and activating the virtualenv and installing a suitable
    mapper, run one of the included tests to verify that the installation is

@@ -57,7 +57,7 @@ Python virtualenv
     version used when creating your virtualenv. It is possible to specify a
     Python binary for use in the created virtualenv with the ``--python``
     argument to virtualenv.  E.g. ``virtualenv --python=/usr/bin/python2.7
-    tentacle_venv``.
+    tentacle_env``.
    
 The recommended way to use Tentacle is to setup a Python virtualenv (virtual
 environment), into which all required packages are installed. You can read more
@@ -120,30 +120,48 @@ we recommend installing it directly from the Bitbucket_ repository. If you are
 unable to install Tentacle from the repository directly, you can install it
 using a release tarball as described in :ref:`download`.
 
+The Tentacle programs and framework is distributed via its `Bitbucket
+repository`_ repository. This requires that the distributed version control
+system `Mercurial`_ is installed. The most recent version can be automatically
+downloaded and installed directly from the online repository with the following
+command::
 
-Installing Tentacle into virtualenv
-===================================
-To install Tentacle into the virtualenv, make sure the virtualenv
-is activated and use ``pip`` from within the virtualenv to install Tentacle::
+  (tentacle_env)$  pip install -e hg+http://bitbucket.org/chalmersmathbioinformatics/tentacle/#egg=Tentacle
 
-  (tentacle_venv)$ pip install tentacle-0.1.0b.tar.gz
+Running this command will install Tentacle along with all dependencies (it will
+download any required dependencies that might be missing). Take a look at the
+output to make sure all packages install correctly into the virtulenv. Note
+that some of the required packages might in turn have further dependencies,
+these will install automatically.  You can verify that all packages installed
+correctly by running ``pip list`` to see a listing of all packages that are
+installed in your virtualenv.
 
-Running this command will install Tentacle along with all dependencies (and it
-will download the required dependencies).  Make sure all packages install
-correctly into the virtulenv.  Note that some of the required packages might in
-turn have further dependencies.  You can verify that all packages installed
-correctly by running ``pip list``.
-
-The pip installation will install the three program files
+The pip installation will automatically make links to the three program files
 ``tentacle_local.py``, ``tentacle_slurm.py``, and ``tentacle_query_jobs.py``
 into the ``bin`` directory of the virtualenv. You can call these from the
-command line to launch Tentacle.
+command line to launch Tentacle from any folder.
 
-If you are installing from a clone of the `Bitbucket`_ repository (e.g. via
-``hg clone ssh://hg@bitbucket.chalmersmathbioinformatics/tentacle tentacle``),
-then the install command would be::
+Downloading and installing Tentacle manually
+============================================
+If `Mercurial`_ is unavailable or you require to install Tentacle without
+downloading it from the `Bitbucket repository`_, Tentacle can also be installed
+from a downloaded compressed archive. However, to get the most recent version
+we recommend installing it directly from the `Bitbucket repository`_.  If you
+are unable to installed Tentacle from the repository directly, you can install
+it using a release tarball as described in :ref:`download`.
 
-  (tentacle_venv)$ pip install ./tentacle
+To install Tentacle from a downloaded compressed archive into the virtualenv,
+make sure the virtualenv is activated and use ``pip`` from within the
+virtualenv to install Tentacle::
+
+  (tentacle_env)$ pip install tentacle-0.1.0b.tar.gz
+
+You can also install Tentacle from a downloaded clone of the `Bitbucket
+repository`_.  Assuming that the repository has been cloned to a folder
+``./tentacle`` in your current directory, you can install it using ``pip`` like
+by issuing this command::
+
+  (tentacle_env)$ pip install ./tentacle
 
 Using Tentacle without installation
 ===================================
@@ -155,7 +173,7 @@ current user with the following commands::
   $ tar -xf tentacle-0.1.0.tar.gz
   $ ln -s tentacle-0.1.0/rundir/tentacle* ~/bin
 
-This should work with a fresh clone of the `Bitbucket`_ repository as well. But
+This should work with a fresh clone of the `Bitbucket repository`_ as well. But
 please note that this is NOT the recommended way to use Tentacle.
 
 .. _mappers:
@@ -182,7 +200,7 @@ Tentacle comes with out-of-the-box support for the following mappers:
 
 .. _Bowtie2: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
 .. _GEM: http://algorithms.cnag.cat/wiki/The_GEM_library
-.. _pBLAT: https://code.google.com/p/pblat/
+.. _pBLAT: http://icebert.github.io/pblat/
 .. _RazerS3: https://www.seqan.de/projects/razers/
 .. _USEARCH: http://www.drive5.com/usearch/
 .. _NCBI BLAST: http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download

@@ -31,7 +31,7 @@ The format is as follows (with TAB as separating character)::
   [strand: + or -                        ]
 
   
-This format is easy to parse and makes further analyses on. Since each
+This format is easy to parse and make further analyses on. Since each
 reference sequence header (e.g. ``scaffold3_2``) is separated with a ``_``
 before the annotation name (e.g. ``COGxxxxx``) it is easy to separate the
 annotation name from the reference sequence header and extract further

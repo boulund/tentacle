@@ -49,7 +49,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Tentacle'
-copyright = u'2014, Fredrik Boulund, Anders Sjögren, Erik Kristiansson'
+copyright = u'2014, Fredrik Boulund, Anders Sjogren, Erik Kristiansson'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -202,7 +202,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
   ('index', 'Tentacle.tex', u'Tentacle Documentation',
-   u'Fredrik Boulund, Anders Sjögren, Erik Kristiansson', 'manual'),
+   u'Fredrik Boulund, Anders Sjogren, Erik Kristiansson', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -232,7 +232,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'tentacle', u'Tentacle Documentation',
-     [u'Fredrik Boulund, Anders Sjögren, Erik Kristiansson'], 1)
+     [u'Fredrik Boulund, Anders Sjogren, Erik Kristiansson'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -246,7 +246,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'Tentacle', u'Tentacle Documentation',
-   u'Fredrik Boulund, Anders Sjögren, Erik Kristiansson', 'Tentacle', 'One line description of project.',
+   u'Fredrik Boulund, Anders Sjogren, Erik Kristiansson', 'Tentacle', 'One line description of project.',
    'Miscellaneous'),
 ]
 

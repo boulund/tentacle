@@ -1,5 +1,5 @@
 # coding: utf-8
-#  Copyright (C) 2014  Fredrik Boulund and Anders SjÃ¶gren
+#  Copyright (C) 2014  Fredrik Boulund and Anders Sjögren
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -127,6 +127,9 @@ class SlurmLauncher(Launcher):
         group.add_argument("--slurmNodesPerJob",
             default="1", 
             help="Number of nodes in each slurm call [default: %(default)s]")
+        group.add_argument("--slurmCoresPerJob",
+            default="1", 
+            help="Number of cores in each slurm call [default: %(default)s]")
 #        #TODO: Implement extra options
 #        group.add_argument("--slurmExtraOptions",
 #            default="",
@@ -154,6 +157,7 @@ class SlurmLauncher(Launcher):
         
         setupTemplate = ("\n".join(["#!/usr/bin/env bash",              #Options magic below ok in this case : #pylint: disable=W0142
                                "#SBATCH -N {slurmNodesPerJob}",
+                               "#SBATCH -n {slurmCoresPerJob}",
                                "#SBATCH -p {slurmPartition}",
                                "#SBATCH -A {slurmAccount}",
                                "#SBATCH -J {slurmJobName}",
